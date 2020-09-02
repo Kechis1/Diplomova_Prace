@@ -1,5 +1,5 @@
 // Generated from E:/Disk Google/School/Master/DP/src/main/java/DP/antlr4/tsql/grammars\TSqlLexer.g4 by ANTLR 4.8
-package DP.antlr4.tsql.parser;
+package DP.antlr4.tsql.grammars;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;

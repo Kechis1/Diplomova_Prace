@@ -13,6 +13,17 @@
           <option name="language" value="Java" />
           <option name="caseChangingStrategy" value="FORCE_UPPERCASE" />
         </PerGrammarGenerationSettings>
+        <PerGrammarGenerationSettings>
+          <option name="fileName" value="$PROJECT_DIR$/src/main/java/DP/antlr4/tsql/grammars/TSqlParser.g4" />
+          <option name="autoGen" value="true" />
+          <option name="outputDir" value="E:\Disk Google\School\Master\DP\src\main\java\DP\antlr4\tsql\parser" />
+          <option name="libDir" value="E:\Disk Google\School\Master\DP\src\main\java\DP\antlr4\tsql\grammars" />
+          <option name="encoding" value="" />
+          <option name="pkg" value="DP.antlr4.tsql.parser" />
+          <option name="language" value="Java" />
+          <option name="generateVisitor" value="true" />
+          <option name="caseChangingStrategy" value="FORCE_UPPERCASE" />
+        </PerGrammarGenerationSettings>
       </list>
     </option>
   </component>

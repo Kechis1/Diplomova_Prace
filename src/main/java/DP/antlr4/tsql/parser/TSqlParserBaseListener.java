@@ -1,4 +1,4 @@
-// Generated from E:/Disk Google/School/Master/DP/src/main/antlr4/tsql\TSqlParser.g4 by ANTLR 4.8
+// Generated from E:/Disk Google/School/Master/DP/src/main/java/DP/antlr4/tsql/grammars\TSqlParser.g4 by ANTLR 4.8
 package DP.antlr4.tsql.parser;
 
 import org.antlr.v4.runtime.ParserRuleContext;

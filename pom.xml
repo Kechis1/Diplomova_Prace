@@ -11,7 +11,7 @@
 
     <properties>
         <antlr.version>4.8-1</antlr.version>
-        <antlr.tsql.grammar.directory>src/main/java/DP/antlr4/tsql/grammars/</antlr.tsql.grammar.directory>
+        <antlr.tsql.grammar.directory>src/main/java/DP/antlr4/tsql/parser/</antlr.tsql.grammar.directory>
     </properties>
 
     <dependencies>

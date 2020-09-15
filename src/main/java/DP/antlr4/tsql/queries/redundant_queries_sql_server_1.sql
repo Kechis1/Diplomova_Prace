@@ -1,5 +1,4 @@
 -- @1 group by
-
 SELECT pId, jmeno
 FROM dbo.predmet
 GROUP BY pId, jmeno

@@ -37,6 +37,11 @@ public class TSqlRunner {
         System.out.println(parser.select_statement().toStringTree(parser));
 
         parser = TSqlRunner.RunFromString( "SELECT *\n" +
+                "FROM dbo.student\n" +
+                "ORDER BY sID");
+        System.out.println(parser.select_statement().toStringTree(parser));
+
+        parser = TSqlRunner.RunFromString( "SELECT *\n" +
                 "FROM predmet\n" +
                 "WHERE jmeno LIKE '%'");
         System.out.println(parser.select_statement().toStringTree(parser));

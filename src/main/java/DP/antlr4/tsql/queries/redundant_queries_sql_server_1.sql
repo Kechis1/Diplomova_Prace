@@ -43,7 +43,16 @@ GO
 FROM dbo.student sdt
 GROUP BY sdt.sID, sdt.jmeno;*/
 
--- @5 like
+-- @5
+SELECT *
+FROM dbo.student
+ORDER BY sID
+GO
+
+/*SELECT *
+FROM dbo.student;*/
+
+-- @6 like
 SELECT *
 FROM predmet
 WHERE jmeno LIKE '%'

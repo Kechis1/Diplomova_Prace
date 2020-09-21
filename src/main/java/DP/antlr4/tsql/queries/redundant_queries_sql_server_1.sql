@@ -1,62 +1,54 @@
--- @1 group by
-SELECT pId, jmeno
-FROM dbo.predmet
-GROUP BY pId, jmeno
+-- @1 GROUP BY
+SELECT PID, JMENO
+FROM DBO.PREDMET
+GROUP BY PID, JMENO
 GO
 
-/*SELECT pId, jmeno
-FROM dbo.predmet;*/
+/*SELECT PID, JMENO
+FROM DBO.PREDMET;*/
 
--- @2 where
+-- @2 WHERE
 SELECT *
-FROM dbo.predmet
-WHERE 1=1
+FROM DBO.PREDMET
+WHERE 1 = 1
 GO
 
 /*SELECT *
-FROM dbo.predmet;*/
+FROM DBO.PREDMET;*/
 
--- @3 where
+-- @3 WHERE
+-- vnejsi podminky vs vnitrni podminky (maji jiny vyznam)
 SELECT *
-FROM dbo.student sdt
-INNER JOIN dbo.studuje sde ON sdt.sID = sde.sID
-INNER JOIN dbo.predmet pdt ON sde.pID = pdt.pID
-WHERE sdt.sID = sde.sID
-ORDER BY sdt.sID
+FROM DBO.STUDENT SDT
+INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID
+INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID
+WHERE SDT.SID = SDE.SID
+ORDER BY SDT.SID
 GO
 
 /*SELECT *
-FROM dbo.student sdt
-INNER JOIN dbo.studuje sde ON sdt.sID = sde.sID
-INNER JOIN dbo.predmet pdt ON sde.pID = pdt.pID
-ORDER BY sdt.sID;*/
+FROM DBO.STUDENT SDT
+INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID
+INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID
+ORDER BY SDT.SID;*/
 
--- @4 join
-SELECT sdt.sId, sdt.jmeno
-FROM dbo.student sdt
-LEFT JOIN dbo.studuje sde ON sdt.sID = sde.sID
-GROUP BY sdt.sID, sdt.jmeno
+-- @4 JOIN
+SELECT distinct SDT.SID, SDT.JMENO
+FROM DBO.STUDENT SDT
+LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID
 GO
 
-/*SELECT sdt.sId, sdt.jmeno
-FROM dbo.student sdt
-GROUP BY sdt.sID, sdt.jmeno;*/
+/*SELECT SDT.SID, SDT.JMENO
+FROM DBO.STUDENT SDT
+;*/
 
--- @5
+-- @5 LIKE
 SELECT *
-FROM dbo.student
-ORDER BY sID
+FROM PREDMET
+WHERE JMENO LIKE '%'
 GO
 
 /*SELECT *
-FROM dbo.student;*/
+FROM PREDMET;*/
 
--- @6 like
-SELECT *
-FROM predmet
-WHERE jmeno LIKE '%'
-GO
 
-/*SELECT *
-FROM predmet;*/
- 

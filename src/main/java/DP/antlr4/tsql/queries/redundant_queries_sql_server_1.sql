@@ -44,6 +44,13 @@ FROM DBO.PREDMET;*/
              JOIN dbo.predmet pr ON ste.pID = pr.pID
     GROUP BY pr.pID, stt.sID, ste.pID, ste.sID, ste.rok
 
+    SELECT pId, jmeno, count(*)
+    FROM dbo.predmet
+    GROUP BY pid, sqrt(jmeno), jmeno
+    -- se muze prepsat na
+    SELECT pId, jmeno, count(*)
+    FROM dbo.predmet
+
     -- count(*) bude vzdy vracet 1
     SELECT pId, jmeno, count(*)
     FROM dbo.predmet

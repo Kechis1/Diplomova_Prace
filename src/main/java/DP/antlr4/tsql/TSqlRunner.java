@@ -1,11 +1,12 @@
 package DP.antlr4.tsql;
 
+import DP.Database.DatabaseMetadata;
+import DP.Database.DatabaseTable;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlLexer;
 import DP.antlr4.tsql.parser.TSqlParser;
 import DP.antlr4.tsql.parser.TSqlParserBaseListener;
 import com.sun.istack.internal.NotNull;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.*;
@@ -18,29 +19,54 @@ import java.util.List;
 public class TSqlRunner {
     private final static String DIR_QUERIES = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "DP" + File.separator + "antlr4" + File.separator + "tsql" + File.separator + "queries" + File.separator;
 
-    public static void RunGroupByWithPrimaryKey() throws IOException {
-        String primaryKey = "PID";
-        TSqlParser parser = RunFromString("SELECT pId, jmeno FROM dbo.predmet GROUP BY pid, jmeno");
-
+    /**
+     * @param metadata
+     * @throws IOException
+     * @TODO agregacni funkce
+     * @TODO prepsat COUNT(*) => 1, kdyz jsou vsechny primarni klice v group by
+     * @TODO prepsat ostatni agregacni funkce => column_name, kdyz jsou vsechny primarni klice v group by
+     */
+    public static void RunGroupByWithPrimaryKey(DatabaseMetadata metadata, String query) throws IOException {
+        TSqlParser parser = RunFromString(query);
         ParseTree select = parser.select_statement();
-        final List<String> aggregateFunctions = new ArrayList<>();
-        final List<Boolean> wasPrimaryKeyInGroupBy = new ArrayList<>();
+
+        final ArrayList<String> aggregateFunctions = new ArrayList<String>();
+        final ArrayList<String> columnsInGroupBy = new ArrayList<String>();
+        final ArrayList<String> joinTables = new ArrayList<String>();
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            /**
+             * @TODO zjistit, jestli je agregacni funkce v group by => nesmi byt, vyhodit error
+             * @param ctx
+             */
             @Override
             public void enterGroup_by_item(@NotNull TSqlParser.Group_by_itemContext ctx) {
-                if (ctx.getText().equals(primaryKey)) {
-                    wasPrimaryKeyInGroupBy.add(true);
+                if (ctx.expression().full_column_name() != null) {
+                    columnsInGroupBy.add(ctx.expression().full_column_name().column_name.getText());
+                } else if (ctx.expression().function_call() != null) {
+                    String groupByItem = ctx.expression().function_call().getRuleContext().getText();
+
                 }
             }
 
             @Override
+            public void exitTable_source_item(TSqlParser.Table_source_itemContext ctx) {
+                joinTables.add(ctx.table_name_with_hint().table_name().table.getText());
+            }
+
+            @Override
             public void enterAggregate_windowed_function(TSqlParser.Aggregate_windowed_functionContext ctx) {
-                aggregateFunctions.add(ctx.getText());
+                aggregateFunctions.add(ctx.all_distinct_expression().expression().full_column_name().column_name.getText());
             }
         }, select);
 
-        if (!wasPrimaryKeyInGroupBy.isEmpty() && aggregateFunctions.isEmpty()) {
+        System.out.println("aggregateFunctions: " + aggregateFunctions);
+        System.out.println("columnsInGroupBy: " + columnsInGroupBy);
+        System.out.println("joinTables: " + joinTables);
+
+        metadata = metadata.withTables(joinTables);
+
+        if (!columnsInGroupBy.isEmpty() && columnsInGroupBy.containsAll(metadata.getAllPrimaryKeys())) {
             System.out.println(UnnecessaryStatementException.message + "GROUP BY");
         }
     }
@@ -64,7 +90,7 @@ public class TSqlRunner {
         }, select);
 
         for (int i = 0; i < conditions.size(); i++) {
-            for (int j = i+1; j < conditions.size(); j++) {
+            for (int j = i + 1; j < conditions.size(); j++) {
                 if (conditions.get(i).equals(conditions.get(j))) {
                     System.out.println(UnnecessaryStatementException.message + "CONDITION");
                 }

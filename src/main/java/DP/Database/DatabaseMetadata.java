@@ -14,9 +14,6 @@ public class DatabaseMetadata {
     private String tableSchema;
     private List<DatabaseTable> tables;
 
-    public DatabaseMetadata() {
-    }
-
     public DatabaseMetadata(String tableCatalog, String tableSchema, List<DatabaseTable> tables) {
         this.tableCatalog = tableCatalog;
         this.tableSchema = tableSchema;
@@ -64,10 +61,10 @@ public class DatabaseMetadata {
             List<String> tableColumns = new ArrayList<>();
             List<String> tablePrimaryKeys = new ArrayList<>();
 
-            tableObject.getJSONArray("column_names").forEach(x->tableColumns.add(x.toString()));
-            tableObject.getJSONArray("primary_keys").forEach(x->tablePrimaryKeys.add(x.toString()));
+            tableObject.getJSONArray("column_names").forEach(x->tableColumns.add(x.toString().toUpperCase()));
+            tableObject.getJSONArray("primary_keys").forEach(x->tablePrimaryKeys.add(x.toString().toUpperCase()));
 
-            dbTables.add(new DatabaseTable(tableObject.getString("table_name"),
+            dbTables.add(new DatabaseTable(tableObject.getString("table_name").toUpperCase(),
                     tableColumns,
                     tablePrimaryKeys
                 )
@@ -78,5 +75,44 @@ public class DatabaseMetadata {
                 object.getString("table_schema"),
                 dbTables
         );
+    }
+
+    public DatabaseTable findTable(String tableName) {
+        for (DatabaseTable item: tables) {
+            if (item.getTableName().equals(tableName)) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    public ArrayList<String> getAllPrimaryKeys() {
+        ArrayList<String> primaryKeys = new ArrayList<>();
+        for (DatabaseTable table: tables) {
+            primaryKeys.addAll(table.getPrimaryKeys());
+        }
+        return primaryKeys;
+    }
+
+    public boolean existsInTablesPrimaryKeys(ArrayList<String> columns) {
+        ArrayList<String> allPrimaryKeys = getAllPrimaryKeys();
+        return allPrimaryKeys.containsAll(columns) && allPrimaryKeys.size() == columns.size();
+    }
+
+    public DatabaseMetadata withTables(List<String> inTables) {
+        List<DatabaseTable> newTables = new ArrayList<>();
+
+        for (DatabaseTable item: tables) {
+            if (inTables.contains(item.getTableName())) {
+                newTables.add(item);
+
+                if (newTables.size() == inTables.size()) {
+                    tables = newTables;
+                    return this;
+                }
+            }
+        }
+
+        return this;
     }
 }

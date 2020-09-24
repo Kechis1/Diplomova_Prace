@@ -5,9 +5,9 @@ import java.util.List;
 public class DatabaseTable {
     private String tableName;
     private List<String> columns;
-    private String primaryKeys;
+    private List<String> primaryKeys;
 
-    public DatabaseTable(String tableName, List<String> columns, String primaryKeys) {
+    public DatabaseTable(String tableName, List<String> columns, List<String> primaryKeys) {
         this.tableName = tableName;
         this.columns = columns;
         this.primaryKeys = primaryKeys;
@@ -29,11 +29,11 @@ public class DatabaseTable {
         this.columns = columns;
     }
 
-    public String getPrimaryKeys() {
+    public List<String> getPrimaryKeys() {
         return primaryKeys;
     }
 
-    public void setPrimaryKeys(String primaryKeys) {
+    public void setPrimaryKeys(List<String> primaryKeys) {
         this.primaryKeys = primaryKeys;
     }
 }

@@ -1,0 +1,42 @@
+{
+  "table_catalog": "master",
+  "table_schema": "dbo",
+  "tables": [
+    {
+      "table_name": "student",
+      "column_names": [
+        "sID",
+        "jmeno",
+        "rok_narozeni"
+      ],
+      "primary_keys": [
+        "sID"
+      ]
+    },
+    {
+      "table_name": "studuje",
+      "column_names": [
+        "pID",
+        "sID",
+        "rok",
+        "body"
+      ],
+      "primary_keys": [
+        "pID",
+        "sID",
+        "rok"
+      ]
+    },
+    {
+      "table_name": "predmet",
+      "column_names": [
+        "pID",
+        "jmeno",
+        "rocnik"
+      ],
+      "primary_keys": [
+        "pID"
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 package DP.antlr4.tsql;
 
+import DP.Database.AggregateItem;
 import DP.Database.DatabaseMetadata;
-import DP.Database.DatabaseTable;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlLexer;
 import DP.antlr4.tsql.parser.TSqlParser;
@@ -13,39 +13,40 @@ import org.antlr.v4.runtime.tree.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class TSqlRunner {
     private final static String DIR_QUERIES = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "DP" + File.separator + "antlr4" + File.separator + "tsql" + File.separator + "queries" + File.separator;
 
-    /**
-     * @param metadata
-     * @throws IOException
-     * @TODO agregacni funkce
-     * @TODO prepsat COUNT(*) => 1, kdyz jsou vsechny primarni klice v group by
-     * @TODO prepsat ostatni agregacni funkce => column_name, kdyz jsou vsechny primarni klice v group by
-     */
-    public static void RunGroupByWithPrimaryKey(DatabaseMetadata metadata, String query) throws IOException {
+
+    public static boolean RunGroupByWithPrimaryKey(DatabaseMetadata metadata, String query) throws IOException {
         TSqlParser parser = RunFromString(query);
         ParseTree select = parser.select_statement();
 
-        final ArrayList<String> aggregateFunctions = new ArrayList<String>();
-        final ArrayList<String> columnsInGroupBy = new ArrayList<String>();
-        final ArrayList<String> joinTables = new ArrayList<String>();
+        final ArrayList<AggregateItem> allAggregateFunctions = new ArrayList<>();
+        final ArrayList<AggregateItem> aggregateFunctionsInSelect = new ArrayList<>();
+        final ArrayList<String> columnsInGroupBy = new ArrayList<>();
+        final ArrayList<String> joinTables = new ArrayList<>();
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
-            /**
-             * @TODO zjistit, jestli je agregacni funkce v group by => nesmi byt, vyhodit error
-             * @param ctx
-             */
+
+            @Override
+            public void enterSelect_list_elem(TSqlParser.Select_list_elemContext ctx) {
+                if (ctx.expression_elem() != null && ctx.expression_elem().expression().function_call() != null) {
+                    TSqlParser.AGGREGATE_WINDOWED_FUNCContext aggCtx =
+                            (TSqlParser.AGGREGATE_WINDOWED_FUNCContext) ctx.expression_elem().expression().function_call().getRuleContext();
+                    aggregateFunctionsInSelect.add(new AggregateItem(ctx.expression_elem().expression().function_call().getChild(0).getChild(2).getText(),
+                            aggCtx.aggregate_windowed_function().STAR() != null
+                                    ? "*"
+                                    : aggCtx.aggregate_windowed_function().all_distinct_expression().expression().full_column_name().column_name.getText(),
+                            ctx.expression_elem().expression().function_call().getChild(0).getChild(0).getText()));
+                }
+            }
+
             @Override
             public void enterGroup_by_item(@NotNull TSqlParser.Group_by_itemContext ctx) {
                 if (ctx.expression().full_column_name() != null) {
                     columnsInGroupBy.add(ctx.expression().full_column_name().column_name.getText());
-                } else if (ctx.expression().function_call() != null) {
-                    String groupByItem = ctx.expression().function_call().getRuleContext().getText();
-
                 }
             }
 
@@ -56,19 +57,38 @@ public class TSqlRunner {
 
             @Override
             public void enterAggregate_windowed_function(TSqlParser.Aggregate_windowed_functionContext ctx) {
-                aggregateFunctions.add(ctx.all_distinct_expression().expression().full_column_name().column_name.getText());
+                allAggregateFunctions.add(new AggregateItem(ctx.getChild(2).getText(),
+                        ctx.STAR() != null
+                                ? "*"
+                                : ctx.all_distinct_expression().expression().full_column_name().column_name.getText(),
+                        ctx.getChild(0).getText()));
             }
         }, select);
 
-        System.out.println("aggregateFunctions: " + aggregateFunctions);
-        System.out.println("columnsInGroupBy: " + columnsInGroupBy);
-        System.out.println("joinTables: " + joinTables);
-
         metadata = metadata.withTables(joinTables);
 
-        if (!columnsInGroupBy.isEmpty() && columnsInGroupBy.containsAll(metadata.getAllPrimaryKeys())) {
-            System.out.println(UnnecessaryStatementException.message + "GROUP BY");
+        if (allAggregateFunctions.isEmpty()) {
+            if (columnsInGroupBy.containsAll(metadata.getAllPrimaryKeys())) {
+                System.out.println(UnnecessaryStatementException.message + "GROUP BY");
+                return false;
+            }
+            System.out.println("OK");
+            return true;
         }
+
+        if (columnsInGroupBy.containsAll(metadata.getAllPrimaryKeys()) && !aggregateFunctionsInSelect.isEmpty()) {
+            for (AggregateItem item: aggregateFunctionsInSelect) {
+                if (item.getFunctionName().equals("COUNT")) {
+                    System.out.println(item.getFullFunctionName() + " SE MUZE PREPSAT NA 1");
+                } else {
+                    System.out.println(item.getFullFunctionName() + " SE MUZE PREPSAT NA " + item.getFullColumnName());
+                }
+            }
+            return false;
+        }
+
+        System.out.println("OK");
+        return true;
     }
 
     public static void RunSameCondition() throws IOException {

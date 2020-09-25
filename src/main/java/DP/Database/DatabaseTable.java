@@ -36,4 +36,13 @@ public class DatabaseTable {
     public void setPrimaryKeys(List<String> primaryKeys) {
         this.primaryKeys = primaryKeys;
     }
+
+    @Override
+    public String toString() {
+        return "DatabaseTable{" +
+                "tableName='" + tableName + '\'' +
+                ", columns=" + columns +
+                ", primaryKeys=" + primaryKeys +
+                '}';
+    }
 }

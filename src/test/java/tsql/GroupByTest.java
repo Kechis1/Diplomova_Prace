@@ -30,21 +30,21 @@ public class GroupByTest {
     @ParameterizedTest(name="doFindUnnecessaryGroupByTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryGroupBySource")
     void doFindUnnecessaryGroupByTest(String query) throws IOException {
-        boolean result = TSqlRunner.RunGroupByWithPrimaryKey(metadata, query);
+        boolean result = TSqlRunner.RunGroupBy(metadata, query);
         assertFalse(result);
     }
 
     @ParameterizedTest(name="doFindNecessaryGroupByTest {index} query = {0}")
     @MethodSource("doFindNecessaryGroupBySource")
     void doFindNecessaryGroupByTest(String query) throws IOException {
-        boolean result = TSqlRunner.RunGroupByWithPrimaryKey(metadata, query);
+        boolean result = TSqlRunner.RunGroupBy(metadata, query);
         assertTrue(result);
     }
 
     @ParameterizedTest(name="doFindRewrittenableAggregateFunctionsTest {index} query = {0}")
     @MethodSource("doFindRewrittenableAggregateFunctionsSource")
     void doFindRewrittenableAggregateFunctionsTest(String query) throws IOException {
-        boolean result = TSqlRunner.RunGroupByWithPrimaryKey(metadata, query);
+        boolean result = TSqlRunner.RunGroupBy(metadata, query);
         assertFalse(result);
     }
 

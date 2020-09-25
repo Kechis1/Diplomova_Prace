@@ -19,7 +19,7 @@ public class TSqlRunner {
     private final static String DIR_QUERIES = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "DP" + File.separator + "antlr4" + File.separator + "tsql" + File.separator + "queries" + File.separator;
 
 
-    public static boolean RunGroupByWithPrimaryKey(DatabaseMetadata metadata, String query) throws IOException {
+    public static boolean RunGroupBy(DatabaseMetadata metadata, String query) throws IOException {
         TSqlParser parser = RunFromString(query);
         ParseTree select = parser.select_statement();
 
@@ -91,13 +91,8 @@ public class TSqlRunner {
         return true;
     }
 
-    public static void RunSameCondition() throws IOException {
-        TSqlParser parser = RunFromString("SELECT *\n" +
-                "FROM DBO.STUDENT SDT\n" +
-                "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
-                "WHERE SDT.SID = SDE.SID\n" +
-                "ORDER BY SDT.SID");
+    public static void RunSameCondition(DatabaseMetadata metadata, String query) throws IOException {
+        TSqlParser parser = RunFromString(query);
 
         ParseTree select = parser.select_statement();
         final List<String> conditions = new ArrayList<>();

@@ -48,7 +48,7 @@ FROM DBO.PREDMET;*/
     FROM dbo.predmet
     GROUP BY pid, sqrt(jmeno), jmeno
     -- se muze prepsat na
-    SELECT pId, jmeno, count(*)
+    SELECT pId, jmeno, 1
     FROM dbo.predmet
 
     -- count(*) bude vzdy vracet 1

@@ -69,7 +69,7 @@ public class TSqlRunner {
 
         if (allAggregateFunctions.isEmpty()) {
             if (columnsInGroupBy.containsAll(metadata.getAllPrimaryKeys())) {
-                System.out.println(UnnecessaryStatementException.message + "GROUP BY");
+                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY");
                 return false;
             }
             System.out.println("OK");
@@ -79,9 +79,9 @@ public class TSqlRunner {
         if (columnsInGroupBy.containsAll(metadata.getAllPrimaryKeys()) && !aggregateFunctionsInSelect.isEmpty()) {
             for (AggregateItem item: aggregateFunctionsInSelect) {
                 if (item.getFunctionName().equals("COUNT")) {
-                    System.out.println(item.getFullFunctionName() + " SE MUZE PREPSAT NA 1");
+                    System.out.println(item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " 1");
                 } else {
-                    System.out.println(item.getFullFunctionName() + " SE MUZE PREPSAT NA " + item.getFullColumnName());
+                    System.out.println(item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " " + item.getFullColumnName());
                 }
             }
             return false;
@@ -112,7 +112,7 @@ public class TSqlRunner {
         for (int i = 0; i < conditions.size(); i++) {
             for (int j = i + 1; j < conditions.size(); j++) {
                 if (conditions.get(i).equals(conditions.get(j))) {
-                    System.out.println(UnnecessaryStatementException.message + "CONDITION");
+                    System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
                 }
             }
         }

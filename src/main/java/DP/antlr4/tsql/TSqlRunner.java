@@ -91,7 +91,7 @@ public class TSqlRunner {
         return true;
     }
 
-    public static void RunSameCondition(DatabaseMetadata metadata, String query) throws IOException {
+    public static boolean RunSameCondition(DatabaseMetadata metadata, String query) throws IOException {
         TSqlParser parser = RunFromString(query);
 
         ParseTree select = parser.select_statement();
@@ -111,6 +111,8 @@ public class TSqlRunner {
                 }
             }
         }
+
+        return true;
     }
 
     public static void RunTests() throws IOException {

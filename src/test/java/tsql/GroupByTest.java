@@ -1,7 +1,9 @@
 package tsql;
 
 import DP.Database.DatabaseMetadata;
+import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -11,7 +13,9 @@ import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 
 import org.junit.jupiter.api.BeforeEach;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
@@ -21,16 +25,28 @@ public class GroupByTest {
     @Mock
     private DatabaseMetadata metadata;
 
+    private final PrintStream originalStdOut = System.out;
+    private ByteArrayOutputStream consoleContent = new ByteArrayOutputStream();
+
+
+    @AfterEach
+    public void restoreStreams() {
+        System.setOut(this.originalStdOut);
+        // System.out.println(this.consoleContent.toString());
+        this.consoleContent = new ByteArrayOutputStream();
+    }
+
     @BeforeEach
     void init() {
         metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        System.out.println("before each");
+        System.setOut(new PrintStream(this.consoleContent));
     }
 
     @ParameterizedTest(name="doFindUnnecessaryGroupByTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryGroupBySource")
     void doFindUnnecessaryGroupByTest(String query) throws IOException {
         boolean result = TSqlRunner.RunGroupBy(metadata, query);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY", this.consoleContent.toString().trim());
         assertFalse(result);
     }
 
@@ -38,13 +54,15 @@ public class GroupByTest {
     @MethodSource("doFindNecessaryGroupBySource")
     void doFindNecessaryGroupByTest(String query) throws IOException {
         boolean result = TSqlRunner.RunGroupBy(metadata, query);
+        assertEquals("OK", this.consoleContent.toString().trim());
         assertTrue(result);
     }
 
-    @ParameterizedTest(name="doFindRewrittenableAggregateFunctionsTest {index} query = {0}")
+    @ParameterizedTest(name="doFindRewrittenableAggregateFunctionsTest {index} query = {0}, message = {1}")
     @MethodSource("doFindRewrittenableAggregateFunctionsSource")
-    void doFindRewrittenableAggregateFunctionsTest(String query) throws IOException {
+    void doFindRewrittenableAggregateFunctionsTest(String query, String message) throws IOException {
         boolean result = TSqlRunner.RunGroupBy(metadata, query);
+        assertEquals(message, this.consoleContent.toString().trim());
         assertFalse(result);
     }
 
@@ -65,10 +83,9 @@ public class GroupByTest {
 
     public static Stream<Arguments> doFindRewrittenableAggregateFunctionsSource() {
         return Stream.of(
-                Arguments.arguments("SELECT pId, jmeno, sum(pid) FROM dbo.predmet GROUP BY pid, jmeno"),
-                Arguments.arguments("SELECT pId, jmeno, count(*) FROM dbo.predmet GROUP BY pid, sqrt(jmeno), jmeno"),
-                Arguments.arguments("SELECT pId, jmeno, count(pId) FROM dbo.predmet GROUP BY pid, jmeno"),
-                Arguments.arguments("SELECT pId, jmeno, sum(pId) FROM dbo.predmet GROUP BY pid, jmeno")
+                Arguments.arguments("SELECT pId, jmeno, sum(pid) FROM dbo.predmet GROUP BY pid, jmeno", "SUM(PID) " + UnnecessaryStatementException.messageCanBeRewrittenTo + " PID"),
+                Arguments.arguments("SELECT pId, jmeno, count(*) FROM dbo.predmet GROUP BY pid, sqrt(jmeno), jmeno", "COUNT(*) " + UnnecessaryStatementException.messageCanBeRewrittenTo + " 1"),
+                Arguments.arguments("SELECT pId, jmeno, count(pId) FROM dbo.predmet GROUP BY pid, jmeno", "COUNT(PID) " + UnnecessaryStatementException.messageCanBeRewrittenTo + " 1")
         );
     }
 

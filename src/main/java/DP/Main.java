@@ -13,10 +13,7 @@ public class Main {
         // TSqlRunner.RunGroupBy(metadata, "SELECT pId, jmeno, sum(pId) FROM dbo.predmet GROUP BY pid, jmeno");
 
         TSqlRunner.RunSameCondition(metadata, "SELECT *\n" +
-                "FROM DBO.STUDENT SDT\n" +
-                "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
-                "WHERE SDT.SID = SDE.SID\n" +
-                "ORDER BY SDT.SID");
+                "FROM DBO.PREDMET\n" +
+                "WHERE 1 = 1");
     }
 }

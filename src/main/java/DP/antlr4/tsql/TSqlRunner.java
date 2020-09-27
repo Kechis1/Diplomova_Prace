@@ -1,6 +1,7 @@
 package DP.antlr4.tsql;
 
 import DP.Database.AggregateItem;
+import DP.Database.ConditionItem;
 import DP.Database.DatabaseMetadata;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlLexer;
@@ -95,22 +96,26 @@ public class TSqlRunner {
         TSqlParser parser = RunFromString(query);
 
         ParseTree select = parser.select_statement();
-        final List<String> conditions = new ArrayList<>();
+        final List<ConditionItem> conditions = new ArrayList<>();
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterSearch_condition(TSqlParser.Search_conditionContext ctx) {
-                conditions.add(ctx.getText());
+                conditions.add(
+                        new ConditionItem(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0).primitive_expression().constant().getText(),
+                                ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().comparison_operator().getText(),
+                                ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1).primitive_expression().constant().getText())
+                );
             }
         }, select);
 
-        for (int i = 0; i < conditions.size(); i++) {
-            for (int j = i + 1; j < conditions.size(); j++) {
-                if (conditions.get(i).equals(conditions.get(j))) {
-                    System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
-                }
+        for (ConditionItem condition : conditions) {
+            if (condition.getOperator().equals("=") && condition.getLeftSide().equals(condition.getRightSide())) {
+                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
             }
         }
+
+        System.out.println("conditions: " + conditions);
 
         return true;
     }

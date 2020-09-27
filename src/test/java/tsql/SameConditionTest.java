@@ -63,6 +63,12 @@ public class SameConditionTest {
                         "\tWHERE 1 = 1"),
                 Arguments.arguments("SELECT *\n" +
                         "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 1 > 0"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 1 < 2"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
                         "\tWHERE 1 <> 0"),
                 Arguments.arguments("SELECT *\n" +
                         "\tFROM DBO.STUDENT SDT\n" +

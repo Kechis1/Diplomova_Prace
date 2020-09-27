@@ -7,7 +7,7 @@ import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlLexer;
 import DP.antlr4.tsql.parser.TSqlParser;
 import DP.antlr4.tsql.parser.TSqlParserBaseListener;
-import com.sun.istack.internal.NotNull;
+import org.jetbrains.annotations.NotNull;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.*;
@@ -20,7 +20,7 @@ public class TSqlRunner {
     private final static String DIR_QUERIES = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "DP" + File.separator + "antlr4" + File.separator + "tsql" + File.separator + "queries" + File.separator;
 
 
-    public static boolean RunGroupBy(DatabaseMetadata metadata, String query) throws IOException {
+    public static boolean RunGroupBy(DatabaseMetadata metadata, String query) {
         TSqlParser parser = RunFromString(query);
         ParseTree select = parser.select_statement();
 
@@ -32,7 +32,7 @@ public class TSqlRunner {
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
 
             @Override
-            public void enterSelect_list_elem(TSqlParser.Select_list_elemContext ctx) {
+            public void enterSelect_list_elem(@NotNull TSqlParser.Select_list_elemContext ctx) {
                 if (ctx.expression_elem() != null && ctx.expression_elem().expression().function_call() != null) {
                     TSqlParser.AGGREGATE_WINDOWED_FUNCContext aggCtx =
                             (TSqlParser.AGGREGATE_WINDOWED_FUNCContext) ctx.expression_elem().expression().function_call().getRuleContext();
@@ -52,12 +52,12 @@ public class TSqlRunner {
             }
 
             @Override
-            public void exitTable_source_item(TSqlParser.Table_source_itemContext ctx) {
+            public void exitTable_source_item(@NotNull TSqlParser.Table_source_itemContext ctx) {
                 joinTables.add(ctx.table_name_with_hint().table_name().table.getText());
             }
 
             @Override
-            public void enterAggregate_windowed_function(TSqlParser.Aggregate_windowed_functionContext ctx) {
+            public void enterAggregate_windowed_function(@NotNull TSqlParser.Aggregate_windowed_functionContext ctx) {
                 allAggregateFunctions.add(new AggregateItem(ctx.getChild(2).getText(),
                         ctx.STAR() != null
                                 ? "*"
@@ -92,7 +92,7 @@ public class TSqlRunner {
         return true;
     }
 
-    public static boolean RunSameCondition(DatabaseMetadata metadata, String query) throws IOException {
+    public static boolean RunSameCondition(DatabaseMetadata metadata, String query) {
         TSqlParser parser = RunFromString(query);
 
         ParseTree select = parser.select_statement();
@@ -100,18 +100,29 @@ public class TSqlRunner {
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
-            public void enterSearch_condition(TSqlParser.Search_conditionContext ctx) {
-                conditions.add(
-                        new ConditionItem(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0).primitive_expression().constant().getText(),
-                                ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().comparison_operator().getText(),
-                                ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1).primitive_expression().constant().getText())
-                );
+            public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
+                if (ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().LIKE() != null) {
+                    conditions.add(
+                            new ConditionItem(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0).full_column_name().getText(),
+                                    ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().LIKE().getText(),
+                                    ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1).primitive_expression().getText())
+                    );
+                } else {
+                    conditions.add(
+                            new ConditionItem(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0).primitive_expression().getText(),
+                                    ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().comparison_operator().getText(),
+                                    ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1).primitive_expression().getText())
+                    );
+                }
             }
         }, select);
 
         for (ConditionItem condition : conditions) {
-            if (condition.getOperator().equals("=") && condition.getLeftSide().equals(condition.getRightSide())) {
+            if ((condition.getOperator().equals("=") && condition.getLeftSide().equals(condition.getRightSide())) ||
+                    (condition.getOperator().equals("<>") && !condition.getLeftSide().equals(condition.getRightSide())) ||
+                    (condition.getOperator().equals("LIKE") && condition.getRightSide().equals("'%'"))) {
                 System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
+                return false;
             }
         }
 
@@ -120,7 +131,7 @@ public class TSqlRunner {
         return true;
     }
 
-    public static void RunTests() throws IOException {
+    public static void RunTests() {
         // test use from file
         /*TSqlParser parser1 = TSqlRunner.RunFromFile( TSqlRunner.DIR_QUERIES + "dml_select.sql");
         System.out.println(parser1.use_statement().toStringTree(parser1));*/
@@ -168,7 +179,7 @@ public class TSqlRunner {
         return new TSqlParser(new CommonTokenStream(lexer));
     }
 
-    public static TSqlParser RunFromString(String query) throws IOException {
+    public static TSqlParser RunFromString(String query) {
         TSqlLexer lexer = new TSqlLexer(CharStreams.fromString(query.toUpperCase()));
         return new TSqlParser(new CommonTokenStream(lexer));
     }

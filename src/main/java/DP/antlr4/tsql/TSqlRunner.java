@@ -97,11 +97,13 @@ public class TSqlRunner {
 
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = new ArrayList<>();
+        final List<String> outerJoinTables = new ArrayList<>();
+        final List<String> innerJoinTables = new ArrayList<>();
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
-                if (ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().LIKE() != null) {
+           /*     if (ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().LIKE() != null) {
                     conditions.add(
                             new ConditionItem(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0).full_column_name().getText(),
                                     ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().LIKE().getText(),
@@ -113,10 +115,26 @@ public class TSqlRunner {
                                     ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().comparison_operator().getText(),
                                     ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1).primitive_expression().getText())
                     );
+                }*/
+            }
+
+            @Override
+            public void enterTable_source_item_joined(TSqlParser.Table_source_item_joinedContext ctx) {
+                for (int i = 0; i < ctx.join_part().size(); i++) {
+                    if (ctx.join_part().get(i).OUTER() != null || ctx.join_part().get(i).LEFT() != null || ctx.join_part().get(i).RIGHT() != null) {
+                        outerJoinTables.add(ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText());
+                    } else {
+                        innerJoinTables.add(ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText());
+                    }
                 }
             }
         }, select);
 
+        /**
+         * @TODO pokud to budou konstanty tak zkusit provest operaci porovnani a dostat z toho boolean (1=1, 1>0, 1<2, 1<>0, atd.)
+         * @TODO checkovat vsechna vnitrni porovnani (INNER JOIN a WHERE)
+         * @TODO checkovat vsechna vnejsi porovnani (OUTER JOIN)
+         */
         for (ConditionItem condition : conditions) {
             if ((condition.getOperator().equals("=") && condition.getLeftSide().equals(condition.getRightSide())) ||
                     (condition.getOperator().equals("<>") && !condition.getLeftSide().equals(condition.getRightSide())) ||
@@ -127,6 +145,8 @@ public class TSqlRunner {
         }
 
         System.out.println("conditions: " + conditions);
+        System.out.println("innerJoinTables: " + innerJoinTables);
+        System.out.println("outerJoinTables: " + outerJoinTables);
 
         return true;
     }

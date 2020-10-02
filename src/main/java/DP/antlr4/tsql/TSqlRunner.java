@@ -133,9 +133,12 @@ public class TSqlRunner {
         for (ConditionItem condition : conditions) {
             if (condition.getLeftSideDataType() == ConditionDataType.STRING && condition.getRightSideDataType() == ConditionDataType.STRING) {
                 condition.compareStringAgainstString();
-            }
-            if (condition.getLeftSideDataType() == ConditionDataType.NUMBER && condition.getRightSideDataType() == ConditionDataType.NUMBER) {
+            } else if (condition.getLeftSideDataType() == ConditionDataType.NUMBER && condition.getRightSideDataType() == ConditionDataType.NUMBER) {
                 condition.compareNumberAgainstNumber();
+            } else if (condition.getLeftSideDataType() == ConditionDataType.STRING && condition.getRightSideDataType() == ConditionDataType.NUMBER) {
+                condition.compareStringAgainstNumber();
+            } else if (condition.getLeftSideDataType() == ConditionDataType.NUMBER && condition.getRightSideDataType() == ConditionDataType.STRING) {
+                condition.compareNumberAgainstString();
             }
         }
 

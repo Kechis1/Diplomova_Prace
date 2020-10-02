@@ -93,11 +93,41 @@ public class ConditionItem {
         return true;
     }
 
+    public boolean compareStringAgainstNumber() {
+        double leftSideValue = Double.parseDouble(getLeftSideValue());
+        double rightSideValue = Double.parseDouble(getRightSideValue());
+        if ((getOperator().equals("=") && leftSideValue == rightSideValue) ||
+                (getOperator().equals("<>") && leftSideValue != rightSideValue) ||
+                (getOperator().equals(">=") && leftSideValue >= rightSideValue) ||
+                (getOperator().equals(">") && leftSideValue > rightSideValue) ||
+                (getOperator().equals("<=") && leftSideValue <= rightSideValue) ||
+                (getOperator().equals("<") && leftSideValue < rightSideValue)) {
+            System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
+            return false;
+        }
+        return true;
+    }
+
+    public boolean compareNumberAgainstString() {
+        double leftSideValue = Double.parseDouble(getLeftSideValue());
+        double rightSideValue = Double.parseDouble(getRightSideValue());
+        if ((getOperator().equals("=") && leftSideValue == rightSideValue) ||
+                (getOperator().equals("<>") && leftSideValue != rightSideValue) ||
+                (getOperator().equals(">=") && leftSideValue >= rightSideValue) ||
+                (getOperator().equals(">") && leftSideValue > rightSideValue) ||
+                (getOperator().equals("<=") && leftSideValue <= rightSideValue) ||
+                (getOperator().equals("<") && leftSideValue < rightSideValue)) {
+            System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
+            return false;
+        }
+        return true;
+    }
+
     public static String findSideValue(TSqlParser.ExpressionContext context) {
         if (context.full_column_name() != null) {
             return context.full_column_name().getText();
         }
-        return context.primitive_expression().getText();
+        return context.primitive_expression().getText().replaceAll("'", "");
     }
 
     public static ConditionDataType findDataType(TSqlParser.ExpressionContext context) {

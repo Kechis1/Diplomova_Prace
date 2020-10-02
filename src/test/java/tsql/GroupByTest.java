@@ -45,7 +45,7 @@ public class GroupByTest {
     @ParameterizedTest(name="doFindUnnecessaryGroupByTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryGroupBySource")
     void doFindUnnecessaryGroupByTest(String query) throws IOException {
-        boolean result = TSqlRunner.RunGroupBy(metadata, query);
+        boolean result = TSqlRunner.runGroupBy(metadata, query);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY", this.consoleContent.toString().trim());
         assertFalse(result);
     }
@@ -53,7 +53,7 @@ public class GroupByTest {
     @ParameterizedTest(name="doFindNecessaryGroupByTest {index} query = {0}")
     @MethodSource("doFindNecessaryGroupBySource")
     void doFindNecessaryGroupByTest(String query) throws IOException {
-        boolean result = TSqlRunner.RunGroupBy(metadata, query);
+        boolean result = TSqlRunner.runGroupBy(metadata, query);
         assertEquals("OK", this.consoleContent.toString().trim());
         assertTrue(result);
     }
@@ -61,7 +61,7 @@ public class GroupByTest {
     @ParameterizedTest(name="doFindRewrittenableAggregateFunctionsTest {index} query = {0}, message = {1}")
     @MethodSource("doFindRewrittenableAggregateFunctionsSource")
     void doFindRewrittenableAggregateFunctionsTest(String query, String message) throws IOException {
-        boolean result = TSqlRunner.RunGroupBy(metadata, query);
+        boolean result = TSqlRunner.runGroupBy(metadata, query);
         assertEquals(message, this.consoleContent.toString().trim());
         assertFalse(result);
     }

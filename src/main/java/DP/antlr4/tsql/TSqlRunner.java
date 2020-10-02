@@ -1,6 +1,7 @@
 package DP.antlr4.tsql;
 
 import DP.Database.AggregateItem;
+import DP.Database.ConditionDataType;
 import DP.Database.ConditionItem;
 import DP.Database.DatabaseMetadata;
 import DP.Exceptions.UnnecessaryStatementException;
@@ -20,8 +21,8 @@ public class TSqlRunner {
     private final static String DIR_QUERIES = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "DP" + File.separator + "antlr4" + File.separator + "tsql" + File.separator + "queries" + File.separator;
 
 
-    public static boolean RunGroupBy(DatabaseMetadata metadata, String query) {
-        TSqlParser parser = RunFromString(query);
+    public static boolean runGroupBy(DatabaseMetadata metadata, String query) {
+        TSqlParser parser = runFromString(query);
         ParseTree select = parser.select_statement();
 
         final ArrayList<AggregateItem> allAggregateFunctions = new ArrayList<>();
@@ -92,8 +93,8 @@ public class TSqlRunner {
         return true;
     }
 
-    public static boolean RunSameCondition(DatabaseMetadata metadata, String query) {
-        TSqlParser parser = RunFromString(query);
+    public static boolean runEqualConditionInComparisonOperators(DatabaseMetadata metadata, String query) {
+        TSqlParser parser = runFromString(query);
 
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = new ArrayList<>();
@@ -103,19 +104,14 @@ public class TSqlRunner {
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
-           /*     if (ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().LIKE() != null) {
-                    conditions.add(
-                            new ConditionItem(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0).full_column_name().getText(),
-                                    ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().LIKE().getText(),
-                                    ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1).primitive_expression().getText())
-                    );
-                } else {
-                    conditions.add(
-                            new ConditionItem(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0).primitive_expression().getText(),
-                                    ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().comparison_operator().getText(),
-                                    ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1).primitive_expression().getText())
-                    );
-                }*/
+                conditions.add(
+                        new ConditionItem(ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                                ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                                ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
+                                ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
+                                ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().comparison_operator().getText()
+                        )
+                );
             }
 
             @Override
@@ -131,16 +127,15 @@ public class TSqlRunner {
         }, select);
 
         /**
-         * @TODO pokud to budou konstanty tak zkusit provest operaci porovnani a dostat z toho boolean (1=1, 1>0, 1<2, 1<>0, atd.)
          * @TODO checkovat vsechna vnitrni porovnani (INNER JOIN a WHERE)
          * @TODO checkovat vsechna vnejsi porovnani (OUTER JOIN)
          */
         for (ConditionItem condition : conditions) {
-            if ((condition.getOperator().equals("=") && condition.getLeftSide().equals(condition.getRightSide())) ||
-                    (condition.getOperator().equals("<>") && !condition.getLeftSide().equals(condition.getRightSide())) ||
-                    (condition.getOperator().equals("LIKE") && condition.getRightSide().equals("'%'"))) {
-                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
-                return false;
+            if (condition.getLeftSideDataType() == ConditionDataType.STRING && condition.getRightSideDataType() == ConditionDataType.STRING) {
+                condition.compareStringAgainstString();
+            }
+            if (condition.getLeftSideDataType() == ConditionDataType.NUMBER && condition.getRightSideDataType() == ConditionDataType.NUMBER) {
+                condition.compareNumberAgainstNumber();
             }
         }
 
@@ -151,55 +146,41 @@ public class TSqlRunner {
         return true;
     }
 
-    public static void RunTests() {
-        // test use from file
-        /*TSqlParser parser1 = TSqlRunner.RunFromFile( TSqlRunner.DIR_QUERIES + "dml_select.sql");
-        System.out.println(parser1.use_statement().toStringTree(parser1));*/
-
-        TSqlParser parser = TSqlRunner.RunFromString("SELECT pId, jmeno FROM dbo.predmet GROUP BY pId, jmeno");
-        System.out.println(parser.select_statement().toStringTree(parser));
-
-        parser = TSqlRunner.RunFromString("SELECT * FROM dbo.predmet WHERE 1=1");
-        System.out.println(parser.select_statement().toStringTree(parser));
-
-        parser = TSqlRunner.RunFromString("SELECT *\n" +
-                "FROM dbo.student sdt\n" +
-                "INNER JOIN dbo.studuje sde ON sdt.sID = sde.sID\n" +
-                "INNER JOIN dbo.predmet pdt ON sde.pID = pdt.pID\n" +
-                "WHERE sdt.sID = sde.sID\n" +
-                "ORDER BY sdt.sID");
-        System.out.println(parser.select_statement().toStringTree(parser));
-
-        parser = TSqlRunner.RunFromString("SELECT sdt.sId, sdt.jmeno\n" +
-                "FROM dbo.student sdt\n" +
-                "LEFT JOIN dbo.studuje sde ON sdt.sID = sde.sID\n" +
-                "GROUP BY sdt.sID, sdt.jmeno");
-        System.out.println(parser.select_statement().toStringTree(parser));
-
-        parser = TSqlRunner.RunFromString("SELECT *\n" +
-                "FROM dbo.student\n" +
-                "ORDER BY sID");
-        System.out.println(parser.select_statement().toStringTree(parser));
-
-        parser = TSqlRunner.RunFromString("SELECT *\n" +
-                "FROM predmet\n" +
-                "WHERE jmeno LIKE '%'");
-        System.out.println(parser.select_statement().toStringTree(parser));
-
-
-        // test select from string
-        /*TSqlParser parser2 = TSqlRunner.RunFromString( "SELECT DISTINCT Name FROM Production.Product WHERE ProductModelID;");
-        System.out.println(parser2.select_statement().toStringTree(parser2));*/
+    public static boolean runEqualConditionInOperatorAll(DatabaseMetadata metadata, String query) {
+        return true;
     }
 
+    public static boolean runEqualConditionInOperatorAny(DatabaseMetadata metadata, String query) {
+        return true;
+    }
 
-    public static TSqlParser RunFromFile(String fileName) throws IOException {
+    public static boolean runEqualConditionInOperatorBetween(DatabaseMetadata metadata, String query) {
+        return true;
+    }
+
+    public static boolean runEqualConditionInOperatorExists(DatabaseMetadata metadata, String query) {
+        return true;
+    }
+
+    public static boolean runEqualConditionInOperatorIn(DatabaseMetadata metadata, String query) {
+        return true;
+    }
+
+    public static boolean runEqualConditionInOperatorLike(DatabaseMetadata metadata, String query) {
+        return true;
+    }
+
+    public static boolean runEqualConditionInOperatorSome(DatabaseMetadata metadata, String query) {
+        return true;
+    }
+
+    public static TSqlParser runFromFile(String fileName) throws IOException {
         String fileContent = CharStreams.fromFileName(fileName).toString();
         TSqlLexer lexer = new TSqlLexer(CharStreams.fromString(fileContent.toUpperCase()));
         return new TSqlParser(new CommonTokenStream(lexer));
     }
 
-    public static TSqlParser RunFromString(String query) {
+    public static TSqlParser runFromString(String query) {
         TSqlLexer lexer = new TSqlLexer(CharStreams.fromString(query.toUpperCase()));
         return new TSqlParser(new CommonTokenStream(lexer));
     }

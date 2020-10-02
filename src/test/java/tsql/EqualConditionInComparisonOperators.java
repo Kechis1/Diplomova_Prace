@@ -13,15 +13,13 @@ import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 @ExtendWith(MockitoExtension.class)
-public class SameConditionTest {
+public class EqualConditionInComparisonOperators {
     @Mock
     private DatabaseMetadata metadata;
 
@@ -32,7 +30,6 @@ public class SameConditionTest {
     @AfterEach
     public void restoreStreams() {
         System.setOut(this.originalStdOut);
-        // System.out.println(this.consoleContent.toString());
         this.consoleContent = new ByteArrayOutputStream();
     }
 
@@ -45,14 +42,14 @@ public class SameConditionTest {
     @ParameterizedTest(name="doFindUnnecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query) {
-        boolean result = TSqlRunner.RunSameCondition(metadata, query);
+        boolean result = TSqlRunner.runEqualConditionInComparisonOperators(metadata, query);
         assertFalse(result);
     }
 
     @ParameterizedTest(name="doFindNecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String query) {
-        boolean result = TSqlRunner.RunSameCondition(metadata, query);
+        boolean result = TSqlRunner.runEqualConditionInComparisonOperators(metadata, query);
         assertFalse(result);
     }
 
@@ -63,22 +60,55 @@ public class SameConditionTest {
                         "\tWHERE 1 = 1"),
                 Arguments.arguments("SELECT *\n" +
                         "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 0 >= 0"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
                         "\tWHERE 1 > 0"),
                 Arguments.arguments("SELECT *\n" +
                         "\tFROM DBO.PREDMET\n" +
-                        "\tWHERE 1 < 2"),
+                        "\tWHERE 0 <= 1"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 0 < 1"),
                 Arguments.arguments("SELECT *\n" +
                         "\tFROM DBO.PREDMET\n" +
                         "\tWHERE 1 <> 0"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 1 < 0 OR 1 > 0"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 1 > 0 AND 0 >= 0"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 'a' = 'A'"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 'ba' >= 'aa'"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 'ba' > 'aa'"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 'ab' <= 'ac'"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 'aa' < 'ab'"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 'aa' <> 'ab'"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 'ba' < 'ba' OR 'bc' > 'bb'"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 'ab' > 'aa' AND 'bb' >= 'ba'"),
                 Arguments.arguments("SELECT *\n" +
                         "\tFROM DBO.STUDENT SDT\n" +
                         "\t\tINNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
                         "\t\tINNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
                         "\tWHERE SDT.SID = SDE.SID\n" +
-                        "\tORDER BY SDT.SID"),
-                Arguments.arguments("SELECT *\n" +
-                        "\tFROM PREDMET\n" +
-                        "\tWHERE JMENO LIKE '%'")
+                        "\tORDER BY SDT.SID")
         );
     }
 

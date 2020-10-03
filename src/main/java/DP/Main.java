@@ -10,21 +10,12 @@ public class Main {
 
         // TSqlRunner.runGroupBy(metadata, "SELECT pId, jmeno, sum(pId) FROM dbo.predmet GROUP BY pid, jmeno");
 
-       /*TSqlRunner.runEqualConditionInComparisonOperators(metadata, "SELECT *\n" +
-                "FROM DBO.STUDENT SDT\n" +
-                "WHERE '11' > '10'");
         TSqlRunner.runEqualConditionInComparisonOperators(metadata, "SELECT *\n" +
                 "FROM DBO.STUDENT SDT\n" +
-                "WHERE 9 < '10'");
-        TSqlRunner.runEqualConditionInComparisonOperators(metadata, "SELECT *\n" +
+                "WHERE (('A' = 'a' AND 'b' > 'a') OR 'c' > 'b') AND 1 = 1");
+
+       /* TSqlRunner.runEqualConditionInComparisonOperators(metadata, "SELECT *\n" +
                 "FROM DBO.STUDENT SDT\n" +
-                "WHERE '3.22E+1' < 3.52E+1");*/
-        /*TSqlRunner.runEqualConditionInComparisonOperators(metadata, "SELECT *\n" +
-                "FROM DBO.STUDENT SDT\n" +
-                "WHERE 0xA < 0xA");*/
-
-        Integer.valueOf("0xA");
-
-
+                "WHERE 'b' = 'a' OR 1 > 0");*/
     }
 }

@@ -17,6 +17,7 @@ import java.io.PrintStream;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 public class EqualConditionInComparisonOperators {
@@ -50,7 +51,7 @@ public class EqualConditionInComparisonOperators {
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String query) {
         boolean result = TSqlRunner.runEqualConditionInComparisonOperators(metadata, query);
-        assertFalse(result);
+        assertTrue(result);
     }
 
 

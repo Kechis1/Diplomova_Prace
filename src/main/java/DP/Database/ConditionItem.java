@@ -9,6 +9,8 @@ public class ConditionItem {
     private ConditionDataType rightSideDataType;
     private String rightSideValue;
     private String operator;
+    private double leftSideNumberValue;
+    private double rightSideNumberValue;
 
 
     public ConditionItem(ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator) {
@@ -17,12 +19,7 @@ public class ConditionItem {
         this.rightSideDataType = rightSideDataType;
         this.rightSideValue = rightSideValue;
         this.operator = operator;
-    }
-
-    public ConditionItem(String leftSideValue, String rightSideValue, String operator) {
-        this.leftSideValue = leftSideValue;
-        this.rightSideValue = rightSideValue;
-        this.operator = operator;
+        initNumberValues();
     }
 
     public ConditionDataType getLeftSideDataType() {
@@ -65,6 +62,22 @@ public class ConditionItem {
         this.operator = operator;
     }
 
+    public double getLeftSideNumberValue() {
+        return leftSideNumberValue;
+    }
+
+    public void setLeftSideNumberValue(double leftSideNumberValue) {
+        this.leftSideNumberValue = leftSideNumberValue;
+    }
+
+    public double getRightSideNumberValue() {
+        return rightSideNumberValue;
+    }
+
+    public void setRightSideNumberValue(double rightSideNumberValue) {
+        this.rightSideNumberValue = rightSideNumberValue;
+    }
+
     public boolean compareStringAgainstString() {
         if ((getOperator().equals("=") && getLeftSideValue().equalsIgnoreCase(getRightSideValue())) ||
                 (getOperator().equals("<>") && !getLeftSideValue().equalsIgnoreCase(getRightSideValue())) ||
@@ -79,14 +92,12 @@ public class ConditionItem {
     }
 
     public boolean compareNumberAgainstNumber() {
-        double leftSideValue = Double.parseDouble(getLeftSideValue());
-        double rightSideValue = Double.parseDouble(getRightSideValue());
-        if ((getOperator().equals("=") && leftSideValue == rightSideValue) ||
-                (getOperator().equals("<>") && leftSideValue != rightSideValue) ||
-                (getOperator().equals(">=") && leftSideValue >= rightSideValue) ||
-                (getOperator().equals(">") && leftSideValue > rightSideValue) ||
-                (getOperator().equals("<=") && leftSideValue <= rightSideValue) ||
-                (getOperator().equals("<") && leftSideValue < rightSideValue)) {
+        if ((getOperator().equals("=") && getLeftSideNumberValue() == getRightSideNumberValue()) ||
+                (getOperator().equals("<>") && getLeftSideNumberValue() != getRightSideNumberValue()) ||
+                (getOperator().equals(">=") && getLeftSideNumberValue() >= getRightSideNumberValue()) ||
+                (getOperator().equals(">") && getLeftSideNumberValue() > getRightSideNumberValue()) ||
+                (getOperator().equals("<=") && getLeftSideNumberValue() <= getRightSideNumberValue()) ||
+                (getOperator().equals("<") && getLeftSideNumberValue() < getRightSideNumberValue())) {
             System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
             return false;
         }
@@ -94,14 +105,12 @@ public class ConditionItem {
     }
 
     public boolean compareStringAgainstNumber() {
-        double leftSideValue = Double.parseDouble(getLeftSideValue());
-        double rightSideValue = Double.parseDouble(getRightSideValue());
-        if ((getOperator().equals("=") && leftSideValue == rightSideValue) ||
-                (getOperator().equals("<>") && leftSideValue != rightSideValue) ||
-                (getOperator().equals(">=") && leftSideValue >= rightSideValue) ||
-                (getOperator().equals(">") && leftSideValue > rightSideValue) ||
-                (getOperator().equals("<=") && leftSideValue <= rightSideValue) ||
-                (getOperator().equals("<") && leftSideValue < rightSideValue)) {
+        if ((getOperator().equals("=") && getLeftSideNumberValue() == getRightSideNumberValue()) ||
+                (getOperator().equals("<>") && getLeftSideNumberValue() != getRightSideNumberValue()) ||
+                (getOperator().equals(">=") && getLeftSideNumberValue() >= getRightSideNumberValue()) ||
+                (getOperator().equals(">") && getLeftSideNumberValue() > getRightSideNumberValue()) ||
+                (getOperator().equals("<=") && getLeftSideNumberValue() <= getRightSideNumberValue()) ||
+                (getOperator().equals("<") && getLeftSideNumberValue() < getRightSideNumberValue())) {
             System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
             return false;
         }
@@ -109,25 +118,43 @@ public class ConditionItem {
     }
 
     public boolean compareNumberAgainstString() {
-        double leftSideValue = Double.parseDouble(getLeftSideValue());
-        double rightSideValue = Double.parseDouble(getRightSideValue());
-        if ((getOperator().equals("=") && leftSideValue == rightSideValue) ||
-                (getOperator().equals("<>") && leftSideValue != rightSideValue) ||
-                (getOperator().equals(">=") && leftSideValue >= rightSideValue) ||
-                (getOperator().equals(">") && leftSideValue > rightSideValue) ||
-                (getOperator().equals("<=") && leftSideValue <= rightSideValue) ||
-                (getOperator().equals("<") && leftSideValue < rightSideValue)) {
+        if ((getOperator().equals("=") && getLeftSideNumberValue() == getRightSideNumberValue()) ||
+                (getOperator().equals("<>") && getLeftSideNumberValue() != getRightSideNumberValue()) ||
+                (getOperator().equals(">=") && getLeftSideNumberValue() >= getRightSideNumberValue()) ||
+                (getOperator().equals(">") && getLeftSideNumberValue() > getRightSideNumberValue()) ||
+                (getOperator().equals("<=") && getLeftSideNumberValue() <= getRightSideNumberValue()) ||
+                (getOperator().equals("<") && getLeftSideNumberValue() < getRightSideNumberValue())) {
             System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
             return false;
         }
         return true;
     }
 
+    private void initNumberValues() {
+        try {
+            if (getLeftSideDataType() != ConditionDataType.COLUMN) {
+                leftSideNumberValue = initSideValue(getLeftSideValue(), getLeftSideDataType());
+            }
+            if (getRightSideDataType() != ConditionDataType.COLUMN) {
+                rightSideNumberValue = initSideValue(getRightSideValue(), getRightSideDataType());
+            }
+        } catch (NumberFormatException ignored) {
+
+        }
+    }
+
+    private double initSideValue(String sideValue, ConditionDataType sideDataType) {
+        if (sideDataType == ConditionDataType.BINARY) {
+            return Integer.valueOf(sideValue, 16);
+        }
+        return Double.parseDouble(sideValue);
+    }
+
     public static String findSideValue(TSqlParser.ExpressionContext context) {
         if (context.full_column_name() != null) {
             return context.full_column_name().getText();
         }
-        return context.primitive_expression().getText().replaceAll("'", "");
+        return context.primitive_expression().getText().replaceAll("'", "").replaceFirst("0x|0X", "");
     }
 
     public static ConditionDataType findDataType(TSqlParser.ExpressionContext context) {
@@ -136,6 +163,9 @@ public class ConditionItem {
         }
         if (context.primitive_expression().constant().STRING() != null) {
             return ConditionDataType.STRING;
+        }
+        if (context.primitive_expression().constant().BINARY() != null) {
+            return ConditionDataType.BINARY;
         }
         return ConditionDataType.NUMBER;
     }

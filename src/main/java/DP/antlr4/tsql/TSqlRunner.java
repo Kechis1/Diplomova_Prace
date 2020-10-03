@@ -130,15 +130,18 @@ public class TSqlRunner {
          * @TODO checkovat vsechna vnitrni porovnani (INNER JOIN a WHERE)
          * @TODO checkovat vsechna vnejsi porovnani (OUTER JOIN)
          */
+        boolean isConditionNecessary = true;
         for (ConditionItem condition : conditions) {
             if (condition.getLeftSideDataType() == ConditionDataType.STRING && condition.getRightSideDataType() == ConditionDataType.STRING) {
-                condition.compareStringAgainstString();
-            } else if (condition.getLeftSideDataType() == ConditionDataType.NUMBER && condition.getRightSideDataType() == ConditionDataType.NUMBER) {
-                condition.compareNumberAgainstNumber();
-            } else if (condition.getLeftSideDataType() == ConditionDataType.STRING && condition.getRightSideDataType() == ConditionDataType.NUMBER) {
-                condition.compareStringAgainstNumber();
-            } else if (condition.getLeftSideDataType() == ConditionDataType.NUMBER && condition.getRightSideDataType() == ConditionDataType.STRING) {
-                condition.compareNumberAgainstString();
+                isConditionNecessary &= condition.compareStringAgainstString();
+            } else if (condition.getLeftSideDataType().isNumeric && condition.getRightSideDataType().isNumeric) {
+                isConditionNecessary &= condition.compareNumberAgainstNumber();
+            } else if (condition.getLeftSideDataType() == ConditionDataType.STRING && condition.getRightSideDataType().isNumeric) {
+                isConditionNecessary &= condition.compareStringAgainstNumber();
+            } else if (condition.getLeftSideDataType().isNumeric && condition.getRightSideDataType() == ConditionDataType.STRING) {
+                isConditionNecessary &= condition.compareNumberAgainstString();
+            } else if (condition.getRightSideDataType() == ConditionDataType.COLUMN && condition.getRightSideDataType() == ConditionDataType.COLUMN) {
+
             }
         }
 
@@ -146,7 +149,7 @@ public class TSqlRunner {
         System.out.println("innerJoinTables: " + innerJoinTables);
         System.out.println("outerJoinTables: " + outerJoinTables);
 
-        return true;
+        return isConditionNecessary;
     }
 
     public static boolean runEqualConditionInOperatorAll(DatabaseMetadata metadata, String query) {

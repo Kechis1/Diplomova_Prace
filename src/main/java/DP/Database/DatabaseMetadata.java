@@ -115,4 +115,9 @@ public class DatabaseMetadata {
 
         return this;
     }
+
+    public boolean columnsEqual(ColumnItem leftSideColumnItem, ColumnItem rightSideColumnItem) {
+
+        return true;
+    }
 }

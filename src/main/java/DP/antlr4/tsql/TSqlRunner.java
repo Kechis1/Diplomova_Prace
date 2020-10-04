@@ -76,7 +76,7 @@ public class TSqlRunner {
         }
 
         if (columnsInGroupBy.containsAll(metadata.getAllPrimaryKeys()) && !aggregateFunctionsInSelect.isEmpty()) {
-            for (AggregateItem item: aggregateFunctionsInSelect) {
+            for (AggregateItem item : aggregateFunctionsInSelect) {
                 if (item.getFunctionName().equals("COUNT")) {
                     System.out.println(item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " 1");
                 } else {
@@ -95,8 +95,10 @@ public class TSqlRunner {
 
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = new ArrayList<>();
-        final List<String> outerJoinTables = new ArrayList<>();
-        final List<String> innerJoinTables = new ArrayList<>();
+        final Map<String, List<String>> joinTables = ConditionItem.findJoinTablesList(select);
+        final List<String> outerJoinTables = joinTables.get("outerJoin");
+        final List<String> innerJoinTables = joinTables.get("innerJoin");
+        final List<String> allTables = ConditionItem.findTablesList(select);
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
@@ -110,22 +112,15 @@ public class TSqlRunner {
                         )
                 );
             }
-
-            @Override
-            public void enterTable_source_item_joined(TSqlParser.Table_source_item_joinedContext ctx) {
-                for (int i = 0; i < ctx.join_part().size(); i++) {
-                    if (ctx.join_part().get(i).OUTER() != null || ctx.join_part().get(i).LEFT() != null || ctx.join_part().get(i).RIGHT() != null) {
-                        outerJoinTables.add(ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText());
-                    } else {
-                        innerJoinTables.add(ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText());
-                    }
-                }
-            }
         }, select);
 
         /**
          * @TODO checkovat vsechna vnitrni porovnani (INNER JOIN a WHERE)
          * @TODO checkovat vsechna vnejsi porovnani (OUTER JOIN)
+         * @TODO zeptat se na porovnani:
+         *      SELECT CASE WHEN '0Xa' = 0Xa THEN 1 ELSE 2 END
+         *      SELECT CASE WHEN '10' = 0xa THEN 1 ELSE 2 END
+         *      SELECT CASE WHEN '10.0' = 0XA THEN 1 ELSE 2 END
          */
         boolean isConditionNecessary = true;
         for (ConditionItem condition : conditions) {
@@ -144,6 +139,7 @@ public class TSqlRunner {
 
         System.out.println("conditions: " + conditions);
         System.out.println("innerJoinTables: " + innerJoinTables);
+        System.out.println("allTables: " + allTables);
         System.out.println("outerJoinTables: " + outerJoinTables);
 
         return isConditionNecessary;
@@ -173,20 +169,28 @@ public class TSqlRunner {
         TSqlParser parser = runFromString(query);
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = new ArrayList<>();
+        final List<String> allTables = ConditionItem.findTablesList(select);
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
-                conditions.add(
-                        new ConditionItem(ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
-                                ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
-                                ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
-                                ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
-                                ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().LIKE().getText()
-                        )
+                ConditionItem item = new ConditionItem(ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                        ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                        ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
+                        ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
+                        ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().LIKE().getText()
                 );
+
+                if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
+                    item.setLeftSideColumnItem(ColumnItem.create(ctx, 0));
+                    item.setRightSideColumnItem(ColumnItem.create(ctx, 1));
+                }
+
+                conditions.add(item);
             }
         }, select);
+
+        metadata = metadata.withTables(allTables);
 
         for (ConditionItem condition : conditions) {
             if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
@@ -202,7 +206,10 @@ public class TSqlRunner {
                         return false;
                     }
                 } else {
-
+                    if (metadata.columnsEqual(condition.getLeftSideColumnItem(), condition.getRightSideColumnItem())) {
+                        System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
+                        return false;
+                    }
                 }
             }
         }

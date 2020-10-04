@@ -1,9 +1,6 @@
 package DP.antlr4.tsql;
 
-import DP.Database.AggregateItem;
-import DP.Database.ConditionDataType;
-import DP.Database.ConditionItem;
-import DP.Database.DatabaseMetadata;
+import DP.Database.*;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlLexer;
 import DP.antlr4.tsql.parser.TSqlParser;
@@ -192,9 +189,21 @@ public class TSqlRunner {
         }, select);
 
         for (ConditionItem condition : conditions) {
-            if (condition.getRightSideValue().equals("%")) {
-                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
-                return false;
+            if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
+                if (SQLLogicalOperators.like(condition.getLeftSideValue(), condition.getRightSideValue())) {
+                    System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
+                    return false;
+                }
+            } else if (condition.getLeftSideDataType() == ConditionDataType.COLUMN &&
+                    (condition.getRightSideDataType() == ConditionDataType.COLUMN || condition.getRightSideDataType() == ConditionDataType.STRING)) {
+                if (condition.getRightSideDataType() == ConditionDataType.STRING) {
+                    if (condition.getRightSideValue().matches("^[%]+$")) {
+                        System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
+                        return false;
+                    }
+                } else {
+
+                }
             }
         }
         return true;

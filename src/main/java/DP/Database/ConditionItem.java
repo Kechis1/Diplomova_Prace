@@ -173,11 +173,13 @@ public class ConditionItem {
     @Override
     public String toString() {
         return "ConditionItem{" +
-                "leftSideDataType='" + leftSideDataType + '\'' +
+                "leftSideDataType=" + leftSideDataType +
                 ", leftSideValue='" + leftSideValue + '\'' +
-                ", rightSideDataType='" + rightSideDataType + '\'' +
+                ", rightSideDataType=" + rightSideDataType +
                 ", rightSideValue='" + rightSideValue + '\'' +
                 ", operator='" + operator + '\'' +
+                ", leftSideNumberValue=" + leftSideNumberValue +
+                ", rightSideNumberValue=" + rightSideNumberValue +
                 '}';
     }
 }

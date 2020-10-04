@@ -204,6 +204,10 @@ public class TSqlRunner {
         return true;
     }
 
+    public static boolean runEqualConditionInOperatorSubQuery(DatabaseMetadata metadata, String query) {
+        return true;
+    }
+
     public static TSqlParser runFromFile(String fileName) throws IOException {
         String fileContent = CharStreams.fromFileName(fileName).toString();
         TSqlLexer lexer = new TSqlLexer(CharStreams.fromString(fileContent.toUpperCase()));

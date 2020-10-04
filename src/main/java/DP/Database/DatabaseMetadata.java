@@ -117,7 +117,9 @@ public class DatabaseMetadata {
     }
 
     public boolean columnsEqual(ColumnItem leftSideColumnItem, ColumnItem rightSideColumnItem) {
-
-        return true;
+        if (!leftSideColumnItem.getName().equals(rightSideColumnItem.getName())) {
+            return false;
+        }
+        return leftSideColumnItem.getTable() == null || rightSideColumnItem.getTable() == null || leftSideColumnItem.getTable().equals(rightSideColumnItem.getTable());
     }
 }

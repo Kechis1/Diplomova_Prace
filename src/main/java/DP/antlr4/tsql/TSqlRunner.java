@@ -173,6 +173,30 @@ public class TSqlRunner {
     }
 
     public static boolean runEqualConditionInOperatorLike(DatabaseMetadata metadata, String query) {
+        TSqlParser parser = runFromString(query);
+        ParseTree select = parser.select_statement();
+        final List<ConditionItem> conditions = new ArrayList<>();
+
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            @Override
+            public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
+                conditions.add(
+                        new ConditionItem(ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                                ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                                ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
+                                ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
+                                ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().LIKE().getText()
+                        )
+                );
+            }
+        }, select);
+
+        for (ConditionItem condition : conditions) {
+            if (condition.getRightSideValue().equals("%")) {
+                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
+                return false;
+            }
+        }
         return true;
     }
 

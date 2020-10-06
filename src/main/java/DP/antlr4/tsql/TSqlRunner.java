@@ -115,12 +115,18 @@ public class TSqlRunner {
         }, select);
 
         /**
-         * @TODO checkovat vsechna vnitrni porovnani (INNER JOIN a WHERE)
-         * @TODO checkovat vsechna vnejsi porovnani (OUTER JOIN)
+         * @TODO vsechna vnitrni porovnani (INNER JOIN a WHERE)
+         * @TODO vsechna vnejsi porovnani (OUTER JOIN)
          * @TODO zeptat se na porovnani:
-         *      SELECT CASE WHEN '0Xa' = 0Xa THEN 1 ELSE 2 END
-         *      SELECT CASE WHEN '10' = 0xa THEN 1 ELSE 2 END
-         *      SELECT CASE WHEN '10.0' = 0XA THEN 1 ELSE 2 END
+         * -- vrati 2
+         * SELECT CASE WHEN '0Xa' = 0Xa THEN 1 ELSE 2 END
+         * SELECT CASE WHEN '10' = 0xa THEN 1 ELSE 2 END
+         * SELECT CASE WHEN '10.0' = 0XA THEN 1 ELSE 2 END
+         * SELECT CASE WHEN 0xa = '10' THEN 1 ELSE 2 END
+         * SELECT CASE WHEN 0XA = '10.0' THEN 1 ELSE 2 END
+         *
+         * -- vrati error converting data type varchar to numeric
+         * SELECT CASE WHEN '0Xa' = 10.0 THEN 1 ELSE 2 END
          */
         boolean isConditionNecessary = true;
         for (ConditionItem condition : conditions) {
@@ -207,11 +213,9 @@ public class TSqlRunner {
                         System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
                         return false;
                     }
-                } else {
-                    if (metadata.columnsEqual(condition.getLeftSideColumnItem(), condition.getRightSideColumnItem())) {
-                        System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
-                        return false;
-                    }
+                } else if (metadata.columnsEqual(condition.getLeftSideColumnItem(), condition.getRightSideColumnItem())) {
+                    System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
+                    return false;
                 }
             }
         }

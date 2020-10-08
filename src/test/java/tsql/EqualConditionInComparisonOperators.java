@@ -76,6 +76,12 @@ public class EqualConditionInComparisonOperators {
                         "\tWHERE 1 <> 0"),
                 Arguments.arguments("SELECT *\n" +
                         "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE 1 = '1'"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
+                        "\tWHERE '1' = 1"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.PREDMET\n" +
                         "\tWHERE 1 < 0 OR 1 > 0"),
                 Arguments.arguments("SELECT *\n" +
                         "\tFROM DBO.PREDMET\n" +
@@ -109,6 +115,12 @@ public class EqualConditionInComparisonOperators {
                         "\t\tINNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
                         "\t\tINNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
                         "\tWHERE SDT.SID = SDE.SID\n" +
+                        "\tORDER BY SDT.SID"),
+                Arguments.arguments("SELECT *\n" +
+                        "\tFROM DBO.STUDENT SDT\n" +
+                        "\t\tINNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
+                        "\t\tINNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
+                        "\tWHERE SDT.SID = SDT.SID\n" +
                         "\tORDER BY SDT.SID")
         );
     }

@@ -95,9 +95,6 @@ public class TSqlRunner {
 
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = new ArrayList<>();
-        final Map<String, List<String>> joinTables = ConditionItem.findJoinTablesList(select);
-        final List<String> outerJoinTables = joinTables.get("outerJoin");
-        final List<String> innerJoinTables = joinTables.get("innerJoin");
         final List<String> allTables = ConditionItem.findTablesList(select);
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
@@ -134,12 +131,15 @@ public class TSqlRunner {
             }
         }
 
-        System.out.println("conditions: " + conditions);
-        System.out.println("innerJoinTables: " + innerJoinTables);
-        System.out.println("allTables: " + allTables);
-        System.out.println("outerJoinTables: " + outerJoinTables);
-
         return isConditionNecessary;
+    }
+
+    public static boolean runEqualConditionInInnerJoins(DatabaseMetadata metadata, String query) {
+        return true;
+    }
+
+    public static boolean runEqualConditionInOuterJoins(DatabaseMetadata metadata, String query) {
+        return true;
     }
 
     public static boolean runEqualConditionInOperatorAll(DatabaseMetadata metadata, String query) {

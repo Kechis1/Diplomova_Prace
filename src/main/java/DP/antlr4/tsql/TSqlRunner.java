@@ -103,43 +103,34 @@ public class TSqlRunner {
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
-                conditions.add(
-                        new ConditionItem(ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
-                                ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
-                                ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
-                                ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
-                                ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().comparison_operator().getText()
-                        )
+                ConditionItem item = new ConditionItem(ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                        ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                        ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
+                        ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
+                        ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().comparison_operator().getText()
                 );
+
+                if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
+                    item.setLeftSideColumnItem(ColumnItem.create(ctx, 0));
+                    item.setRightSideColumnItem(ColumnItem.create(ctx, 1));
+                }
+
+                conditions.add(item);
             }
         }, select);
 
-        /**
-         * @TODO vsechna vnitrni porovnani (INNER JOIN a WHERE)
-         * @TODO vsechna vnejsi porovnani (OUTER JOIN)
-         * @TODO zeptat se na porovnani:
-         * -- vrati 2
-         * SELECT CASE WHEN '0Xa' = 0Xa THEN 1 ELSE 2 END
-         * SELECT CASE WHEN '10' = 0xa THEN 1 ELSE 2 END
-         * SELECT CASE WHEN '10.0' = 0XA THEN 1 ELSE 2 END
-         * SELECT CASE WHEN 0xa = '10' THEN 1 ELSE 2 END
-         * SELECT CASE WHEN 0XA = '10.0' THEN 1 ELSE 2 END
-         *
-         * -- vrati error converting data type varchar to numeric
-         * SELECT CASE WHEN '0Xa' = 10.0 THEN 1 ELSE 2 END
-         */
         boolean isConditionNecessary = true;
         for (ConditionItem condition : conditions) {
             if (condition.getLeftSideDataType() == ConditionDataType.STRING && condition.getRightSideDataType() == ConditionDataType.STRING) {
                 isConditionNecessary &= condition.compareStringAgainstString();
             } else if (condition.getLeftSideDataType().isNumeric && condition.getRightSideDataType().isNumeric) {
                 isConditionNecessary &= condition.compareNumberAgainstNumber();
-            } else if (condition.getLeftSideDataType() == ConditionDataType.STRING && condition.getRightSideDataType().isNumeric) {
+            } else if ((condition.getLeftSideDataType() == ConditionDataType.STRING && condition.getRightSideDataType().isNumeric) ||
+                    (condition.getLeftSideDataType().isNumeric && condition.getRightSideDataType() == ConditionDataType.STRING)) {
                 isConditionNecessary &= condition.compareStringAgainstNumber();
-            } else if (condition.getLeftSideDataType().isNumeric && condition.getRightSideDataType() == ConditionDataType.STRING) {
-                isConditionNecessary &= condition.compareNumberAgainstString();
             } else if (condition.getRightSideDataType() == ConditionDataType.COLUMN && condition.getRightSideDataType() == ConditionDataType.COLUMN) {
-
+                metadata = metadata.withTables(allTables);
+                isConditionNecessary &= condition.compareColumnAgainstColumn(metadata);
             }
         }
 

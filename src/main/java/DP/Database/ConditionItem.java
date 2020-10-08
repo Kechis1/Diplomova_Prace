@@ -117,25 +117,14 @@ public class ConditionItem {
     }
 
     public boolean compareStringAgainstNumber() {
-        if ((getOperator().equals("=") && getLeftSideNumberValue() == getRightSideNumberValue()) ||
-                (getOperator().equals("<>") && getLeftSideNumberValue() != getRightSideNumberValue()) ||
-                (getOperator().equals(">=") && getLeftSideNumberValue() >= getRightSideNumberValue()) ||
-                (getOperator().equals(">") && getLeftSideNumberValue() > getRightSideNumberValue()) ||
-                (getOperator().equals("<=") && getLeftSideNumberValue() <= getRightSideNumberValue()) ||
-                (getOperator().equals("<") && getLeftSideNumberValue() < getRightSideNumberValue())) {
-            System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
-            return false;
+        if (getLeftSideDataType() == ConditionDataType.BINARY || getRightSideDataType() == ConditionDataType.BINARY) {
+            return true;
         }
-        return true;
+        return compareNumberAgainstNumber();
     }
 
-    public boolean compareNumberAgainstString() {
-        if ((getOperator().equals("=") && getLeftSideNumberValue() == getRightSideNumberValue()) ||
-                (getOperator().equals("<>") && getLeftSideNumberValue() != getRightSideNumberValue()) ||
-                (getOperator().equals(">=") && getLeftSideNumberValue() >= getRightSideNumberValue()) ||
-                (getOperator().equals(">") && getLeftSideNumberValue() > getRightSideNumberValue()) ||
-                (getOperator().equals("<=") && getLeftSideNumberValue() <= getRightSideNumberValue()) ||
-                (getOperator().equals("<") && getLeftSideNumberValue() < getRightSideNumberValue())) {
+    public boolean compareColumnAgainstColumn(DatabaseMetadata metadata) {
+        if (metadata.columnsEqual(getLeftSideColumnItem(), getRightSideColumnItem())) {
             System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
             return false;
         }

@@ -25,7 +25,7 @@ public class TSqlRunner {
         final ArrayList<AggregateItem> allAggregateFunctions = new ArrayList<>();
         final ArrayList<AggregateItem> aggregateFunctionsInSelect = new ArrayList<>();
         final ArrayList<String> columnsInGroupBy = new ArrayList<>();
-        final ArrayList<String> joinTables = new ArrayList<>();
+        final ArrayList<TableItem> joinTables = new ArrayList<>();
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
 
@@ -51,7 +51,7 @@ public class TSqlRunner {
 
             @Override
             public void exitTable_source_item(@NotNull TSqlParser.Table_source_itemContext ctx) {
-                joinTables.add(ctx.table_name_with_hint().table_name().table.getText());
+                joinTables.add(TableItem.create(ctx));
             }
 
             @Override
@@ -95,7 +95,7 @@ public class TSqlRunner {
 
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = new ArrayList<>();
-        final List<String> allTables = ConditionItem.findTablesList(select);
+        final List<TableItem> allTables = ConditionItem.findTablesList(select);
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
@@ -131,14 +131,56 @@ public class TSqlRunner {
             }
         }
 
+        if (isConditionNecessary) {
+            System.out.println("OK");
+        }
         return isConditionNecessary;
     }
 
-    public static boolean runEqualConditionInInnerJoins(DatabaseMetadata metadata, String query) {
-        return true;
+    public static boolean runEqualInnerConditions(DatabaseMetadata metadata, String query) {
+        TSqlParser parser = runFromString(query);
+
+        ParseTree select = parser.select_statement();
+        final List<ConditionItem> initConditions = new ArrayList<>();
+        final Map<String, List<TableItem>> joinTables = ConditionItem.findJoinTablesList(select);
+        final List<TableItem> allTables = ConditionItem.findTablesList(select);
+        final List<TableItem> innerJoinTables = TableItem.difference(allTables, joinTables.get("outerJoin"));
+
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            @Override
+            public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
+                ConditionItem item = new ConditionItem(ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                        ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                        ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
+                        ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
+                        ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().comparison_operator().getText()
+                );
+
+                if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
+                    item.setLeftSideColumnItem(ColumnItem.create(ctx, 0));
+                    item.setRightSideColumnItem(ColumnItem.create(ctx, 1));
+                }
+
+                initConditions.add(item);
+            }
+        }, select);
+
+        metadata = metadata.withTables(innerJoinTables);
+        List<ConditionItem> conditions = ConditionItem.filterByMetadata(metadata, initConditions);
+        boolean isConditionNecessary = true;
+        for (int i = 0; i < conditions.size() - 1; i++) {
+            for (int j = i + 1; j < conditions.size(); j++) {
+                isConditionNecessary &= conditions.get(i).compareToCondition(metadata, conditions.get(j));
+            }
+        }
+
+        if (isConditionNecessary) {
+            System.out.println("OK");
+        }
+        return isConditionNecessary;
     }
 
-    public static boolean runEqualConditionInOuterJoins(DatabaseMetadata metadata, String query) {
+    public static boolean runEqualOuterConditions(DatabaseMetadata metadata, String query) {
         return true;
     }
 
@@ -166,7 +208,7 @@ public class TSqlRunner {
         TSqlParser parser = runFromString(query);
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = new ArrayList<>();
-        final List<String> allTables = ConditionItem.findTablesList(select);
+        final List<TableItem> allTables = ConditionItem.findTablesList(select);
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
@@ -194,22 +236,23 @@ public class TSqlRunner {
         for (ConditionItem condition : conditions) {
             if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
                 if (SQLLogicalOperators.like(condition.getLeftSideValue(), condition.getRightSideValue())) {
-                    System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
+                    System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE");
                     return false;
                 }
             } else if (condition.getLeftSideDataType() == ConditionDataType.COLUMN &&
                     (condition.getRightSideDataType() == ConditionDataType.COLUMN || condition.getRightSideDataType() == ConditionDataType.STRING)) {
                 if (condition.getRightSideDataType() == ConditionDataType.STRING) {
                     if (condition.getRightSideValue().matches("^[%]+$")) {
-                        System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
+                        System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE");
                         return false;
                     }
                 } else if (metadata.columnsEqual(condition.getLeftSideColumnItem(), condition.getRightSideColumnItem())) {
-                    System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
+                    System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE");
                     return false;
                 }
             }
         }
+        System.out.println("OK");
         return true;
     }
 

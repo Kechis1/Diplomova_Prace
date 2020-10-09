@@ -34,6 +34,18 @@ public class ConditionItem {
         initNumberValues();
     }
 
+    public static List<ConditionItem> filterByMetadata(DatabaseMetadata metadata, List<ConditionItem> conditions) {
+        List<ConditionItem> items = new ArrayList<>();
+
+        for (ConditionItem condition : conditions) {
+            if (metadata.columnExists(condition.getLeftSideColumnItem()) && metadata.columnExists(condition.getRightSideColumnItem())) {
+                items.add(condition);
+            }
+        }
+
+        return items;
+    }
+
     public ConditionDataType getLeftSideDataType() {
         return leftSideDataType;
     }
@@ -131,6 +143,18 @@ public class ConditionItem {
         return true;
     }
 
+    public boolean compareToCondition(DatabaseMetadata metadata, ConditionItem conditionItem) {
+        if (getLeftSideDataType() == ConditionDataType.COLUMN && getLeftSideDataType() == ConditionDataType.COLUMN &&
+                conditionItem.getLeftSideDataType() == ConditionDataType.COLUMN && conditionItem.getLeftSideDataType() == ConditionDataType.COLUMN) {
+            if (metadata.columnsEqual(getLeftSideColumnItem(), conditionItem.getLeftSideColumnItem()) &&
+                    metadata.columnsEqual(getRightSideColumnItem(), conditionItem.getRightSideColumnItem())) {
+                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION");
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void initNumberValues() {
         try {
             if (getLeftSideDataType() != ConditionDataType.COLUMN) {
@@ -171,33 +195,33 @@ public class ConditionItem {
         return ConditionDataType.NUMBER;
     }
 
-    public static List<String> findTablesList(ParseTree select) {
-        final List<String> allTables = new ArrayList<>();
+    public static List<TableItem> findTablesList(ParseTree select) {
+        final List<TableItem> allTables = new ArrayList<>();
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void exitTable_source_item(@NotNull TSqlParser.Table_source_itemContext ctx) {
-                allTables.add(ctx.table_name_with_hint().table_name().table.getText());
+                allTables.add(TableItem.create(ctx));
             }
         }, select);
         return allTables;
     }
 
-    public static Map<String, List<String>> findJoinTablesList(ParseTree select) {
-        final List<String> outerJoinTables = new ArrayList<>();
-        final List<String> innerJoinTables = new ArrayList<>();
+    public static Map<String, List<TableItem>> findJoinTablesList(ParseTree select) {
+        final List<TableItem> outerJoinTables = new ArrayList<>();
+        final List<TableItem> innerJoinTables = new ArrayList<>();
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterTable_source_item_joined(TSqlParser.Table_source_item_joinedContext ctx) {
                 for (int i = 0; i < ctx.join_part().size(); i++) {
                     if (ctx.join_part().get(i).OUTER() != null || ctx.join_part().get(i).LEFT() != null || ctx.join_part().get(i).RIGHT() != null) {
-                        outerJoinTables.add(ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText());
+                        outerJoinTables.add(TableItem.create(ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()));
                     } else {
-                        innerJoinTables.add(ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText());
+                        innerJoinTables.add(TableItem.create(ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()));
                     }
                 }
             }
         }, select);
-        Map<String,List<String>> map = new HashMap();
+        Map<String, List<TableItem>> map = new HashMap();
         map.put("outerJoin", outerJoinTables);
         map.put("innerJoin", innerJoinTables);
         return map;
@@ -221,14 +245,16 @@ public class ConditionItem {
 
     @Override
     public String toString() {
-        return "ConditionItem{" +
-                "leftSideDataType=" + leftSideDataType +
-                ", leftSideValue='" + leftSideValue + '\'' +
-                ", rightSideDataType=" + rightSideDataType +
-                ", rightSideValue='" + rightSideValue + '\'' +
-                ", operator='" + operator + '\'' +
-                ", leftSideNumberValue=" + leftSideNumberValue +
-                ", rightSideNumberValue=" + rightSideNumberValue +
-                '}';
+        return "ConditionItem {" +
+                "\n\tleftSideColumnItem=" + leftSideColumnItem +
+                "\n\trightSideColumnItem=" + rightSideColumnItem +
+                "\n\tleftSideDataType=" + leftSideDataType +
+                "\n\tleftSideValue='" + leftSideValue + '\'' +
+                "\n\trightSideDataType=" + rightSideDataType +
+                "\n\trightSideValue='" + rightSideValue + '\'' +
+                "\n\toperator='" + operator + '\'' +
+                "\n\tleftSideNumberValue=" + leftSideNumberValue +
+                "\n\trightSideNumberValue=" + rightSideNumberValue +
+                "\n}";
     }
 }

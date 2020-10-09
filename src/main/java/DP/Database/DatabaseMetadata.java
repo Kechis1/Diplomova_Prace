@@ -61,13 +61,14 @@ public class DatabaseMetadata {
             List<String> tableColumns = new ArrayList<>();
             List<String> tablePrimaryKeys = new ArrayList<>();
 
-            tableObject.getJSONArray("column_names").forEach(x->tableColumns.add(x.toString().toUpperCase()));
-            tableObject.getJSONArray("primary_keys").forEach(x->tablePrimaryKeys.add(x.toString().toUpperCase()));
+            tableObject.getJSONArray("column_names").forEach(x -> tableColumns.add(x.toString().toUpperCase()));
+            tableObject.getJSONArray("primary_keys").forEach(x -> tablePrimaryKeys.add(x.toString().toUpperCase()));
 
             dbTables.add(new DatabaseTable(tableObject.getString("table_name").toUpperCase(),
-                    tableColumns,
-                    tablePrimaryKeys
-                )
+                            tableColumns,
+                            tablePrimaryKeys,
+                    tableObject.getString("table_name").toUpperCase()
+                    )
             );
         }
 
@@ -78,7 +79,7 @@ public class DatabaseMetadata {
     }
 
     public DatabaseTable findTable(String tableName) {
-        for (DatabaseTable item: tables) {
+        for (DatabaseTable item : tables) {
             if (item.getTableName().equals(tableName)) {
                 return item;
             }
@@ -88,7 +89,7 @@ public class DatabaseMetadata {
 
     public ArrayList<String> getAllPrimaryKeys() {
         ArrayList<String> primaryKeys = new ArrayList<>();
-        for (DatabaseTable table: tables) {
+        for (DatabaseTable table : tables) {
             primaryKeys.addAll(table.getPrimaryKeys());
         }
         return primaryKeys;
@@ -99,16 +100,19 @@ public class DatabaseMetadata {
         return allPrimaryKeys.containsAll(columns) && allPrimaryKeys.size() == columns.size();
     }
 
-    public DatabaseMetadata withTables(List<String> inTables) {
+    public DatabaseMetadata withTables(List<TableItem> inTables) {
         List<DatabaseTable> newTables = new ArrayList<>();
 
-        for (DatabaseTable item: tables) {
-            if (inTables.contains(item.getTableName())) {
-                newTables.add(item);
+        for (DatabaseTable item : tables) {
+            for (TableItem tableItem : inTables) {
+                if (tableItem.getName().equals(item.getTableName())) {
+                    item.setTableAlias(tableItem.getAlias());
+                    newTables.add(item);
 
-                if (newTables.size() == inTables.size()) {
-                    tables = newTables;
-                    return this;
+                    if (newTables.size() == inTables.size()) {
+                        tables = newTables;
+                        return this;
+                    }
                 }
             }
         }
@@ -120,6 +124,44 @@ public class DatabaseMetadata {
         if (!leftSideColumnItem.getName().equals(rightSideColumnItem.getName())) {
             return false;
         }
-        return leftSideColumnItem.getTable() == null || rightSideColumnItem.getTable() == null || leftSideColumnItem.getTable().equals(rightSideColumnItem.getTable());
+        return leftSideColumnItem.getTable().getAlias() == null || rightSideColumnItem.getTable().getAlias() == null || leftSideColumnItem.getTable().getAlias().equals(rightSideColumnItem.getTable().getAlias());
+    }
+
+    public boolean columnExists(ColumnItem columnItem) {
+        ArrayList<ColumnItem> allColumns = getAllColumnItems();
+        for (ColumnItem currentItem : allColumns) {
+            if (!currentItem.getName().equals(columnItem.getName())) {
+                continue;
+            }
+            if (columnItem.getTable().getAlias() == null || currentItem.getTable().getAlias().equals(columnItem.getTable().getAlias())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private ArrayList<ColumnItem> getAllColumnItems() {
+        ArrayList<ColumnItem> columns = new ArrayList<>();
+        for (DatabaseTable table : tables) {
+            columns.addAll(table.getColumnItems());
+        }
+        return columns;
+    }
+
+    private ArrayList<String> getAllColumns() {
+        ArrayList<String> columns = new ArrayList<>();
+        for (DatabaseTable table : tables) {
+            columns.addAll(table.getColumns());
+        }
+        return columns;
+    }
+
+    @Override
+    public String toString() {
+        return "DatabaseMetadata{" +
+                "tableCatalog='" + tableCatalog + '\'' +
+                ", tableSchema='" + tableSchema + '\'' +
+                ", tables=" + tables +
+                '}';
     }
 }

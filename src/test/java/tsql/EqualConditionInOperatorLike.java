@@ -1,6 +1,7 @@
 package tsql;
 
 import DP.Database.DatabaseMetadata;
+import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 import org.junit.jupiter.api.AfterEach;
@@ -15,8 +16,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @ExtendWith(MockitoExtension.class)
 public class EqualConditionInOperatorLike {
@@ -43,6 +43,7 @@ public class EqualConditionInOperatorLike {
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query) {
         boolean result = TSqlRunner.runEqualConditionInOperatorLike(metadata, query);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE", this.consoleContent.toString().trim());
         assertFalse(result);
     }
 
@@ -50,32 +51,33 @@ public class EqualConditionInOperatorLike {
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String query) {
         boolean result = TSqlRunner.runEqualConditionInOperatorLike(metadata, query);
+        assertEquals("OK", this.consoleContent.toString().trim());
         assertTrue(result);
     }
 
 
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
         return Stream.of(Arguments.arguments("SELECT *\n" +
-                        "\tFROM DBO.PREDMET\n" +
-                        "\tWHERE 1 LIKE 1"),
+                        "FROM DBO.PREDMET\n" +
+                        "WHERE 1 LIKE 1"),
                 Arguments.arguments("SELECT *\n" +
-                        "\tFROM DBO.PREDMET\n" +
-                        "\tWHERE 1 LIKE '1'"),
+                        "FROM DBO.PREDMET\n" +
+                        "WHERE 1 LIKE '1'"),
                 Arguments.arguments("SELECT *\n" +
-                        "\tFROM DBO.PREDMET\n" +
-                        "\tWHERE 1 LIKE '%1'"),
+                        "FROM DBO.PREDMET\n" +
+                        "WHERE 1 LIKE '%1'"),
                 Arguments.arguments("SELECT *\n" +
-                        "\tFROM DBO.PREDMET\n" +
-                        "\tWHERE 1 LIKE '%1%'"),
+                        "FROM DBO.PREDMET\n" +
+                        "WHERE 1 LIKE '%1%'"),
                 Arguments.arguments("SELECT *\n" +
-                        "\tFROM DBO.PREDMET\n" +
-                        "\tWHERE 1 LIKE '1%'"),
+                        "FROM DBO.PREDMET\n" +
+                        "WHERE 1 LIKE '1%'"),
                 Arguments.arguments("SELECT *\n" +
-                        "\tFROM DBO.PREDMET\n" +
-                        "\tWHERE '1' LIKE '1'"),
+                        "FROM DBO.PREDMET\n" +
+                        "WHERE '1' LIKE '1'"),
                 Arguments.arguments("SELECT *\n" +
-                        "\tFROM DBO.PREDMET\n" +
-                        "\tWHERE 'string' LIKE 'str%'"),
+                        "FROM DBO.PREDMET\n" +
+                        "WHERE 'string' LIKE 'str%'"),
                 Arguments.arguments("SELECT *\n" +
                         "FROM student stt\n" +
                         "JOIN studuje sde ON stt.sID = stt.sID\n" +

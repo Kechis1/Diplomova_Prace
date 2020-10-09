@@ -5,10 +5,10 @@ import DP.antlr4.tsql.parser.TSqlParser;
 public class ColumnItem {
     String database;
     String schema;
-    String table;
+    TableItem table;
     String name;
 
-    public ColumnItem(String database, String schema, String table, String name) {
+    public ColumnItem(String database, String schema, TableItem table, String name) {
         this.database = database;
         this.schema = schema;
         this.table = table;
@@ -24,9 +24,10 @@ public class ColumnItem {
                     ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().schema != null
                             ? ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().schema.getText()
                             : null,
-                    ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().table != null
-                            ? ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().table.getText()
-                            : null,
+                    new TableItem(null,
+                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().table != null
+                                    ? ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().table.getText()
+                                    : null),
                     ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().column_name.getText()
             );
         }
@@ -55,11 +56,11 @@ public class ColumnItem {
         this.schema = schema;
     }
 
-    public String getTable() {
+    public TableItem getTable() {
         return table;
     }
 
-    public void setTable(String table) {
+    public void setTable(TableItem table) {
         this.table = table;
     }
 
@@ -69,5 +70,15 @@ public class ColumnItem {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "ColumnItem{" +
+                "database='" + database + '\'' +
+                ", schema='" + schema + '\'' +
+                ", table={" + table + "}" +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

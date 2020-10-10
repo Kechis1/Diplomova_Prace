@@ -2,21 +2,29 @@ package DP.Database;
 
 import DP.antlr4.tsql.parser.TSqlParser;
 
+import java.util.List;
+
 public class ColumnItem {
     String database;
     String schema;
-    TableItem table;
+    DatabaseTable table;
     String name;
 
-    public ColumnItem(String database, String schema, TableItem table, String name) {
+    public ColumnItem(String database, String schema, DatabaseTable table, String name) {
         this.database = database;
         this.schema = schema;
         this.table = table;
         this.name = name;
     }
 
-    public static ColumnItem create(TSqlParser.Search_conditionContext ctx, int index) {
+    public static ColumnItem create(DatabaseMetadata metadata, TSqlParser.Search_conditionContext ctx, int index) {
         if (ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name() != null) {
+            DatabaseTable table = DatabaseTable.create(metadata,
+                    null,
+                    ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().table != null
+                            ? ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().table.getText()
+                            : null);
+
             return new ColumnItem(
                     ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().database != null
                             ? ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().database.getText()
@@ -24,10 +32,7 @@ public class ColumnItem {
                     ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().schema != null
                             ? ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().schema.getText()
                             : null,
-                    new TableItem(null,
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().table != null
-                                    ? ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().table.getText()
-                                    : null),
+                    table,
                     ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().column_name.getText()
             );
         }
@@ -38,6 +43,18 @@ public class ColumnItem {
                 null,
                 ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().column_name.getText()
         );
+    }
+
+    public static boolean exists(List<ColumnItem> allColumns, ColumnItem columnItem) {
+        for (ColumnItem currentItem : allColumns) {
+            if (!currentItem.getName().equals(columnItem.getName())) {
+                continue;
+            }
+            if (columnItem.getTable().getTableAlias() == null || currentItem.getTable().getTableAlias().equals(columnItem.getTable().getTableAlias())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public String getDatabase() {
@@ -56,11 +73,11 @@ public class ColumnItem {
         this.schema = schema;
     }
 
-    public TableItem getTable() {
+    public DatabaseTable getTable() {
         return table;
     }
 
-    public void setTable(TableItem table) {
+    public void setTable(DatabaseTable table) {
         this.table = table;
     }
 

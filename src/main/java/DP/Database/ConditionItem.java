@@ -2,15 +2,9 @@ package DP.Database;
 
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlParser;
-import DP.antlr4.tsql.parser.TSqlParserBaseListener;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ConditionItem {
     private ColumnItem leftSideColumnItem;
@@ -193,38 +187,6 @@ public class ConditionItem {
             return ConditionDataType.BINARY;
         }
         return ConditionDataType.NUMBER;
-    }
-
-    public static List<TableItem> findTablesList(ParseTree select) {
-        final List<TableItem> allTables = new ArrayList<>();
-        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
-            @Override
-            public void exitTable_source_item(@NotNull TSqlParser.Table_source_itemContext ctx) {
-                allTables.add(TableItem.create(ctx));
-            }
-        }, select);
-        return allTables;
-    }
-
-    public static Map<String, List<TableItem>> findJoinTablesList(ParseTree select) {
-        final List<TableItem> outerJoinTables = new ArrayList<>();
-        final List<TableItem> innerJoinTables = new ArrayList<>();
-        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
-            @Override
-            public void enterTable_source_item_joined(TSqlParser.Table_source_item_joinedContext ctx) {
-                for (int i = 0; i < ctx.join_part().size(); i++) {
-                    if (ctx.join_part().get(i).OUTER() != null || ctx.join_part().get(i).LEFT() != null || ctx.join_part().get(i).RIGHT() != null) {
-                        outerJoinTables.add(TableItem.create(ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()));
-                    } else {
-                        innerJoinTables.add(TableItem.create(ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()));
-                    }
-                }
-            }
-        }, select);
-        Map<String, List<TableItem>> map = new HashMap();
-        map.put("outerJoin", outerJoinTables);
-        map.put("innerJoin", innerJoinTables);
-        return map;
     }
 
     public ColumnItem getLeftSideColumnItem() {

@@ -84,7 +84,7 @@ public class DatabaseMetadata {
                 return item;
             }
         }
-        return null;
+        return new DatabaseTable();
     }
 
     public ArrayList<String> getAllPrimaryKeys() {
@@ -100,13 +100,13 @@ public class DatabaseMetadata {
         return allPrimaryKeys.containsAll(columns) && allPrimaryKeys.size() == columns.size();
     }
 
-    public DatabaseMetadata withTables(List<TableItem> inTables) {
+    public DatabaseMetadata withTables(List<DatabaseTable> inTables) {
         List<DatabaseTable> newTables = new ArrayList<>();
 
         for (DatabaseTable item : tables) {
-            for (TableItem tableItem : inTables) {
-                if (tableItem.getName().equals(item.getTableName())) {
-                    item.setTableAlias(tableItem.getAlias());
+            for (DatabaseTable DatabaseTable : inTables) {
+                if (DatabaseTable.getTableName().equals(item.getTableName())) {
+                    item.setTableAlias(DatabaseTable.getTableAlias());
                     newTables.add(item);
 
                     if (newTables.size() == inTables.size()) {
@@ -124,20 +124,12 @@ public class DatabaseMetadata {
         if (!leftSideColumnItem.getName().equals(rightSideColumnItem.getName())) {
             return false;
         }
-        return leftSideColumnItem.getTable().getAlias() == null || rightSideColumnItem.getTable().getAlias() == null || leftSideColumnItem.getTable().getAlias().equals(rightSideColumnItem.getTable().getAlias());
+        return leftSideColumnItem.getTable().getTableAlias() == null || rightSideColumnItem.getTable().getTableAlias() == null || leftSideColumnItem.getTable().getTableAlias().equals(rightSideColumnItem.getTable().getTableAlias());
     }
 
     public boolean columnExists(ColumnItem columnItem) {
         ArrayList<ColumnItem> allColumns = getAllColumnItems();
-        for (ColumnItem currentItem : allColumns) {
-            if (!currentItem.getName().equals(columnItem.getName())) {
-                continue;
-            }
-            if (columnItem.getTable().getAlias() == null || currentItem.getTable().getAlias().equals(columnItem.getTable().getAlias())) {
-                return true;
-            }
-        }
-        return false;
+        return ColumnItem.exists(allColumns, columnItem);
     }
 
     private ArrayList<ColumnItem> getAllColumnItems() {

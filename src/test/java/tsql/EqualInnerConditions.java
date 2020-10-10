@@ -71,7 +71,7 @@ public class EqualInnerConditions {
         return Stream.of(Arguments.arguments("SELECT *\n" +
                 "FROM DBO.STUDENT SDT\n" +
                 "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
+                "LEFT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
                 "WHERE SDT.SID = SDE.SID\n" +
                 "ORDER BY SDT.SID")
         );

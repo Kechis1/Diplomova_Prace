@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 import static org.junit.Assert.*;
 
 @ExtendWith(MockitoExtension.class)
-public class EqualInnerConditions {
+public class JoinTablesTest {
     @Mock
     private DatabaseMetadata metadata;
 
@@ -42,15 +42,15 @@ public class EqualInnerConditions {
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query) {
-        boolean result = TSqlRunner.runEqualInnerConditions(metadata, query);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION", this.consoleContent.toString().trim());
+        boolean result = TSqlRunner.runRedundantJoinTables(metadata, query);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " LEFT JOIN", this.consoleContent.toString().trim());
         assertFalse(result);
     }
 
     @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String query) {
-        boolean result = TSqlRunner.runEqualInnerConditions(metadata, query);
+        boolean result = TSqlRunner.runRedundantJoinTables(metadata, query);
         assertEquals("OK", this.consoleContent.toString().trim());
         assertTrue(result);
     }
@@ -58,22 +58,17 @@ public class EqualInnerConditions {
 
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
         return Stream.of(
-                Arguments.arguments("SELECT *\n" +
+                Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO\n" +
                         "FROM DBO.STUDENT SDT\n" +
-                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
-                        "WHERE SDT.SID = SDE.SID\n" +
-                        "ORDER BY SDT.SID")
+                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID")
         );
     }
 
     public static Stream<Arguments> doFindNecessaryConditionSource() {
-        return Stream.of(Arguments.arguments("SELECT *\n" +
-                "FROM DBO.STUDENT SDT\n" +
-                "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                "LEFT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
-                "WHERE SDT.SID = SDE.SID\n" +
-                "ORDER BY SDT.SID")
+        return Stream.of(
+                Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +
+                        "FROM DBO.STUDENT SDT " +
+                        "JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID")
         );
     }
 }

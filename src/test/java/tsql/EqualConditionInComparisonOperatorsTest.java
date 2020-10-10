@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 import static org.junit.Assert.*;
 
 @ExtendWith(MockitoExtension.class)
-public class EqualConditionInComparisonOperators {
+public class EqualConditionInComparisonOperatorsTest {
     @Mock
     private DatabaseMetadata metadata;
 

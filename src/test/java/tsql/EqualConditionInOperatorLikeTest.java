@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 import static org.junit.Assert.*;
 
 @ExtendWith(MockitoExtension.class)
-public class EqualConditionInOperatorLike {
+public class EqualConditionInOperatorLikeTest {
     @Mock
     private DatabaseMetadata metadata;
 

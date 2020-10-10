@@ -10,12 +10,11 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
 public class TSqlRunner {
-    private final static String DIR_QUERIES = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "DP" + File.separator + "antlr4" + File.separator + "tsql" + File.separator + "queries" + File.separator;
+    // private final static String DIR_QUERIES = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "DP" + File.separator + "antlr4" + File.separator + "tsql" + File.separator + "queries" + File.separator;
 
 
     public static boolean runGroupBy(final DatabaseMetadata metadata, String query) {
@@ -108,9 +107,6 @@ public class TSqlRunner {
         TSqlParser parser = runFromString(query);
 
         ParseTree select = parser.select_statement();
-        final Map<String, List<DatabaseTable>> joinTables = TSqlParseWalker.findJoinTablesList(metadata, select);
-        final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
-        final List<DatabaseTable> innerJoinTables = DatabaseTable.difference(allTables, joinTables.get("outerJoin"));
         final List<ConditionItem> leftJoinConditions = new ArrayList<>();
         final List<ConditionItem> rightJoinConditions = new ArrayList<>();
         final List<ConditionItem> fullOuterJoinConditions = new ArrayList<>();

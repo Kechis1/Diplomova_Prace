@@ -65,7 +65,7 @@ public class TSqlParseWalker {
                 }
             }
         }, select);
-        Map<String, List<DatabaseTable>> map = new HashMap();
+        Map<String, List<DatabaseTable>> map = new HashMap<>();
         map.put("outerJoin", outerJoinTables);
         map.put("innerJoin", innerJoinTables);
         map.put("leftJoin", leftJoinTables);

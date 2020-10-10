@@ -15,13 +15,9 @@ public class Main {
                 "WHERE (('A' = 'a' AND 'b' > 'a') OR 'c' > 'b') AND 1 = 1");*/
 
         System.out.println("1");
-        TSqlRunner.runEqualOuterConditions(metadata, "SELECT distinct SDT.SID, SDT.JMENO " +
-                "FROM DBO.STUDENT SDT " +
-                "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID");
-        System.out.println("2");
-        TSqlRunner.runEqualOuterConditions(metadata, "SELECT * " +
+        TSqlRunner.runRedundantJoinConditions(metadata, "SELECT * " +
                 "FROM DBO.STUDENT SDT " +
                 "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
-                "LEFT JOIN DBO.PREDMET PRT ON SDE.PID = PRT.PID AND SDE.PID = PRT.PID");
+                "LEFT JOIN DBO.PREDMET PRT ON SDE.PID = PRT.PID ");
     }
 }

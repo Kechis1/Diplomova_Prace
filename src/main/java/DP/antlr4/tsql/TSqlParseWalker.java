@@ -97,9 +97,9 @@ public class TSqlParseWalker {
         return conditions;
     }
 
-    public static Collection<? extends ConditionItem> findConditionsFromSearchCtx(final DatabaseMetadata metadata, TSqlParser.Join_partContext ctx) {
+    public static Collection<? extends ConditionItem> findConditionsFromSearchCtx(final DatabaseMetadata metadata, TSqlParser.Search_conditionContext ctx) {
         List<ConditionItem> conditions = new ArrayList<>();
-        for (TSqlParser.Search_condition_andContext ctxAnd : ctx.search_condition().search_condition_and()) {
+        for (TSqlParser.Search_condition_andContext ctxAnd : ctx.search_condition_and()) {
             for (TSqlParser.Search_condition_notContext ctxNot : ctxAnd.search_condition_not()) {
                 ConditionItem item = new ConditionItem(ConditionItem.findDataType(ctxNot.predicate().expression().get(0)),
                         ConditionItem.findSideValue(ctxNot.predicate().expression().get(0)),
@@ -109,8 +109,8 @@ public class TSqlParseWalker {
                 );
 
                 if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                    item.setLeftSideColumnItem(ColumnItem.create(metadata, ctx.search_condition(), 0));
-                    item.setRightSideColumnItem(ColumnItem.create(metadata, ctx.search_condition(), 1));
+                    item.setLeftSideColumnItem(ColumnItem.create(metadata, ctx, 0));
+                    item.setRightSideColumnItem(ColumnItem.create(metadata, ctx, 1));
                 }
 
                 conditions.add(item);

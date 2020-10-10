@@ -40,6 +40,17 @@ public class ConditionItem {
         return items;
     }
 
+    public static boolean duplicatesExists(DatabaseMetadata metadata, List<ConditionItem> conditions) {
+        for (int i = 0; i < conditions.size() - 1; i++) {
+            for (int j = i + 1; j < conditions.size(); j++) {
+                if (!conditions.get(i).compareToCondition(metadata, conditions.get(j))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public ConditionDataType getLeftSideDataType() {
         return leftSideDataType;
     }

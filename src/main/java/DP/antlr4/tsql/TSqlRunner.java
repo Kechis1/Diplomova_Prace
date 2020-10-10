@@ -104,54 +104,60 @@ public class TSqlRunner {
         return isConditionNecessary;
     }
 
-    public static boolean runEqualInnerConditions(final DatabaseMetadata metadata, String query) {
+    public static boolean runRedundantJoinConditions(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
 
         ParseTree select = parser.select_statement();
-        final List<ConditionItem> initConditions = TSqlParseWalker.findConditions(metadata, select);
         final Map<String, List<DatabaseTable>> joinTables = TSqlParseWalker.findJoinTablesList(metadata, select);
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
         final List<DatabaseTable> innerJoinTables = DatabaseTable.difference(allTables, joinTables.get("outerJoin"));
-
-        DatabaseMetadata newMetadata = metadata.withTables(innerJoinTables);
-        List<ConditionItem> conditions = ConditionItem.filterByMetadata(newMetadata, initConditions);
-        boolean isConditionNecessary = true;
-        for (int i = 0; i < conditions.size() - 1; i++) {
-            for (int j = i + 1; j < conditions.size(); j++) {
-                isConditionNecessary &= conditions.get(i).compareToCondition(newMetadata, conditions.get(j));
-            }
-        }
-
-        if (isConditionNecessary) {
-            System.out.println("OK");
-        }
-        return isConditionNecessary;
-    }
-
-    public static boolean runEqualOuterConditions(final DatabaseMetadata metadata, String query) {
-        TSqlParser parser = runFromString(query);
-
-        ParseTree select = parser.select_statement();
-        final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadata, select);
-        final List<Boolean> isDistinctInSelect = TSqlParseWalker.findDistinctInSelect(select);
         final List<ConditionItem> leftJoinConditions = new ArrayList<>();
         final List<ConditionItem> rightJoinConditions = new ArrayList<>();
         final List<ConditionItem> fullOuterJoinConditions = new ArrayList<>();
-        final Map<String, List<DatabaseTable>> joinTables = TSqlParseWalker.findJoinTablesList(metadata, select);
-        final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
+        final List<ConditionItem> innerConditions = new ArrayList<>();
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterJoin_part(TSqlParser.Join_partContext ctx) {
                 if (ctx.LEFT() != null) {
-                    leftJoinConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx));
+                    leftJoinConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
                 } else if (ctx.RIGHT() != null) {
-                    rightJoinConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx));
+                    rightJoinConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
                 } else if (ctx.FULL() != null && ctx.OUTER() != null) {
-                    fullOuterJoinConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx));
+                    fullOuterJoinConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
+                } else {
+                    innerConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
+                }
+            }
+
+            @Override
+            public void enterQuery_specification(TSqlParser.Query_specificationContext ctx) {
+                if (ctx.search_condition() != null) {
+                    for (TSqlParser.Search_conditionContext sCtx : ctx.search_condition()) {
+                        innerConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, sCtx));
+                    }
                 }
             }
         }, select);
+
+        boolean foundDuplicateCondition = ConditionItem.duplicatesExists(metadata, innerConditions);
+        foundDuplicateCondition |= ConditionItem.duplicatesExists(metadata, leftJoinConditions);
+        foundDuplicateCondition |= ConditionItem.duplicatesExists(metadata, rightJoinConditions);
+        foundDuplicateCondition |= ConditionItem.duplicatesExists(metadata, fullOuterJoinConditions);
+
+        if (!foundDuplicateCondition) {
+            System.out.println("OK");
+        }
+        return !foundDuplicateCondition;
+    }
+
+    public static boolean runRedundantJoinTables(final DatabaseMetadata metadata, String query) {
+        TSqlParser parser = runFromString(query);
+
+        ParseTree select = parser.select_statement();
+        final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadata, select);
+        final List<Boolean> isDistinctInSelect = TSqlParseWalker.findDistinctInSelect(select);
+        final Map<String, List<DatabaseTable>> joinTables = TSqlParseWalker.findJoinTablesList(metadata, select);
 
         if (joinTables.get("outerJoin").isEmpty()) {
             System.out.println("OK");
@@ -175,17 +181,7 @@ public class TSqlRunner {
             }
         }
 
-
-        System.out.println("allColumnsInSelect: " + allColumnsInSelect);
-
-
-        /*System.out.println("isDistinctInSelect: " + isDistinctInSelect);
-        System.out.println("leftJoinConditions: " + leftJoinConditions);
-        System.out.println("rightJoinConditions: " + rightJoinConditions);
-        System.out.println("fullOuterJoinConditions: " + fullOuterJoinConditions);
-        System.out.println("joinTables: " + joinTables);
-        System.out.println("allTables: " + allTables);*/
-
+        System.out.println("OK");
         return true;
     }
 

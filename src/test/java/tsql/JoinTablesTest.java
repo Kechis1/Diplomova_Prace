@@ -60,7 +60,10 @@ public class JoinTablesTest {
         return Stream.of(
                 Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO\n" +
                         "FROM DBO.STUDENT SDT\n" +
-                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID")
+                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO\n" +
+                        "FROM DBO.STUDENT SDT\n" +
+                        "FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID")
         );
     }
 
@@ -68,7 +71,10 @@ public class JoinTablesTest {
         return Stream.of(
                 Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +
                         "FROM DBO.STUDENT SDT " +
-                        "JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID")
+                        "JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +
+                        "FROM DBO.STUDENT SDT " +
+                        "RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID")
         );
     }
 }

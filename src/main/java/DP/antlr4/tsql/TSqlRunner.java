@@ -12,6 +12,8 @@ import org.antlr.v4.runtime.tree.*;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TSqlRunner {
     // private final static String DIR_QUERIES = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "DP" + File.separator + "antlr4" + File.separator + "tsql" + File.separator + "queries" + File.separator;
@@ -161,7 +163,8 @@ public class TSqlRunner {
         }
 
         if (!isDistinctInSelect.isEmpty()) {
-            for (DatabaseTable table: joinTables.get("leftJoin")) {
+            for (DatabaseTable table: Stream.concat(joinTables.get("leftJoin").stream(), joinTables.get("fullOuterJoin").stream()).collect(Collectors
+                    .toList())) {
                 boolean tableColumnIsInSelect = false;
                 for (ColumnItem cItem : allColumnsInSelect) {
                     if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || cItem.getTable().getTableAlias().equals(table.getTableAlias()))

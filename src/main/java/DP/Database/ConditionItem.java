@@ -192,12 +192,35 @@ public class ConditionItem {
             return ConditionDataType.COLUMN;
         }
         if (context.primitive_expression().constant().STRING() != null) {
+            String value = context.primitive_expression().constant().getText().replaceAll("'", "");
+            if (value.toLowerCase().startsWith("0x") && value.toLowerCase().replaceFirst("0x", "").matches("-?[0-9a-fA-F]+")) {
+                return ConditionDataType.STRING_BINARY;
+            } else if (value.toLowerCase().matches("\\d+e-?[0-9]+")) {
+                return ConditionDataType.STRING_REAL;
+            }
+            try {
+                Integer.parseInt(value);
+                return ConditionDataType.STRING_DECIMAL;
+            } catch (NumberFormatException ignored) {
+            }
+            try {
+                Float.parseFloat(value);
+                return ConditionDataType.STRING_FLOAT;
+            } catch (NumberFormatException ignored) {
+            }
+
             return ConditionDataType.STRING;
         }
         if (context.primitive_expression().constant().BINARY() != null) {
             return ConditionDataType.BINARY;
         }
-        return ConditionDataType.NUMBER;
+        if (context.primitive_expression().constant().REAL() != null) {
+            return ConditionDataType.REAL;
+        }
+        if (context.primitive_expression().constant().FLOAT() != null) {
+            return ConditionDataType.FLOAT;
+        }
+        return ConditionDataType.DECIMAL;
     }
 
     public ColumnItem getLeftSideColumnItem() {

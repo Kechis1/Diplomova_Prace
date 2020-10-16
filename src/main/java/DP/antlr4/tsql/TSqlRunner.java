@@ -77,6 +77,9 @@ public class TSqlRunner {
         return true;
     }
 
+    /**
+     * @TODO OR, AND
+     */
     public static boolean runEqualConditionInComparisonOperators(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
 
@@ -86,13 +89,18 @@ public class TSqlRunner {
 
         boolean isConditionNecessary = true;
         for (ConditionItem condition : conditions) {
-            if (condition.getLeftSideDataType() == ConditionDataType.STRING && condition.getRightSideDataType() == ConditionDataType.STRING) {
-                isConditionNecessary &= condition.compareStringAgainstString();
-            } else if (condition.getLeftSideDataType().isNumeric && condition.getRightSideDataType().isNumeric) {
+            if ((condition.getLeftSideDataType() == ConditionDataType.BINARY && Arrays.asList(ConditionDataType.BINARY, ConditionDataType.DECIMAL).contains(condition.getRightSideDataType())) ||
+                    (condition.getLeftSideDataType() == ConditionDataType.DECIMAL && (condition.getRightSideDataType().isNumeric || condition.getRightSideDataType() == ConditionDataType.STRING_DECIMAL)) ||
+                    (condition.getLeftSideDataType() == ConditionDataType.FLOAT && ((condition.getRightSideDataType().isNumeric && condition.getRightSideDataType() != ConditionDataType.BINARY) || (Arrays.asList(ConditionDataType.STRING_DECIMAL, ConditionDataType.STRING_FLOAT).contains(condition.getRightSideDataType())))) ||
+                    (condition.getLeftSideDataType() == ConditionDataType.REAL && !Arrays.asList(ConditionDataType.BINARY, ConditionDataType.STRING_BINARY).contains(condition.getRightSideDataType())) ||
+                    (condition.getLeftSideDataType() == ConditionDataType.STRING_DECIMAL && condition.getRightSideDataType() != ConditionDataType.BINARY) ||
+                    (condition.getLeftSideDataType() == ConditionDataType.STRING_FLOAT && Arrays.asList(ConditionDataType.REAL, ConditionDataType.FLOAT).contains(condition.getRightSideDataType())) ||
+                    (condition.getLeftSideDataType() == ConditionDataType.STRING_REAL && condition.getRightSideDataType() == ConditionDataType.REAL)) {
                 isConditionNecessary &= condition.compareNumberAgainstNumber();
-            } else if ((condition.getLeftSideDataType() == ConditionDataType.STRING && condition.getRightSideDataType().isNumeric) ||
-                    (condition.getLeftSideDataType().isNumeric && condition.getRightSideDataType() == ConditionDataType.STRING)) {
-                isConditionNecessary &= condition.compareStringAgainstNumber();
+            } else if (condition.getRightSideDataType() == ConditionDataType.STRING &&
+                    Arrays.asList(ConditionDataType.STRING_BINARY, ConditionDataType.STRING_DECIMAL, ConditionDataType.STRING_FLOAT, ConditionDataType.STRING_REAL, ConditionDataType.STRING)
+                            .contains(condition.getLeftSideDataType())) {
+                isConditionNecessary &= condition.compareStringAgainstString();
             } else if (condition.getRightSideDataType() == ConditionDataType.COLUMN && condition.getRightSideDataType() == ConditionDataType.COLUMN) {
                 DatabaseMetadata newMetadata = metadata.withTables(allTables);
                 isConditionNecessary &= condition.compareColumnAgainstColumn(newMetadata);
@@ -163,12 +171,12 @@ public class TSqlRunner {
         }
 
         if (!isDistinctInSelect.isEmpty()) {
-            for (DatabaseTable table: Stream.concat(joinTables.get("leftJoin").stream(), joinTables.get("fullOuterJoin").stream()).collect(Collectors
+            for (DatabaseTable table : Stream.concat(joinTables.get("leftJoin").stream(), joinTables.get("fullOuterJoin").stream()).collect(Collectors
                     .toList())) {
                 boolean tableColumnIsInSelect = false;
                 for (ColumnItem cItem : allColumnsInSelect) {
                     if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || cItem.getTable().getTableAlias().equals(table.getTableAlias()))
-                        || (table.columnExists(cItem)))) {
+                            || (table.columnExists(cItem)))) {
                         tableColumnIsInSelect = true;
                         break;
                     }

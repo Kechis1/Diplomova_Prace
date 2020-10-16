@@ -2,6 +2,7 @@ package DP.Database;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONObject;
@@ -60,13 +61,22 @@ public class DatabaseMetadata {
             JSONObject tableObject = jsonTables.getJSONObject(i);
             List<String> tableColumns = new ArrayList<>();
             List<String> tablePrimaryKeys = new ArrayList<>();
+            List<ForeignKey> tableForeignKeys = new ArrayList<>();
 
             tableObject.getJSONArray("column_names").forEach(x -> tableColumns.add(x.toString().toUpperCase()));
             tableObject.getJSONArray("primary_keys").forEach(x -> tablePrimaryKeys.add(x.toString().toUpperCase()));
+            if (tableObject.has("foreign_keys")) {
+                JSONArray fKey = tableObject.getJSONArray("foreign_keys");
+                for (Object o : fKey) {
+                    JSONObject item = (JSONObject) o;
+                    tableForeignKeys.add(new ForeignKey(item.getString("column_name"), null, item.getString("references_table")));
+                }
+            }
 
             dbTables.add(new DatabaseTable(tableObject.getString("table_name").toUpperCase(),
                             tableColumns,
                             tablePrimaryKeys,
+                    tableForeignKeys,
                     tableObject.getString("table_name").toUpperCase()
                     )
             );

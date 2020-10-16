@@ -11,15 +11,25 @@ public class DatabaseTable {
     private String tableAlias;
     private List<String> columns;
     private List<String> primaryKeys;
+    private List<ForeignKey> foreignKeys;
 
-    public DatabaseTable(String tableName, List<String> columns, List<String> primaryKeys, String tableAlias) {
+    public DatabaseTable(String tableName, List<String> columns, List<String> primaryKeys, List<ForeignKey> foreignKeys, String tableAlias) {
         this.tableName = tableName;
         this.columns = columns;
         this.primaryKeys = primaryKeys;
+        this.foreignKeys = foreignKeys;
         this.tableAlias = tableAlias;
     }
 
     public DatabaseTable() {}
+
+    public List<ForeignKey> getForeignKeys() {
+        return foreignKeys;
+    }
+
+    public void setForeignKeys(List<ForeignKey> foreignKeys) {
+        this.foreignKeys = foreignKeys;
+    }
 
     public String getTableName() {
         return tableName;
@@ -113,6 +123,7 @@ public class DatabaseTable {
                 ", tableAlias='" + tableAlias + '\'' +
                 ", columns=" + columns +
                 ", primaryKeys=" + primaryKeys +
+                ", foreignKeys=" + foreignKeys +
                 '}';
     }
 }

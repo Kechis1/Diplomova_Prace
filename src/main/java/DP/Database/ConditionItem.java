@@ -195,7 +195,7 @@ public class ConditionItem {
             String value = context.primitive_expression().constant().getText().replaceAll("'", "");
             if (value.toLowerCase().startsWith("0x") && value.toLowerCase().replaceFirst("0x", "").matches("-?[0-9a-fA-F]+")) {
                 return ConditionDataType.STRING_BINARY;
-            } else if (value.toLowerCase().matches("\\d+e-?[0-9]+")) {
+            } else if (value.toLowerCase().matches("^(-?|\\+?)\\d+(\\.\\d+)?e(-?|\\+?)\\d+$")) {
                 return ConditionDataType.STRING_REAL;
             }
             try {

@@ -25,6 +25,16 @@
         "pID",
         "sID",
         "rok"
+      ],
+      "foreign_keys": [
+        {
+          "column_name": "pID",
+          "references_table": "predmet"
+        },
+        {
+          "column_name": "sID",
+          "references_table": "student"
+        }
       ]
     },
     {

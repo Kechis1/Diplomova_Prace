@@ -39,11 +39,11 @@ public class JoinTablesTest {
         System.setOut(new PrintStream(this.consoleContent));
     }
 
-    @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}")
+    @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, message = {1}")
     @MethodSource("doFindUnnecessaryConditionSource")
-    void doFindUnnecessaryConditionTest(String query) {
+    void doFindUnnecessaryConditionTest(String query, String message) {
         boolean result = TSqlRunner.runRedundantJoinTables(metadata, query);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " LEFT JOIN", this.consoleContent.toString().trim());
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " " + message, this.consoleContent.toString().trim());
         assertFalse(result);
     }
 
@@ -60,10 +60,28 @@ public class JoinTablesTest {
         return Stream.of(
                 Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO\n" +
                         "FROM DBO.STUDENT SDT\n" +
-                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),
-                Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO\n" +
-                        "FROM DBO.STUDENT SDT\n" +
-                        "FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID")
+                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID", "LEFT JOIN"),
+                Arguments.arguments("SELECT distinct SDT.* " +
+                        "FROM DBO.STUDENT SDT " +
+                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID", "LEFT JOIN"),
+                Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +
+                        "FROM DBO.STUDENT SDT " +
+                        "FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID", "FULL OUTER JOIN"),
+                Arguments.arguments("SELECT distinct SDT.* " +
+                        "FROM DBO.STUDENT SDT " +
+                        "FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID", "FULL OUTER JOIN"),
+                Arguments.arguments("SELECT distinct SDE.SID, SDE.body " +
+                        "FROM dbo.student SDT " +
+                        "RIGHT JOIN dbo.STUDUJE SDE ON SDT.SID = SDE.SID", "RIGHT JOIN"),
+                Arguments.arguments("SELECT distinct SDE.* " +
+                        "FROM dbo.student SDT " +
+                        "RIGHT JOIN dbo.STUDUJE SDE ON SDT.SID = SDE.SID", "RIGHT JOIN"),
+                Arguments.arguments("SELECT distinct SDE.SID, SDE.body " +
+                        "FROM DBO.STUDENT SDT " +
+                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID", "INNER JOIN"),
+                Arguments.arguments("SELECT distinct SDE.* " +
+                        "FROM DBO.STUDENT SDT " +
+                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID", "INNER JOIN")
         );
     }
 
@@ -72,9 +90,18 @@ public class JoinTablesTest {
                 Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +
                         "FROM DBO.STUDENT SDT " +
                         "JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT distinct * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),
                 Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +
                         "FROM DBO.STUDENT SDT " +
-                        "RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID")
+                        "RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT distinct SDT.* " +
+                        "FROM DBO.STUDENT SDT " +
+                        "RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT distinct SDE.* " +
+                        "FROM DBO.STUDENT SDT " +
+                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID")
         );
     }
 }

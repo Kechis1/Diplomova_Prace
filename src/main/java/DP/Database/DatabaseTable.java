@@ -12,6 +12,7 @@ public class DatabaseTable {
     private List<ColumnItem> columns;
     private List<String> primaryKeys;
     private List<ForeignKey> foreignKeys;
+    private boolean isColumnsTableSet = false;
 
     public DatabaseTable(String tableName, List<ColumnItem> columns, List<String> primaryKeys, List<ForeignKey> foreignKeys, String tableAlias) {
         this.tableName = tableName;
@@ -40,6 +41,12 @@ public class DatabaseTable {
     }
 
     public List<ColumnItem> getColumns() {
+        if (!isColumnsTableSet) {
+            for (ColumnItem currItem : columns) {
+                currItem.setTable(this);
+            }
+            isColumnsTableSet = true;
+        }
         return columns;
     }
 
@@ -115,6 +122,7 @@ public class DatabaseTable {
                 ", columns=" + columns +
                 ", primaryKeys=" + primaryKeys +
                 ", foreignKeys=" + foreignKeys +
+                ", isColumnsTableSet=" + isColumnsTableSet +
                 '}';
     }
 }

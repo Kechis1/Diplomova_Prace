@@ -157,6 +157,18 @@ public class TSqlRunner {
         return !foundDuplicateCondition;
     }
 
+    /**
+     * b.x must not be nullable
+     * SELECT DISTINCT b.x FROM a INNER JOIN b ON a.x = b.x
+     *
+     * b.x or a.x must not be nullable
+     * SELECT DISTINCT a.x FROM a FULL OUTER JOIN b ON a.x = b.x
+     *
+     * @TODO nacist isNullable pro sloupce
+     * @param metadata
+     * @param query
+     * @return
+     */
     public static boolean runRedundantJoinTables(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
 
@@ -164,27 +176,92 @@ public class TSqlRunner {
         final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadata, select);
         final List<Boolean> isDistinctInSelect = TSqlParseWalker.findDistinctInSelect(select);
         final Map<String, List<DatabaseTable>> joinTables = TSqlParseWalker.findJoinTablesList(metadata, select);
+        final List<ConditionItem> fullOuterJoinConditions = new ArrayList<>();
+        final List<ConditionItem> innerConditions = new ArrayList<>();
+        final List<DatabaseTable> fromTable = new ArrayList<>();
 
-        if (joinTables.get("outerJoin").isEmpty()) {
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            @Override
+            public void enterJoin_part(TSqlParser.Join_partContext ctx) {
+                if (ctx.FULL() != null && ctx.OUTER() != null) {
+                    fullOuterJoinConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
+                } else if (ctx.LEFT() == null && ctx.RIGHT() == null) {
+                    innerConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
+                }
+            }
+
+            @Override
+            public void enterQuery_specification(TSqlParser.Query_specificationContext ctx) {
+                DatabaseTable found = metadata.findTable(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText());
+                if (ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias() != null) {
+                    found.setTableAlias(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias().getText());
+                }
+                fromTable.add(found);
+            }
+        }, select);
+
+        if (isDistinctInSelect.isEmpty()) {
             System.out.println("OK");
             return true;
         }
 
-        if (!isDistinctInSelect.isEmpty()) {
-            for (DatabaseTable table : Stream.concat(joinTables.get("leftJoin").stream(), joinTables.get("fullOuterJoin").stream()).collect(Collectors
-                    .toList())) {
-                boolean tableColumnIsInSelect = false;
-                for (ColumnItem cItem : allColumnsInSelect) {
-                    if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || cItem.getTable().getTableAlias().equals(table.getTableAlias()))
-                            || (table.columnExists(cItem)))) {
-                        tableColumnIsInSelect = true;
-                        break;
-                    }
+        for (DatabaseTable table : joinTables.get("leftJoin")) {
+            boolean joinTableColumnAreInSelect = false;
+            for (ColumnItem cItem : allColumnsInSelect) {
+                if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || !cItem.getTable().getTableAlias().equals(fromTable.get(0).getTableAlias())))
+                        || table.columnExists(cItem)) {
+                    joinTableColumnAreInSelect = true;
+                    break;
                 }
-                if (!tableColumnIsInSelect) {
-                    System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " LEFT JOIN");
-                    return false;
+            }
+            if (!joinTableColumnAreInSelect) {
+                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " LEFT JOIN");
+                return false;
+            }
+        }
+
+        for (DatabaseTable table : joinTables.get("rightJoin")) {
+            boolean fromTableColumnAreInSelect = false;
+            for (ColumnItem cItem : allColumnsInSelect) {
+                if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || !cItem.getTable().getTableAlias().equals(table.getTableAlias())))
+                        || (!cItem.getName().equals("*") && !table.columnExists(cItem))) {
+                    fromTableColumnAreInSelect = true;
+                    break;
                 }
+            }
+            if (!fromTableColumnAreInSelect) {
+                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " RIGHT JOIN");
+                return false;
+            }
+        }
+
+        for (DatabaseTable table : joinTables.get("fullOuterJoin")) {
+            boolean joinTableColumnIsInSelect = false;
+            for (ColumnItem cItem : allColumnsInSelect) {
+                if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || cItem.getTable().getTableAlias().equals(table.getTableAlias())))
+                        || table.columnExists(cItem)) {
+                    joinTableColumnIsInSelect = true;
+                    break;
+                }
+            }
+            if (!joinTableColumnIsInSelect && !ConditionItem.isConditionColumnNullable(fullOuterJoinConditions, table, true)) {
+                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " FULL OUTER JOIN");
+                return false;
+            }
+        }
+
+        for (DatabaseTable table : joinTables.get("innerJoin")) {
+            boolean fromTableColumnAreInSelect = false;
+            for (ColumnItem cItem : allColumnsInSelect) {
+                if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || !cItem.getTable().getTableAlias().equals(table.getTableAlias())))
+                        || (!cItem.getName().equals("*") && !table.columnExists(cItem))) {
+                    fromTableColumnAreInSelect = true;
+                    break;
+                }
+            }
+            if (!fromTableColumnAreInSelect && !ConditionItem.isConditionColumnNullable(innerConditions, table, false)) {
+                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " INNER JOIN");
+                return false;
             }
         }
 

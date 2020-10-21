@@ -51,6 +51,25 @@ public class ConditionItem {
         return false;
     }
 
+    public static boolean isConditionColumnNullable(List<ConditionItem> conditions, DatabaseTable table, boolean checkBothSides) {
+        if (checkBothSides) {
+            for (ConditionItem currItem: conditions) {
+                if ((currItem.getLeftSideDataType() == ConditionDataType.COLUMN && currItem.getLeftSideColumnItem().isNullable) ||
+                        (currItem.getRightSideDataType() == ConditionDataType.COLUMN && currItem.getRightSideColumnItem().isNullable)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        for (ConditionItem currItem: conditions) {
+            if ((currItem.getLeftSideDataType() == ConditionDataType.COLUMN && currItem.getLeftSideColumnItem().isNullable && ColumnItem.exists(table.getColumns(), currItem.getLeftSideColumnItem())) ||
+                    (currItem.getRightSideDataType() == ConditionDataType.COLUMN && currItem.getRightSideColumnItem().isNullable && ColumnItem.exists(table.getColumns(), currItem.getRightSideColumnItem()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public ConditionDataType getLeftSideDataType() {
         return leftSideDataType;
     }

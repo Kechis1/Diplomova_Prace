@@ -100,10 +100,16 @@ public class ColumnItem {
 
     @Override
     public String toString() {
+        String tableString = "";
+        if (table != null) {
+            tableString += "{tableName=" + table.getTableName() + ", tableAlias=" + table.getTableAlias() + "}";
+        } else {
+            tableString = "null";
+        }
         return "ColumnItem{" +
                 "database='" + database + '\'' +
                 ", schema='" + schema + '\'' +
-                ", table=" + table +
+                ", table=" + tableString +
                 ", name='" + name + '\'' +
                 ", isNullable=" + isNullable +
                 '}';

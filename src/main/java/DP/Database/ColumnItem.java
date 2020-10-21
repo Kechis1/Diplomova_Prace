@@ -9,6 +9,15 @@ public class ColumnItem {
     String schema;
     DatabaseTable table;
     String name;
+    boolean isNullable = true;
+
+    public ColumnItem(String database, String schema, DatabaseTable table, String name, boolean isNullable) {
+        this.database = database;
+        this.schema = schema;
+        this.table = table;
+        this.name = name;
+        this.isNullable = isNullable;
+    }
 
     public ColumnItem(String database, String schema, DatabaseTable table, String name) {
         this.database = database;
@@ -94,8 +103,9 @@ public class ColumnItem {
         return "ColumnItem{" +
                 "database='" + database + '\'' +
                 ", schema='" + schema + '\'' +
-                ", table={" + table + "}" +
+                ", table=" + table +
                 ", name='" + name + '\'' +
+                ", isNullable=" + isNullable +
                 '}';
     }
 }

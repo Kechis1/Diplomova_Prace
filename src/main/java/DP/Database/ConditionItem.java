@@ -133,13 +133,6 @@ public class ConditionItem {
         return true;
     }
 
-    public boolean compareStringAgainstNumber() {
-        if (getLeftSideDataType() == ConditionDataType.BINARY || getRightSideDataType() == ConditionDataType.BINARY) {
-            return true;
-        }
-        return compareNumberAgainstNumber();
-    }
-
     public boolean compareColumnAgainstColumn(DatabaseMetadata metadata) {
         if (metadata.columnsEqual(getLeftSideColumnItem(), getRightSideColumnItem())) {
             System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");

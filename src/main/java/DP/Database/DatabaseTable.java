@@ -9,11 +9,11 @@ import java.util.Objects;
 public class DatabaseTable {
     private String tableName;
     private String tableAlias;
-    private List<String> columns;
+    private List<ColumnItem> columns;
     private List<String> primaryKeys;
     private List<ForeignKey> foreignKeys;
 
-    public DatabaseTable(String tableName, List<String> columns, List<String> primaryKeys, List<ForeignKey> foreignKeys, String tableAlias) {
+    public DatabaseTable(String tableName, List<ColumnItem> columns, List<String> primaryKeys, List<ForeignKey> foreignKeys, String tableAlias) {
         this.tableName = tableName;
         this.columns = columns;
         this.primaryKeys = primaryKeys;
@@ -39,11 +39,11 @@ public class DatabaseTable {
         this.tableName = tableName;
     }
 
-    public List<String> getColumns() {
+    public List<ColumnItem> getColumns() {
         return columns;
     }
 
-    public void setColumns(List<String> columns) {
+    public void setColumns(List<ColumnItem> columns) {
         this.columns = columns;
     }
 
@@ -94,17 +94,8 @@ public class DatabaseTable {
         return newItems;
     }
 
-    public List<ColumnItem> getColumnItems() {
-        List<ColumnItem> items = new ArrayList<>();
-        for (String item : getColumns()) {
-            items.add(new ColumnItem(null, null, this, item));
-        }
-        return items;
-    }
-
     public boolean columnExists(ColumnItem columnItem) {
-        List<ColumnItem> allColumns = getColumnItems();
-        return ColumnItem.exists(allColumns, columnItem);
+        return ColumnItem.exists(getColumns(), columnItem);
     }
 
     @Override

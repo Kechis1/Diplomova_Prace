@@ -4,10 +4,19 @@
   "tables": [
     {
       "table_name": "student",
-      "column_names": [
-        "sID",
-        "jmeno",
-        "rok_narozeni"
+      "columns": [
+        {
+          "name": "sID",
+          "is_nullable": false
+        },
+        {
+          "name": "jmeno",
+          "is_nullable": false
+        },
+        {
+          "name": "rok_narozeni",
+          "is_nullable": true
+        }
       ],
       "primary_keys": [
         "sID"
@@ -15,11 +24,23 @@
     },
     {
       "table_name": "studuje",
-      "column_names": [
-        "pID",
-        "sID",
-        "rok",
-        "body"
+      "columns": [
+        {
+          "name": "pID",
+          "is_nullable": false
+        },
+        {
+          "name": "sID",
+          "is_nullable": false
+        },
+        {
+          "name": "rok",
+          "is_nullable": false
+        },
+        {
+          "name": "body",
+          "is_nullable": true
+        }
       ],
       "primary_keys": [
         "pID",
@@ -29,20 +50,31 @@
       "foreign_keys": [
         {
           "column_name": "pID",
-          "references_table": "predmet"
+          "references_table": "predmet",
+          "references_column": "pID"
         },
         {
           "column_name": "sID",
-          "references_table": "student"
+          "references_table": "student",
+          "references_column": "sID"
         }
       ]
     },
     {
       "table_name": "predmet",
-      "column_names": [
-        "pID",
-        "jmeno",
-        "rocnik"
+      "columns": [
+        {
+          "name": "pID",
+          "is_nullable": false
+        },
+        {
+          "name": "jmeno",
+          "is_nullable": false
+        },
+        {
+          "name": "rocnik",
+          "is_nullable": true
+        }
       ],
       "primary_keys": [
         "pID"

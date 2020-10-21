@@ -88,6 +88,17 @@ public class JoinConditionsTest {
                         "FROM DBO.STUDENT SDT\n" +
                         "JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
                         "JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID\n" +
+                        "ORDER BY SDT.SID"),
+                Arguments.arguments("SELECT *\n" +
+                        "FROM DBO.STUDENT SDT\n" +
+                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
+                        "JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
+                        "WHERE SDT.SID = SDE.SID\n" +
+                        "ORDER BY SDT.SID"),
+                Arguments.arguments("SELECT *\n" +
+                        "FROM DBO.STUDENT SDT\n" +
+                        "JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
+                        "RIGHT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID\n" +
                         "ORDER BY SDT.SID")
         );
     }

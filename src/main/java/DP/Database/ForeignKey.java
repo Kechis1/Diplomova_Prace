@@ -2,13 +2,19 @@ package DP.Database;
 
 public class ForeignKey {
     String columnName;
-    DatabaseTable referencesTableObj;
+    ColumnItem columnItem;
+    String referencesColumnName;
+    ColumnItem referencesColumnObj;
     String referencesTableName;
+    DatabaseTable referencesTableObj;
 
-    public ForeignKey(String columnName, DatabaseTable referencesTableObj, String referencesTableName) {
+    public ForeignKey(String columnName, ColumnItem columnItem, String referencesColumnName, ColumnItem referencesColumnObj, String referencesTableName, DatabaseTable referencesTableObj) {
         this.columnName = columnName;
-        this.referencesTableObj = referencesTableObj;
+        this.columnItem = columnItem;
+        this.referencesColumnName = referencesColumnName;
+        this.referencesColumnObj = referencesColumnObj;
         this.referencesTableName = referencesTableName;
+        this.referencesTableObj = referencesTableObj;
     }
 
     public String getColumnName() {
@@ -19,12 +25,28 @@ public class ForeignKey {
         this.columnName = columnName;
     }
 
-    public DatabaseTable getReferencesTableObj() {
-        return referencesTableObj;
+    public ColumnItem getColumnItem() {
+        return columnItem;
     }
 
-    public void setReferencesTableObj(DatabaseTable referencesTableObj) {
-        this.referencesTableObj = referencesTableObj;
+    public void setColumnItem(ColumnItem columnItem) {
+        this.columnItem = columnItem;
+    }
+
+    public String getReferencesColumnName() {
+        return referencesColumnName;
+    }
+
+    public void setReferencesColumnName(String referencesColumnName) {
+        this.referencesColumnName = referencesColumnName;
+    }
+
+    public ColumnItem getReferencesColumnObj() {
+        return referencesColumnObj;
+    }
+
+    public void setReferencesColumnObj(ColumnItem referencesColumnObj) {
+        this.referencesColumnObj = referencesColumnObj;
     }
 
     public String getReferencesTableName() {
@@ -35,12 +57,23 @@ public class ForeignKey {
         this.referencesTableName = referencesTableName;
     }
 
+    public DatabaseTable getReferencesTableObj() {
+        return referencesTableObj;
+    }
+
+    public void setReferencesTableObj(DatabaseTable referencesTableObj) {
+        this.referencesTableObj = referencesTableObj;
+    }
+
     @Override
     public String toString() {
         return "ForeignKey{" +
                 "columnName='" + columnName + '\'' +
-                ", referencesTableObj=" + referencesTableObj +
+                ", columnItem=" + columnItem +
+                ", referencesColumnName='" + referencesColumnName + '\'' +
+                ", referencesColumnObj=" + referencesColumnObj +
                 ", referencesTableName='" + referencesTableName + '\'' +
+                ", referencesTableObj=" + referencesTableObj +
                 '}';
     }
 }

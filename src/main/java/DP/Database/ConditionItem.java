@@ -62,8 +62,8 @@ public class ConditionItem {
             return false;
         }
         for (ConditionItem currItem: conditions) {
-            if ((currItem.getLeftSideDataType() == ConditionDataType.COLUMN && currItem.getLeftSideColumnItem().isNullable && ColumnItem.exists(table.getColumns(), currItem.getLeftSideColumnItem())) ||
-                    (currItem.getRightSideDataType() == ConditionDataType.COLUMN && currItem.getRightSideColumnItem().isNullable && ColumnItem.exists(table.getColumns(), currItem.getRightSideColumnItem()))) {
+            if ((currItem.getLeftSideDataType() == ConditionDataType.COLUMN && currItem.getLeftSideColumnItem().isNullable() && ColumnItem.exists(table.getColumns(), currItem.getLeftSideColumnItem())) ||
+                    (currItem.getRightSideDataType() == ConditionDataType.COLUMN && currItem.getRightSideColumnItem().isNullable() && ColumnItem.exists(table.getColumns(), currItem.getRightSideColumnItem()))) {
                 return true;
             }
         }

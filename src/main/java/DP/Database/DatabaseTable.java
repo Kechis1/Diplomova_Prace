@@ -1,5 +1,6 @@
 package DP.Database;
 
+import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlParser;
 
 import java.util.ArrayList;
@@ -23,6 +24,24 @@ public class DatabaseTable {
     }
 
     public DatabaseTable() {}
+
+    public static boolean redundantJoinExists(String typeOfJoin, List<DatabaseTable> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides) {
+        for (DatabaseTable table : joins) {
+            boolean found = false;
+            for (ColumnItem cItem : allColumnsInSelect) {
+                if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || !cItem.getTable().getTableAlias().equals(tableAlias == null ? table.getTableAlias() : tableAlias)))
+                        || (!cItem.getName().equals("*") && !(databaseTable == null ? table : databaseTable).columnExists(cItem))) {
+                    found = true;
+                    break;
+                }
+            }
+            if ((!checkNullable && !found) || (checkNullable && !found && !ConditionItem.isConditionColumnNullable(newConditions, table, checkBothSides))) {
+                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " " + typeOfJoin + " JOIN");
+                return true;
+            }
+        }
+        return false;
+    }
 
     public List<ForeignKey> getForeignKeys() {
         return foreignKeys;
@@ -71,7 +90,7 @@ public class DatabaseTable {
     }
 
     public static DatabaseTable create(DatabaseMetadata metadata, TSqlParser.Table_source_itemContext ctx) {
-        DatabaseTable newItem = metadata.findTable(ctx.table_name_with_hint().table_name().table.getText());
+        DatabaseTable newItem = metadata.findTable(ctx.table_name_with_hint().table_name().table.getText(), null);
         newItem.setTableAlias(ctx.as_table_alias() != null
                 ? ctx.as_table_alias().getText()
                 : ctx.table_name_with_hint().table_name().table.getText());
@@ -81,9 +100,9 @@ public class DatabaseTable {
     public static DatabaseTable create(DatabaseMetadata metadata, String name, String alias) {
         DatabaseTable newItem;
         if (name != null) {
-            newItem = metadata.findTable(name);
+            newItem = metadata.findTable(name, null);
         } else if (alias != null) {
-            newItem = metadata.findTable(alias);
+            newItem = metadata.findTable(null, alias);
         } else {
             newItem = new DatabaseTable();
         }

@@ -117,6 +117,22 @@ public class TSqlParseWalker {
         return conditions;
     }
 
+    public static List<DatabaseTable> findFromTable(final DatabaseMetadata metadata, ParseTree select) {
+        List<DatabaseTable> fromTable = new ArrayList<>();
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            @Override
+            public void enterQuery_specification(TSqlParser.Query_specificationContext ctx) {
+                DatabaseTable found = metadata.findTable(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText(), null);
+                if (ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias() != null) {
+                    found.setTableAlias(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias().getText());
+                }
+                fromTable.add(found);
+            }
+        }, select);
+
+        return fromTable;
+    }
+
     public static List<Boolean> findDistinctInSelect(ParseTree select) {
         final List<Boolean> isDistinctFoundInSelect = new ArrayList<>();
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {

@@ -125,9 +125,19 @@ public class DatabaseMetadata {
         );
     }
 
-    public DatabaseTable findTable(String tableName) {
+    private ColumnItem findColumn(ColumnItem columnItem) {
+        DatabaseTable table = findTable(columnItem.getTable().getTableName(), columnItem.getTable().getTableAlias());
+        for (ColumnItem item : table.getColumns()) {
+            if (item.getName().equalsIgnoreCase(columnItem.getName())) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    public DatabaseTable findTable(String tableName, String tableAlias) {
         for (DatabaseTable item : tables) {
-            if (item.getTableName().equals(tableName)) {
+            if (item.getTableName().equals(tableName) || item.getTableAlias().equals(tableAlias)) {
                 return item;
             }
         }
@@ -185,6 +195,18 @@ public class DatabaseMetadata {
             columns.addAll(table.getColumns());
         }
         return columns;
+    }
+
+    public List<ConditionItem> setNullableColumns(List<ConditionItem> conditions) {
+        for (ConditionItem conItem : conditions) {
+            ColumnItem colItem = findColumn(conItem.getLeftSideColumnItem());
+            assert colItem != null;
+            conItem.getLeftSideColumnItem().setNullable(colItem.isNullable());
+            colItem = findColumn(conItem.getRightSideColumnItem());
+            assert colItem != null;
+            conItem.getRightSideColumnItem().setNullable(colItem.isNullable());
+        }
+        return conditions;
     }
 
     @Override

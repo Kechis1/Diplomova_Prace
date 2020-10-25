@@ -98,6 +98,14 @@ public class ColumnItem {
         this.name = name;
     }
 
+    public boolean isNullable() {
+        return isNullable;
+    }
+
+    public void setNullable(boolean nullable) {
+        isNullable = nullable;
+    }
+
     @Override
     public String toString() {
         String tableString = "";

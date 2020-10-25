@@ -10,6 +10,7 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.*;
 
+import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -157,18 +158,6 @@ public class TSqlRunner {
         return !foundDuplicateCondition;
     }
 
-    /**
-     * b.x must not be nullable
-     * SELECT DISTINCT b.x FROM a INNER JOIN b ON a.x = b.x
-     *
-     * b.x or a.x must not be nullable
-     * SELECT DISTINCT a.x FROM a FULL OUTER JOIN b ON a.x = b.x
-     *
-     * @TODO nacist isNullable pro sloupce
-     * @param metadata
-     * @param query
-     * @return
-     */
     public static boolean runRedundantJoinTables(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
 
@@ -178,7 +167,7 @@ public class TSqlRunner {
         final Map<String, List<DatabaseTable>> joinTables = TSqlParseWalker.findJoinTablesList(metadata, select);
         final List<ConditionItem> fullOuterJoinConditions = new ArrayList<>();
         final List<ConditionItem> innerConditions = new ArrayList<>();
-        final List<DatabaseTable> fromTable = new ArrayList<>();
+        final List<DatabaseTable> fromTable = TSqlParseWalker.findFromTable(metadata, select);
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
@@ -189,15 +178,6 @@ public class TSqlRunner {
                     innerConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
                 }
             }
-
-            @Override
-            public void enterQuery_specification(TSqlParser.Query_specificationContext ctx) {
-                DatabaseTable found = metadata.findTable(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText());
-                if (ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias() != null) {
-                    found.setTableAlias(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias().getText());
-                }
-                fromTable.add(found);
-            }
         }, select);
 
         if (isDistinctInSelect.isEmpty()) {
@@ -205,68 +185,19 @@ public class TSqlRunner {
             return true;
         }
 
-        for (DatabaseTable table : joinTables.get("leftJoin")) {
-            boolean joinTableColumnAreInSelect = false;
-            for (ColumnItem cItem : allColumnsInSelect) {
-                if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || !cItem.getTable().getTableAlias().equals(fromTable.get(0).getTableAlias())))
-                        || table.columnExists(cItem)) {
-                    joinTableColumnAreInSelect = true;
-                    break;
-                }
-            }
-            if (!joinTableColumnAreInSelect) {
-                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " LEFT JOIN");
-                return false;
-            }
-        }
+        boolean foundRedundantJoin = DatabaseTable.redundantJoinExists("LEFT", joinTables.get("leftJoin"),
+                fromTable.get(0).getTableAlias(), fromTable.get(0), allColumnsInSelect, false, null, false);
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists("RIGHT", joinTables.get("rightJoin"),
+                null, null, allColumnsInSelect, false, null, false);
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists("FULL OUTER", joinTables.get("fullOuterJoin"), fromTable.get(0).getTableAlias(),
+                fromTable.get(0), allColumnsInSelect, true, metadata.setNullableColumns(fullOuterJoinConditions), true);
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists("INNER", joinTables.get("innerJoin"), null,
+                null, allColumnsInSelect, true, metadata.setNullableColumns(innerConditions), false);
 
-        for (DatabaseTable table : joinTables.get("rightJoin")) {
-            boolean fromTableColumnAreInSelect = false;
-            for (ColumnItem cItem : allColumnsInSelect) {
-                if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || !cItem.getTable().getTableAlias().equals(table.getTableAlias())))
-                        || (!cItem.getName().equals("*") && !table.columnExists(cItem))) {
-                    fromTableColumnAreInSelect = true;
-                    break;
-                }
-            }
-            if (!fromTableColumnAreInSelect) {
-                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " RIGHT JOIN");
-                return false;
-            }
+        if (!foundRedundantJoin) {
+            System.out.println("OK");
         }
-
-        for (DatabaseTable table : joinTables.get("fullOuterJoin")) {
-            boolean joinTableColumnIsInSelect = false;
-            for (ColumnItem cItem : allColumnsInSelect) {
-                if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || cItem.getTable().getTableAlias().equals(table.getTableAlias())))
-                        || table.columnExists(cItem)) {
-                    joinTableColumnIsInSelect = true;
-                    break;
-                }
-            }
-            if (!joinTableColumnIsInSelect && !ConditionItem.isConditionColumnNullable(fullOuterJoinConditions, table, true)) {
-                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " FULL OUTER JOIN");
-                return false;
-            }
-        }
-
-        for (DatabaseTable table : joinTables.get("innerJoin")) {
-            boolean fromTableColumnAreInSelect = false;
-            for (ColumnItem cItem : allColumnsInSelect) {
-                if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || !cItem.getTable().getTableAlias().equals(table.getTableAlias())))
-                        || (!cItem.getName().equals("*") && !table.columnExists(cItem))) {
-                    fromTableColumnAreInSelect = true;
-                    break;
-                }
-            }
-            if (!fromTableColumnAreInSelect && !ConditionItem.isConditionColumnNullable(innerConditions, table, false)) {
-                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " INNER JOIN");
-                return false;
-            }
-        }
-
-        System.out.println("OK");
-        return true;
+        return !foundRedundantJoin;
     }
 
     public static boolean runEqualConditionInOperatorAll(final DatabaseMetadata metadata, String query) {

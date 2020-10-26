@@ -10,14 +10,8 @@ public class Main {
 
         // TSqlRunner.runGroupBy(metadata, "SELECT pId, jmeno, sum(pId) FROM dbo.predmet GROUP BY pid, jmeno");
 
-  /*      TSqlRunner.runEqualConditionInComparisonOperators(metadata, "SELECT *\n" +
-                "FROM DBO.STUDENT SDT\n" +
-                "WHERE (('A' = 'a' AND 'b' > 'a') OR 'c' > 'b') AND 1 = 1");*/
-
-        /*System.out.println("1");
-        TSqlRunner.runRedundantJoinConditions(metadata, "SELECT * " +
-                "FROM DBO.STUDENT SDT " +
-                "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
-                "LEFT JOIN DBO.PREDMET PRT ON SDE.PID = PRT.PID ");*/
+      TSqlRunner.runEqualConditionInComparisonOperators(metadata, "SELECT * " +
+              "FROM DBO.PREDMET " +
+              "WHERE 'ab' > 'aa' AND 'bb' >= 'ba'");
     }
 }

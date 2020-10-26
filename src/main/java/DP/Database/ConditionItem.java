@@ -147,7 +147,6 @@ public class ConditionItem {
                 (getOperator().equals(">") && getLeftSideValue().compareToIgnoreCase(getRightSideValue()) > 0) ||
                 (getOperator().equals("<=") && getLeftSideValue().compareToIgnoreCase(getRightSideValue()) <= 0) ||
                 (getOperator().equals("<") && getLeftSideValue().compareToIgnoreCase(getRightSideValue()) < 0)) {
-            System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
             return false;
         }
         return true;
@@ -160,7 +159,6 @@ public class ConditionItem {
                 (getOperator().equals(">") && getLeftSideNumberValue() > getRightSideNumberValue()) ||
                 (getOperator().equals("<=") && getLeftSideNumberValue() <= getRightSideNumberValue()) ||
                 (getOperator().equals("<") && getLeftSideNumberValue() < getRightSideNumberValue())) {
-            System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
             return false;
         }
         return true;
@@ -168,7 +166,6 @@ public class ConditionItem {
 
     public boolean compareColumnAgainstColumn(DatabaseMetadata metadata) {
         if (metadata.columnsEqual(getLeftSideColumnItem(), getRightSideColumnItem())) {
-            System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION");
             return false;
         }
         return true;

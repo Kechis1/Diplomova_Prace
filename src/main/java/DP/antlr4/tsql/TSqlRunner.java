@@ -10,11 +10,8 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.*;
 
-import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class TSqlRunner {
     // private final static String DIR_QUERIES = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "DP" + File.separator + "antlr4" + File.separator + "tsql" + File.separator + "queries" + File.separator;
@@ -110,6 +107,8 @@ public class TSqlRunner {
 
         if (isConditionNecessary) {
             System.out.println("OK");
+        } else {
+            System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION");
         }
         return isConditionNecessary;
     }

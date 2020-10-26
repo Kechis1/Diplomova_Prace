@@ -44,7 +44,7 @@ public class EqualConditionInComparisonOperatorsTest {
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query) {
         boolean result = TSqlRunner.runEqualConditionInComparisonOperators(metadata, query);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION", this.consoleContent.toString().trim());
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION", this.consoleContent.toString().trim());
         assertFalse(result);
     }
 

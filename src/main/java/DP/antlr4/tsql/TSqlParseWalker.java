@@ -79,19 +79,7 @@ public class TSqlParseWalker {
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
-                ConditionItem item = new ConditionItem(ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
-                        ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
-                        ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
-                        ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
-                        ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getChild(1).getText()
-                );
-
-                if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                    item.setLeftSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
-                    item.setRightSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 1));
-                }
-
-                conditions.add(item);
+                conditions.addAll(findConditionsFromSearchCtx(metadata, ctx));
             }
         }, select);
         return conditions;

@@ -57,44 +57,44 @@ public class EqualConditionInOperatorLikeTest {
 
 
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
-        return Stream.of(Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+        return Stream.of(Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 LIKE 1"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 LIKE '1'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 LIKE '%1'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 LIKE '%1%'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 LIKE '1%'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE '1' LIKE '1'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'string' LIKE 'str%'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM student stt\n" +
-                        "JOIN studuje sde ON stt.sID = stt.sID\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM student stt " +
+                        "JOIN studuje sde ON stt.sID = stt.sID " +
                         "WHERE stt.sID LIKE stt.sID")
         );
     }
 
     public static Stream<Arguments> doFindNecessaryConditionSource() {
-        return Stream.of(Arguments.arguments("SELECT *\n" +
-                        "FROM student stt\n" +
-                        "JOIN studuje sde ON stt.sID = stt.sID\n" +
+        return Stream.of(Arguments.arguments("SELECT * " +
+                        "FROM student stt " +
+                        "JOIN studuje sde ON stt.sID = stt.sID " +
                         "WHERE sde.sID LIKE stt.sID"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM student stt\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM student stt " +
                         "WHERE stt.prijmeni LIKE stt.jmeno"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM student stt\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM student stt " +
                         "WHERE stt.prijmeni LIKE '%ová'")
         );
     }

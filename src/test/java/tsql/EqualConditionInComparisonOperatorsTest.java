@@ -58,129 +58,129 @@ public class EqualConditionInComparisonOperatorsTest {
 
 
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
-        return Stream.of(Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+        return Stream.of(Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 = 1"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 0 >= 0"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 > 0"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 0 <= 1"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 0 < 1"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 <> 0"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 = '1'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE '1' = 1"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 > 0 AND 0 >= 0"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'a' = 'A'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'ba' >= 'aa'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'ba' > 'aa'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'ab' <= 'ac'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'aa' < 'ab'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'aa' <> 'ab'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'ab' > 'aa' AND 'bb' >= 'ba'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.STUDENT SDT\n" +
-                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
-                        "WHERE SDT.SID = SDT.SID\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID " +
+                        "WHERE SDT.SID = SDT.SID " +
                         "ORDER BY SDT.SID")
         );
     }
 
     public static Stream<Arguments> doFindNecessaryConditionSource() {
-        return Stream.of(Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+        return Stream.of(Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 = 2"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 0 >= 1"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 > 2"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 2 <= 1"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 2 < 1"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 <> 1"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 = '2'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE '1' = 2"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'ba' < 'ba' OR 'bc' > 'bb'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 > 0 OR 1 < 0"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 < 0 OR 1 > 2"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 1 > 2 AND 0 >= 2"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'a' = 'B'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'ba' >= 'ca'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'ba' > 'ca'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'ab' <= 'aa'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'ac' < 'ab'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'aa' <> 'aa'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'ba' < 'ba' OR 'bc' > 'db'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.PREDMET\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'ab' > 'ad' AND 'bb' >= 'bd'"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.STUDENT SDT\n" +
-                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
-                        "WHERE SDT.SID = SDT.JMENO\n" +
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID " +
+                        "WHERE SDT.SID = SDT.JMENO " +
                         "ORDER BY SDT.SID")
         );
     }

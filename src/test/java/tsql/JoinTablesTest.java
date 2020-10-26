@@ -58,8 +58,8 @@ public class JoinTablesTest {
 
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
         return Stream.of(
-                Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO\n" +
-                        "FROM DBO.STUDENT SDT\n" +
+                Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +
+                        "FROM DBO.STUDENT SDT " +
                         "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID", "LEFT JOIN"),
                 Arguments.arguments("SELECT distinct SDT.* " +
                         "FROM DBO.STUDENT SDT " +

@@ -58,58 +58,66 @@ public class JoinConditionsTest {
 
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
         return Stream.of(
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.STUDENT SDT\n" +
-                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
-                        "WHERE SDT.SID = SDE.SID\n" +
-                        "ORDER BY SDT.SID"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.STUDENT SDT\n" +
-                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID\n" +
-                        "ORDER BY SDT.SID"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.STUDENT SDT\n" +
-                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                        "LEFT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID\n" +
-                        "ORDER BY SDT.SID"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.STUDENT SDT\n" +
-                        "RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                        "RIGHT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID\n" +
-                        "ORDER BY SDT.SID"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.STUDENT SDT\n" +
-                        "FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                        "FULL OUTER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID\n" +
-                        "ORDER BY SDT.SID"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.STUDENT SDT\n" +
-                        "JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                        "JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID\n" +
-                        "ORDER BY SDT.SID"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.STUDENT SDT\n" +
-                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                        "JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
-                        "WHERE SDT.SID = SDE.SID\n" +
-                        "ORDER BY SDT.SID"),
-                Arguments.arguments("SELECT *\n" +
-                        "FROM DBO.STUDENT SDT\n" +
-                        "JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                        "RIGHT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID\n" +
-                        "ORDER BY SDT.SID")
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID " +
+                        "WHERE SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "LEFT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "RIGHT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDE.PID = PDT.PID")
         );
     }
 
     public static Stream<Arguments> doFindNecessaryConditionSource() {
-        return Stream.of(Arguments.arguments("SELECT *\n" +
-                "FROM DBO.STUDENT SDT\n" +
-                "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID\n" +
-                "LEFT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID\n" +
-                "WHERE SDT.SID = SDE.SID\n" +
-                "ORDER BY SDT.SID")
+        return Stream.of(Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "WHERE SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "WHERE SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "WHERE SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "RIGHT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID " +
+                        "WHERE SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID " +
+                        "WHERE SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "RIGHT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "RIGHT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID " +
+                        "WHERE SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "FULL OUTER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID")
         );
     }
 }

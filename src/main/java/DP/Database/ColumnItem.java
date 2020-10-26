@@ -26,23 +26,23 @@ public class ColumnItem {
         this.name = name;
     }
 
-    public static ColumnItem create(DatabaseMetadata metadata, TSqlParser.Search_conditionContext ctx, int index) {
-        if (ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name() != null) {
+    public static ColumnItem create(DatabaseMetadata metadata, TSqlParser.Search_condition_notContext ctx, int index) {
+        if (ctx.predicate().expression().get(index).full_column_name().table_name() != null) {
             DatabaseTable table = DatabaseTable.create(metadata,
                     null,
-                    ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().table != null
-                            ? ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().table.getText()
+                    ctx.predicate().expression().get(index).full_column_name().table_name().table != null
+                            ? ctx.predicate().expression().get(index).full_column_name().table_name().table.getText()
                             : null);
 
             return new ColumnItem(
-                    ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().database != null
-                            ? ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().database.getText()
+                    ctx.predicate().expression().get(index).full_column_name().table_name().database != null
+                            ? ctx.predicate().expression().get(index).full_column_name().table_name().database.getText()
                             : null,
-                    ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().schema != null
-                            ? ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().table_name().schema.getText()
+                    ctx.predicate().expression().get(index).full_column_name().table_name().schema != null
+                            ? ctx.predicate().expression().get(index).full_column_name().table_name().schema.getText()
                             : null,
                     table,
-                    ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().column_name.getText()
+                    ctx.predicate().expression().get(index).full_column_name().column_name.getText()
             );
         }
 
@@ -50,7 +50,7 @@ public class ColumnItem {
                 null,
                 null,
                 null,
-                ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(index).full_column_name().column_name.getText()
+                ctx.predicate().expression().get(index).full_column_name().column_name.getText()
         );
     }
 

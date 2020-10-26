@@ -87,8 +87,8 @@ public class TSqlParseWalker {
                 );
 
                 if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                    item.setLeftSideColumnItem(ColumnItem.create(metadata, ctx, 0));
-                    item.setRightSideColumnItem(ColumnItem.create(metadata, ctx, 1));
+                    item.setLeftSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
+                    item.setRightSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 1));
                 }
 
                 conditions.add(item);
@@ -108,8 +108,8 @@ public class TSqlParseWalker {
                         ctxNot.predicate().getChild(1).getText()
                 );
                 if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                    item.setLeftSideColumnItem(ColumnItem.create(metadata, ctx, 0));
-                    item.setRightSideColumnItem(ColumnItem.create(metadata, ctx, 1));
+                    item.setLeftSideColumnItem(ColumnItem.create(metadata, ctxNot, 0));
+                    item.setRightSideColumnItem(ColumnItem.create(metadata, ctxNot, 1));
                 }
                 conditions.add(item);
             }

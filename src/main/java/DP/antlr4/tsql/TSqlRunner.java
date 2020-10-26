@@ -119,9 +119,10 @@ public class TSqlRunner {
 
         ParseTree select = parser.select_statement();
         final List<ConditionItem> leftJoinConditions = new ArrayList<>();
-        final List<ConditionItem> rightJoinConditions = new ArrayList<>();
-        final List<ConditionItem> fullOuterJoinConditions = new ArrayList<>();
+        final HashMap<Integer, List<ConditionItem>> rightJoinConditions = new HashMap<>();
+        final HashMap<Integer, List<ConditionItem>> fullOuterJoinConditions = new HashMap<>();
         final List<ConditionItem> innerConditions = new ArrayList<>();
+        final List<ConditionItem> whereConditions = new ArrayList<>();
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
@@ -129,9 +130,9 @@ public class TSqlRunner {
                 if (ctx.LEFT() != null) {
                     leftJoinConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
                 } else if (ctx.RIGHT() != null) {
-                    rightJoinConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
+                    rightJoinConditions.put(rightJoinConditions.size(), (List<ConditionItem>) TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
                 } else if (ctx.FULL() != null && ctx.OUTER() != null) {
-                    fullOuterJoinConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
+                    fullOuterJoinConditions.put(fullOuterJoinConditions.size(), (List<ConditionItem>) TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
                 } else {
                     innerConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
                 }
@@ -141,12 +142,15 @@ public class TSqlRunner {
             public void enterQuery_specification(TSqlParser.Query_specificationContext ctx) {
                 if (ctx.search_condition() != null) {
                     for (TSqlParser.Search_conditionContext sCtx : ctx.search_condition()) {
-                        innerConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, sCtx));
+                        whereConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, sCtx));
                     }
                 }
             }
         }, select);
 
+        if (!(leftJoinConditions.size() != 0 || rightJoinConditions.size() != 0 || fullOuterJoinConditions.size() != 0)) {
+            innerConditions.addAll(whereConditions);
+        }
         boolean foundDuplicateCondition = ConditionItem.duplicatesExists(metadata, innerConditions);
         foundDuplicateCondition |= ConditionItem.duplicatesExists(metadata, leftJoinConditions);
         foundDuplicateCondition |= ConditionItem.duplicatesExists(metadata, rightJoinConditions);
@@ -238,8 +242,8 @@ public class TSqlRunner {
                     );
 
                     if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                        item.setLeftSideColumnItem(ColumnItem.create(metadata, ctx, 0));
-                        item.setRightSideColumnItem(ColumnItem.create(metadata, ctx, 1));
+                        item.setLeftSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
+                        item.setRightSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 1));
                     }
 
                     conditions.add(item);

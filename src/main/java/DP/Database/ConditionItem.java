@@ -4,6 +4,7 @@ import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlParser;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class ConditionItem {
@@ -38,6 +39,19 @@ public class ConditionItem {
         }
 
         return items;
+    }
+
+    public static boolean duplicatesExists(DatabaseMetadata metadata, HashMap<Integer, List<ConditionItem>> conditions) {
+        for (int x = 0; x < conditions.size(); x++) {
+            for (int i = 0; i < conditions.get(x).size() - 1; i++) {
+                for (int j = i + 1; j < conditions.get(x).size(); j++) {
+                    if (!conditions.get(x).get(i).compareToCondition(metadata, conditions.get(x).get(j))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public static boolean duplicatesExists(DatabaseMetadata metadata, List<ConditionItem> conditions) {

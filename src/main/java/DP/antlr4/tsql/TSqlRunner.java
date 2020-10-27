@@ -212,7 +212,79 @@ public class TSqlRunner {
     }
 
     public static boolean runEqualConditionInOperatorBetween(final DatabaseMetadata metadata, String query) {
-        return true;
+        TSqlParser parser = runFromString(query);
+        ParseTree select = parser.select_statement();
+        final List<ConditionItem> conditions = new ArrayList<>();
+        final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
+
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            @Override
+            public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
+                if (ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().BETWEEN() != null) {
+                    ConditionItem item = new ConditionItem(ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                            ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                            ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
+                            ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
+                            ">="
+                    );
+
+                    if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
+                        item.setLeftSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
+                        item.setRightSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 1));
+                    }
+
+                    conditions.add(item);
+
+                    item = new ConditionItem(ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                            ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                            ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(2)),
+                            ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(2)),
+                            "<="
+                    );
+
+                    if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
+                        item.setLeftSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
+                        item.setRightSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 2));
+                    }
+
+                    conditions.add(item);
+                }
+            }
+        }, select);
+
+      //  System.out.println("conditions: " + conditions);
+
+        boolean isConditionNecessary = true;
+        boolean currentNecessary;
+        for (int i = 0; i < conditions.size(); i+=2) {
+            currentNecessary = false;
+            for (int j = i; j <= i+1; j++) {
+                if ((conditions.get(j).getLeftSideDataType() == ConditionDataType.BINARY && Arrays.asList(ConditionDataType.BINARY, ConditionDataType.DECIMAL).contains(conditions.get(j).getRightSideDataType())) ||
+                        (conditions.get(j).getLeftSideDataType() == ConditionDataType.DECIMAL && (conditions.get(j).getRightSideDataType().isNumeric || conditions.get(j).getRightSideDataType() == ConditionDataType.STRING_DECIMAL)) ||
+                        (conditions.get(j).getLeftSideDataType() == ConditionDataType.FLOAT && ((conditions.get(j).getRightSideDataType().isNumeric && conditions.get(j).getRightSideDataType() != ConditionDataType.BINARY) || (Arrays.asList(ConditionDataType.STRING_DECIMAL, ConditionDataType.STRING_FLOAT).contains(conditions.get(j).getRightSideDataType())))) ||
+                        (conditions.get(j).getLeftSideDataType() == ConditionDataType.REAL && !Arrays.asList(ConditionDataType.BINARY, ConditionDataType.STRING_BINARY).contains(conditions.get(j).getRightSideDataType())) ||
+                        (conditions.get(j).getLeftSideDataType() == ConditionDataType.STRING_DECIMAL && conditions.get(j).getRightSideDataType() != ConditionDataType.BINARY) ||
+                        (conditions.get(j).getLeftSideDataType() == ConditionDataType.STRING_FLOAT && Arrays.asList(ConditionDataType.REAL, ConditionDataType.FLOAT).contains(conditions.get(j).getRightSideDataType())) ||
+                        (conditions.get(j).getLeftSideDataType() == ConditionDataType.STRING_REAL && conditions.get(j).getRightSideDataType() == ConditionDataType.REAL)) {
+                    currentNecessary |= conditions.get(j).compareNumberAgainstNumber();
+                } else if (conditions.get(j).getRightSideDataType() == ConditionDataType.STRING &&
+                        Arrays.asList(ConditionDataType.STRING_BINARY, ConditionDataType.STRING_DECIMAL, ConditionDataType.STRING_FLOAT, ConditionDataType.STRING_REAL, ConditionDataType.STRING)
+                                .contains(conditions.get(j).getLeftSideDataType())) {
+                    currentNecessary |= conditions.get(j).compareStringAgainstString();
+                } else if (conditions.get(j).getRightSideDataType() == ConditionDataType.COLUMN && conditions.get(j).getRightSideDataType() == ConditionDataType.COLUMN) {
+                    DatabaseMetadata newMetadata = metadata.withTables(allTables);
+                    currentNecessary |= conditions.get(j).compareColumnAgainstColumn(newMetadata);
+                }
+            }
+            isConditionNecessary &= currentNecessary;
+        }
+
+        if (isConditionNecessary) {
+            System.out.println("OK");
+        } else {
+            System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION BETWEEN");
+        }
+        return isConditionNecessary;
     }
 
     public static boolean runEqualConditionInOperatorExists(final DatabaseMetadata metadata, String query) {

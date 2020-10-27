@@ -10,8 +10,5 @@ public class Main {
 
         // TSqlRunner.runGroupBy(metadata, "SELECT pId, jmeno, sum(pId) FROM dbo.predmet GROUP BY pid, jmeno");
 
-      TSqlRunner.runEqualConditionInComparisonOperators(metadata, "SELECT * " +
-              "FROM DBO.PREDMET " +
-              "WHERE 'ab' > 'aa' AND 'bb' >= 'ba'");
     }
 }

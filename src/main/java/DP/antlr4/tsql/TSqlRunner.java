@@ -10,13 +10,9 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.*;
 
-import java.io.IOException;
 import java.util.*;
 
 public class TSqlRunner {
-    // private final static String DIR_QUERIES = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "DP" + File.separator + "antlr4" + File.separator + "tsql" + File.separator + "queries" + File.separator;
-
-
     public static boolean runGroupBy(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
         ParseTree select = parser.select_statement();
@@ -203,10 +199,16 @@ public class TSqlRunner {
         return !foundRedundantJoin;
     }
 
+    /**
+     * @TODO implement this
+     */
     public static boolean runEqualConditionInOperatorAll(final DatabaseMetadata metadata, String query) {
         return true;
     }
 
+    /**
+     * @TODO implement this
+     */
     public static boolean runEqualConditionInOperatorAny(final DatabaseMetadata metadata, String query) {
         return true;
     }
@@ -289,6 +291,9 @@ public class TSqlRunner {
         return true;
     }
 
+    /**
+     * @TODO implement this
+     */
     public static boolean runEqualConditionInOperatorIn(final DatabaseMetadata metadata, String query) {
         return true;
     }
@@ -345,18 +350,18 @@ public class TSqlRunner {
         return true;
     }
 
+    /**
+     * @TODO implement this
+     */
     public static boolean runEqualConditionInOperatorSome(final DatabaseMetadata metadata, String query) {
         return true;
     }
 
+    /**
+     * @TODO implement this
+     */
     public static boolean runEqualConditionInOperatorSubQuery(final DatabaseMetadata metadata, String query) {
         return true;
-    }
-
-    public static TSqlParser runFromFile(String fileName) throws IOException {
-        String fileContent = CharStreams.fromFileName(fileName).toString();
-        TSqlLexer lexer = new TSqlLexer(CharStreams.fromString(fileContent.toUpperCase()));
-        return new TSqlParser(new CommonTokenStream(lexer));
     }
 
     public static TSqlParser runFromString(String query) {

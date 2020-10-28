@@ -102,7 +102,13 @@ public class EqualConditionInComparisonOperatorsTest {
                         "WHERE 'aa' < 'ab'"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
+                        "WHERE 'ba' < 'ba' OR 'bc' > 'bb'"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 'aa' <> 'ab'"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE 1 > 0 OR 1 < 0"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 'ab' > 'aa' AND 'bb' >= 'ba'"),
@@ -140,12 +146,6 @@ public class EqualConditionInComparisonOperatorsTest {
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE '1' = 2"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'ba' < 'ba' OR 'bc' > 'bb'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 1 > 0 OR 1 < 0"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 1 < 0 OR 1 > 2"),

@@ -252,8 +252,6 @@ public class TSqlRunner {
             }
         }, select);
 
-      //  System.out.println("conditions: " + conditions);
-
         boolean isConditionNecessary = true;
         boolean currentNecessary;
         for (int i = 0; i < conditions.size(); i+=2) {

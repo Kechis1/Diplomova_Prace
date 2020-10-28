@@ -10,5 +10,8 @@ public class Main {
 
         // TSqlRunner.runGroupBy(metadata, "SELECT pId, jmeno, sum(pId) FROM dbo.predmet GROUP BY pid, jmeno");
 
+        TSqlRunner.runEqualConditionInOperatorBetween(metadata, "SELECT * " +
+                "FROM DBO.STUDENT " +
+                "WHERE jmeno BETWEEN jmeno AND jmeno");
     }
 }

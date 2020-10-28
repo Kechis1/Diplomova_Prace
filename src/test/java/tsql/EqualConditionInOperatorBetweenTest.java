@@ -60,7 +60,19 @@ public class EqualConditionInOperatorBetweenTest {
         return Stream.of(
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT " +
-                        "WHERE 'b' BETWEEN 'a' AND 'c'")
+                        "WHERE 'b' BETWEEN 'a' AND 'c'"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT " +
+                        "WHERE 'abc' BETWEEN 'aaa' AND 'abc'"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT " +
+                        "WHERE 1 BETWEEN 0 AND 2"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT " +
+                        "WHERE 1.5 BETWEEN 1.2 AND 1.7"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT " +
+                        "WHERE jmeno BETWEEN jmeno AND jmeno")
         );
     }
 
@@ -68,7 +80,26 @@ public class EqualConditionInOperatorBetweenTest {
         return Stream.of(
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT " +
-                        "WHERE jmeno BETWEEN 'a' AND 'c'")
+                        "WHERE 'b' BETWEEN 'c' AND 'd'"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT " +
+                        "WHERE 'abc' BETWEEN 'abc' AND 'aaa'"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT " +
+                        "WHERE 1 BETWEEN 2 AND 5"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT " +
+                        "WHERE 1.5 BETWEEN -1.7 AND -1.5"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT STT " +
+                        "INNER JOIN DBO.STUDUJE SDE ON STT.SID = SDE.SID " +
+                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID" +
+                        "WHERE SDE.SID BETWEEN 5 AND 10"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT STT " +
+                        "INNER JOIN DBO.STUDUJE SDE ON STT.SID = SDE.SID " +
+                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID" +
+                        "WHERE SDE.SID BETWEEN STT.SID AND PDT.SID")
         );
     }
 }

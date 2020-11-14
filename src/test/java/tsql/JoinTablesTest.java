@@ -1,6 +1,8 @@
 package tsql;
 
+import DP.Database.ColumnItem;
 import DP.Database.DatabaseMetadata;
+import DP.Database.DatabaseTable;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
@@ -39,6 +41,17 @@ public class JoinTablesTest {
         System.setOut(new PrintStream(this.consoleContent));
     }
 
+    @ParameterizedTest(name = "doFindNecessaryConditionWithNullableTest {index} query = {0}")
+    @MethodSource("doFindNecessaryConditionWithNullableSource")
+    void doFindNecessaryConditionWithNullableTest(String query) {
+        DatabaseTable table = metadata.findTable("STUDUJE", null);
+        ColumnItem sId = table.findColumn("SID");
+        sId.setNullable(true);
+        boolean result = TSqlRunner.runRedundantJoinTables(metadata, query);
+        assertEquals("OK", this.consoleContent.toString().trim());
+        assertTrue(result);
+    }
+
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, message = {1}")
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query, String message) {
@@ -55,6 +68,22 @@ public class JoinTablesTest {
         assertTrue(result);
     }
 
+    public static Stream<Arguments> doFindNecessaryConditionWithNullableSource() {
+        return Stream.of(
+                Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +
+                        "FROM DBO.STUDENT SDT " +
+                        "FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT distinct SDT.* " +
+                        "FROM DBO.STUDENT SDT " +
+                        "FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT distinct SDE.SID, SDE.body " +
+                        "FROM DBO.STUDENT SDT " +
+                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT distinct SDE.* " +
+                        "FROM DBO.STUDENT SDT " +
+                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID")
+        );
+    }
 
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
         return Stream.of(

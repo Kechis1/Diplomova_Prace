@@ -74,7 +74,11 @@ public class JoinConditionsTest {
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT SDT " +
                         "RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
-                        "RIGHT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDE.PID = PDT.PID")
+                        "RIGHT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDE.PID = PDT.PID"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDENT SDT " +
+                        "FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
+                        "FULL OUTER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDE.PID = PDT.PID")
         );
     }
 

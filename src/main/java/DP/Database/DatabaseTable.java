@@ -133,6 +133,15 @@ public class DatabaseTable {
                 Objects.equals(tableAlias, table.tableAlias);
     }
 
+    public ColumnItem findColumn(String name) {
+        for (ColumnItem item : columns) {
+            if (item.getName().equalsIgnoreCase(name)) {
+                return item;
+            }
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         return "DatabaseTable{" +

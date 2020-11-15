@@ -291,6 +291,7 @@ public class TSqlRunner {
      * @TODO implement this
      */
     public static boolean runEqualConditionInOperatorExists(final DatabaseMetadata metadata, String query) {
+
         return true;
     }
 

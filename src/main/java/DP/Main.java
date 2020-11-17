@@ -8,10 +8,8 @@ public class Main {
     public static void main(String[] args) {
         DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
 
-        // TSqlRunner.runGroupBy(metadata, "SELECT pId, jmeno, sum(pId) FROM dbo.predmet GROUP BY pid, jmeno");
-
-        TSqlRunner.runEqualConditionInOperatorBetween(metadata, "SELECT * " +
-                "FROM DBO.STUDENT " +
-                "WHERE jmeno BETWEEN jmeno AND jmeno");
+        TSqlRunner.runEqualConditionInOperatorExists(metadata, "SELECT * " +
+                "FROM DBO.PREDMET " +
+                "WHERE EXISTS (SELECT t1.a FROM (SELECT 1 as a) t1)");
     }
 }

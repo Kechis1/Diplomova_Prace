@@ -1,8 +1,6 @@
 package tsql;
 
-import DP.Database.ColumnItem;
 import DP.Database.DatabaseMetadata;
-import DP.Database.DatabaseTable;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
@@ -60,62 +58,29 @@ public class ExistsTest {
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
         return Stream.of(Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
-                        "WHERE EXISTS (SELECT * " +
-                            "FROM DBO.STUDUJE " +
-                            "WHERE 1 = 1 "+
-                        ")"),
+                        "WHERE EXISTS (SELECT 1)"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
-                        "WHERE EXISTS (SELECT * " +
-                            "FROM DBO.STUDUJE " +
-                            "WHERE 0 >= 0 "+
-                        ")"),
+                        "WHERE EXISTS (SELECT 0)"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
-                        "WHERE EXISTS (SELECT * " +
-                            "FROM DBO.STUDUJE " +
-                            "WHERE DBO.STUDUJE.SID = DBO.STUDUJE.SID "+
-                        ")"),
+                        "WHERE EXISTS (SELECT null)"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
-                        "WHERE EXISTS (SELECT * " +
-                            "FROM DBO.STUDUJE " +
-                            "WHERE 'b' BETWEEN 'a' AND 'c' "+
-                        ")"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE EXISTS (SELECT * " +
-                            "FROM DBO.STUDUJE " +
-                            "WHERE 'abc' BETWEEN 'aaa' AND 'abc' "+
-                        ")")
+                        "WHERE EXISTS (SELECT t1.a FROM (SELECT 1 as a) t1)")
         );
     }
 
     public static Stream<Arguments> doFindNecessaryConditionSource() {
         return Stream.of(Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
+                        "FROM DBO.PREDMET PDT " +
                         "WHERE EXISTS (SELECT * " +
-                            "FROM DBO.STUDUJE " +
-                            "WHERE 1 = 1 "+
+                            "FROM DBO.STUDUJE SDT " +
+                            "WHERE PDT.PID = SDT.PID "+
                         ")"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
-                        "WHERE EXISTS (SELECT * " +
-                            "FROM DBO.STUDUJE " +
-                            "WHERE 0 >= 0 "+
-                        ")"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE EXISTS (SELECT * " +
-                            "FROM DBO.STUDUJE " +
-                            "WHERE DBO.PREDMET.PID = DBO.STUDUJE.PID "+
-                        ")"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE EXISTS (SELECT * " +
-                            "FROM DBO.STUDUJE " +
-                            "WHERE STUDUJE.SID BETWEEN 5 AND 10 "+
-                        ")")
+                        "WHERE NOT EXISTS (SELECT 1)")
         );
     }
 }

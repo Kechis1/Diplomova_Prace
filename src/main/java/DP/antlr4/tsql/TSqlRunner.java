@@ -199,20 +199,6 @@ public class TSqlRunner {
         return !foundRedundantJoin;
     }
 
-    /**
-     * @TODO implement this
-     */
-    public static boolean runEqualConditionInOperatorAll(final DatabaseMetadata metadata, String query) {
-        return true;
-    }
-
-    /**
-     * @TODO implement this
-     */
-    public static boolean runEqualConditionInOperatorAny(final DatabaseMetadata metadata, String query) {
-        return true;
-    }
-
     public static boolean runEqualConditionInOperatorBetween(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
         ParseTree select = parser.select_statement();
@@ -287,18 +273,46 @@ public class TSqlRunner {
         return isConditionNecessary;
     }
 
-    /**
-     * @TODO implement this
-     */
     public static boolean runEqualConditionInOperatorExists(final DatabaseMetadata metadata, String query) {
+        TSqlParser parser = runFromString(query);
+        ParseTree select = parser.select_statement();
+        final List<ExistItem> existTables = new ArrayList<>();
 
-        return true;
-    }
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            @Override
+            public void enterSearch_condition_and(TSqlParser.Search_condition_andContext ctx) {
+                for (int i = 0; i < ctx.search_condition_not().size(); i++) {
+                    if (ctx.search_condition_not(i).predicate() != null && ctx.search_condition_not(i).predicate().EXISTS() != null) {
+                        TSqlParser.Query_specificationContext qSpecContext = ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification();
+                        if (qSpecContext.FROM() != null) {
+                            boolean found = false;
+                            for (TSqlParser.Table_sourceContext TSctx : qSpecContext.table_sources().table_source()) {
+                                if (TSctx.table_source_item_joined().table_source_item().table_name_with_hint() != null) {
+                                    existTables.add(new ExistItem(metadata.findTable(TSctx.table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.toString(),
+                                            TSctx.table_source_item_joined().table_source_item().as_table_alias().toString()),
+                                            ctx.search_condition_not(i).NOT() != null));
+                                    found = true;
+                                }
+                            }
+                            if (!found) {
+                                existTables.add(new ExistItem(null, ctx.search_condition_not(i).NOT() != null));
+                            }
+                        } else {
+                            existTables.add(new ExistItem(null, ctx.search_condition_not(i).NOT() != null));
+                        }
+                    }
+                }
+            }
+        }, select);
 
-    /**
-     * @TODO implement this
-     */
-    public static boolean runEqualConditionInOperatorIn(final DatabaseMetadata metadata, String query) {
+        for (ExistItem exist : existTables) {
+            if (!exist.isNot() && exist.getTable() == null) {
+                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS");
+                return false;
+            }
+        }
+
+        System.out.println("OK");
         return true;
     }
 
@@ -351,20 +365,6 @@ public class TSqlRunner {
             }
         }
         System.out.println("OK");
-        return true;
-    }
-
-    /**
-     * @TODO implement this
-     */
-    public static boolean runEqualConditionInOperatorSome(final DatabaseMetadata metadata, String query) {
-        return true;
-    }
-
-    /**
-     * @TODO implement this
-     */
-    public static boolean runEqualConditionInOperatorSubQuery(final DatabaseMetadata metadata, String query) {
         return true;
     }
 

@@ -290,7 +290,9 @@ public class TSqlRunner {
                         TSqlParser.Query_specificationContext qSpecContext = ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification();
                         if (qSpecContext.FROM() != null && qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().table_name_with_hint() != null) {
                             eItem.setTable(metadata.findTable(qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText(),
-                                    qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().as_table_alias().getText()));
+                                    qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().as_table_alias() == null
+                                        ? null
+                                        : qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().as_table_alias().getText()));
                         }
                         if (qSpecContext.WHERE() != null) {
                             List<ConditionItem> eConditions = new ArrayList<>();
@@ -322,8 +324,8 @@ public class TSqlRunner {
             if ((exist.isNot() && exist.getTable() != null && exist.getTable().isEmpty()) ||
                     (!exist.isNot() && (exist.getTable() == null ||
                             (!exist.getTable().isEmpty() &&
-                                (exist.getConditions().size() == 0) ||
-                                (exist.getConditions().size() == 1 && ConditionItem.isComparingForeignKey(fromTable, exist.getTable(), exist.getConditions().get(0))))))) {
+                                (exist.getConditions() == null || exist.getConditions().size() == 0 ||
+                                (exist.getConditions().size() == 1 && ConditionItem.isComparingForeignKey(fromTable, exist.getTable(), exist.getConditions().get(0)))))))) {
                 System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS");
                 return false;
             }

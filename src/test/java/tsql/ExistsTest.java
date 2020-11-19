@@ -1,11 +1,13 @@
 package tsql;
 
 import DP.Database.DatabaseMetadata;
+import DP.Database.DatabaseTable;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -55,6 +57,33 @@ public class ExistsTest {
         assertTrue(result);
     }
 
+    @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}, recordsCount = {1}")
+    @MethodSource("doFindUnnecessaryConditionBasedOnRecordsCountSource")
+    void doFindUnnecessaryConditionBasedOnRecordsCountTest(String query, int recordsCount) {
+        DatabaseTable table = metadata.findTable("STUDUJE", "SDT");
+        table.setRecordsCount(recordsCount);
+        boolean result = TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS", this.consoleContent.toString().trim());
+        assertFalse(result);
+    }
+
+    public static Stream<Arguments> doFindUnnecessaryConditionBasedOnRecordsCountSource() {
+        return Stream.of(Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET PDT " +
+                        "WHERE NOT EXISTS (" +
+                            "SELECT * " +
+                            "FROM STUDUJE SDT " +
+                            "WHERE PDT.PID = SDT.PID" +
+                        ")", 0),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE EXISTS (" +
+                            "SELECT * " +
+                            "FROM STUDUJE " +
+                        ")", 46)
+        );
+    }
+
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
         return Stream.of(Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
@@ -86,7 +115,13 @@ public class ExistsTest {
                         ")"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
-                        "WHERE NOT EXISTS (SELECT 1)")
+                        "WHERE NOT EXISTS (SELECT 1)"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDUJE SDT " +
+                        "WHERE EXISTS (SELECT * " +
+                            "FROM DBO.PREDMET PDT " +
+                            "WHERE SDT.PID = PDT.PID AND PDT.JMENO = 'DAIS' " +
+                        ")")
         );
     }
 }

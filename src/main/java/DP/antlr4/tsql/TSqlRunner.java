@@ -191,7 +191,7 @@ public class TSqlRunner {
         foundRedundantJoin |= DatabaseTable.redundantJoinExists("FULL OUTER", joinTables.get("fullOuterJoin"), fromTable.get(0).getTableAlias(),
                 fromTable.get(0), allColumnsInSelect, true, metadata.setNullableColumns(fullOuterJoinConditions), true);
         foundRedundantJoin |= DatabaseTable.redundantJoinExists("INNER", joinTables.get("innerJoin"), null,
-                null, allColumnsInSelect, true, metadata.setNullableColumns(innerConditions), false);
+                null, allColumnsInSelect, true, metadata.setNullableColumns(innerConditions), true);
 
         if (!foundRedundantJoin) {
             System.out.println("OK");

@@ -44,7 +44,7 @@ public class JoinTablesTest {
     @ParameterizedTest(name = "doFindNecessaryConditionWithNullableTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionWithNullableSource")
     void doFindNecessaryConditionWithNullableTest(String query) {
-        DatabaseTable table = metadata.findTable("STUDUJE", null);
+        DatabaseTable table = metadata.findTable("STUDENT", null);
         ColumnItem sId = table.findColumn("SID");
         sId.setNullable(true);
         boolean result = TSqlRunner.runRedundantJoinTables(metadata, query);
@@ -118,10 +118,10 @@ public class JoinTablesTest {
         return Stream.of(
                 Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +
                         "FROM DBO.STUDENT SDT " +
-                        "JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),
+                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),
                 Arguments.arguments("SELECT distinct * " +
                         "FROM DBO.STUDENT SDT " +
-                        "JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),
+                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),
                 Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +
                         "FROM DBO.STUDENT SDT " +
                         "RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID"),

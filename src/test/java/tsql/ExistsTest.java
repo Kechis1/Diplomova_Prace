@@ -67,7 +67,13 @@ public class ExistsTest {
                         "WHERE EXISTS (SELECT null)"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
-                        "WHERE EXISTS (SELECT t1.a FROM (SELECT 1 as a) t1)")
+                        "WHERE EXISTS (SELECT t1.a FROM (SELECT 1 as a) t1)"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDUJE SDT " +
+                        "WHERE EXISTS (SELECT * " +
+                            "FROM DBO.PREDMET PDT " +
+                            "WHERE SDT.PID = PDT.PID " +
+                        ")")
         );
     }
 

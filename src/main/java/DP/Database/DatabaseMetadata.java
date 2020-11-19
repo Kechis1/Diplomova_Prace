@@ -163,6 +163,15 @@ public class DatabaseMetadata {
         return new DatabaseTable();
     }
 
+    public int tableExists(String tableName, String tableAlias) {
+        for (int i = 0; i < tables.size(); i++) {
+            if (tables.get(i).getTableName().equals(tableName) || tables.get(i).getTableAlias().equals(tableAlias)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public ArrayList<String> getAllPrimaryKeys() {
         ArrayList<String> primaryKeys = new ArrayList<>();
         for (DatabaseTable table : tables) {
@@ -197,7 +206,7 @@ public class DatabaseMetadata {
     }
 
     public boolean columnsEqual(ColumnItem leftSideColumnItem, ColumnItem rightSideColumnItem) {
-        if (!leftSideColumnItem.getName().equals(rightSideColumnItem.getName())) {
+        if (leftSideColumnItem == null || rightSideColumnItem == null || !leftSideColumnItem.getName().equals(rightSideColumnItem.getName())) {
             return false;
         }
         return (leftSideColumnItem.getTable() == null && rightSideColumnItem.getTable() == null) || leftSideColumnItem.getTable().getTableAlias() == null || rightSideColumnItem.getTable().getTableAlias() == null || leftSideColumnItem.getTable().getTableAlias().equals(rightSideColumnItem.getTable().getTableAlias());

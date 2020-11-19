@@ -96,8 +96,8 @@ public class TSqlParseWalker {
                         ctxNot.predicate().getChild(1).getText()
                 );
                 if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                    item.setLeftSideColumnItem(ColumnItem.create(metadata, ctxNot, 0));
-                    item.setRightSideColumnItem(ColumnItem.create(metadata, ctxNot, 1));
+                    item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctxNot, 0));
+                    item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctxNot, 1));
                 }
                 conditions.add(item);
             }
@@ -110,11 +110,13 @@ public class TSqlParseWalker {
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterQuery_specification(TSqlParser.Query_specificationContext ctx) {
-                DatabaseTable found = metadata.findTable(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText(), null);
-                if (ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias() != null) {
-                    found.setTableAlias(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias().getText());
+                if (ctx.table_sources() != null && ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().table_name_with_hint() != null) {
+                    DatabaseTable found = metadata.findTable(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText(), null);
+                    if (ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias() != null) {
+                        found.setTableAlias(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias().getText());
+                    }
+                    fromTable.add(found);
                 }
-                fromTable.add(found);
             }
         }, select);
 

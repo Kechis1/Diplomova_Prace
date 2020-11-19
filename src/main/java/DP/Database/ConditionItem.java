@@ -84,6 +84,20 @@ public class ConditionItem {
         return false;
     }
 
+    public static boolean isComparingForeignKey(DatabaseTable from, DatabaseTable to, ConditionItem item) {
+        if (item.getOperator().equals("=") && item.getLeftSideDataType() == ConditionDataType.COLUMN &&
+                item.getRightSideDataType() == ConditionDataType.COLUMN && item.getLeftSideColumnItem() != null &&
+                item.getRightSideColumnItem() != null) {
+            if (item.getLeftSideColumnItem().getTable().equals(from) && item.getRightSideColumnItem().getTable().equals(to)) {
+                return item.getLeftSideColumnItem().isForeignKey() && item.getLeftSideColumnItem().getReferencesColumnName().equals(item.getRightSideColumnItem().getName());
+            }
+            if (item.getLeftSideColumnItem().getTable().equals(to) && item.getRightSideColumnItem().getTable().equals(from)) {
+                return item.getRightSideColumnItem().isForeignKey() && item.getRightSideColumnItem().getReferencesColumnName().equals(item.getLeftSideColumnItem().getName());
+            }
+        }
+        return false;
+    }
+
     public ConditionDataType getLeftSideDataType() {
         return leftSideDataType;
     }

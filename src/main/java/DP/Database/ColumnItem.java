@@ -9,13 +9,32 @@ public class ColumnItem {
     String schema;
     DatabaseTable table;
     String name;
+    boolean isForeignKey;
+    String referencesTableName;
+    String referencesColumnName;
+    DatabaseTable referencesTable;
+    ColumnItem referencesColumn;
     boolean isNullable = true;
+
+    public ColumnItem(String database, String schema, DatabaseTable table, String name, boolean isForeignKey, String referencesTableName, String referencesColumnName, DatabaseTable referencesTable, ColumnItem referencesColumn, boolean isNullable) {
+        this.database = database;
+        this.schema = schema;
+        this.table = table;
+        this.name = name;
+        this.isForeignKey = isForeignKey;
+        this.referencesTableName = referencesTableName;
+        this.referencesColumnName = referencesColumnName;
+        this.referencesTable = referencesTable;
+        this.referencesColumn = referencesColumn;
+        this.isNullable = isNullable;
+    }
 
     public ColumnItem(String database, String schema, DatabaseTable table, String name, boolean isNullable) {
         this.database = database;
         this.schema = schema;
         this.table = table;
         this.name = name;
+        this.isForeignKey = false;
         this.isNullable = isNullable;
     }
 
@@ -26,24 +45,34 @@ public class ColumnItem {
         this.name = name;
     }
 
-    public static ColumnItem create(DatabaseMetadata metadata, TSqlParser.Search_condition_notContext ctx, int index) {
+    public static ColumnItem findOrCreate(DatabaseMetadata metadata, TSqlParser.Search_condition_notContext ctx, int index) {
         if (ctx.predicate().expression().get(index).full_column_name().table_name() != null) {
-            DatabaseTable table = DatabaseTable.create(metadata,
+            int tableIndex = DatabaseTable.exists(metadata,
                     null,
                     ctx.predicate().expression().get(index).full_column_name().table_name().table != null
-                            ? ctx.predicate().expression().get(index).full_column_name().table_name().table.getText()
-                            : null);
+                    ? ctx.predicate().expression().get(index).full_column_name().table_name().table.getText()
+                    : null);
+            DatabaseTable table;
+            if (tableIndex == -1) {
+                table = new DatabaseTable();
+                table.setTableAlias(ctx.predicate().expression().get(index).full_column_name().table_name().table != null
+                                ? ctx.predicate().expression().get(index).full_column_name().table_name().table.getText()
+                                : null);
+            } else {
+                table = metadata.getTables().get(tableIndex);
+            }
 
-            return new ColumnItem(
-                    ctx.predicate().expression().get(index).full_column_name().table_name().database != null
-                            ? ctx.predicate().expression().get(index).full_column_name().table_name().database.getText()
-                            : null,
-                    ctx.predicate().expression().get(index).full_column_name().table_name().schema != null
-                            ? ctx.predicate().expression().get(index).full_column_name().table_name().schema.getText()
-                            : null,
-                    table,
-                    ctx.predicate().expression().get(index).full_column_name().column_name.getText()
-            );
+            if (tableIndex == -1) {
+                return new ColumnItem(ctx.predicate().expression().get(index).full_column_name().table_name().database != null
+                        ? ctx.predicate().expression().get(index).full_column_name().table_name().database.getText()
+                        : null,
+                        ctx.predicate().expression().get(index).full_column_name().table_name().schema != null
+                                ? ctx.predicate().expression().get(index).full_column_name().table_name().schema.getText()
+                                : null,
+                        table,
+                        ctx.predicate().expression().get(index).full_column_name().column_name.getText());
+            }
+            return table.findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
         }
 
         return new ColumnItem(
@@ -104,6 +133,46 @@ public class ColumnItem {
 
     public void setNullable(boolean nullable) {
         isNullable = nullable;
+    }
+
+    public boolean isForeignKey() {
+        return isForeignKey;
+    }
+
+    public void setForeignKey(boolean foreignKey) {
+        isForeignKey = foreignKey;
+    }
+
+    public String getReferencesTableName() {
+        return referencesTableName;
+    }
+
+    public void setReferencesTableName(String referencesTableName) {
+        this.referencesTableName = referencesTableName;
+    }
+
+    public String getReferencesColumnName() {
+        return referencesColumnName;
+    }
+
+    public void setReferencesColumnName(String referencesColumnName) {
+        this.referencesColumnName = referencesColumnName;
+    }
+
+    public DatabaseTable getReferencesTable() {
+        return referencesTable;
+    }
+
+    public void setReferencesTable(DatabaseTable referencesTable) {
+        this.referencesTable = referencesTable;
+    }
+
+    public ColumnItem getReferencesColumn() {
+        return referencesColumn;
+    }
+
+    public void setReferencesColumn(ColumnItem referencesColumn) {
+        this.referencesColumn = referencesColumn;
     }
 
     @Override

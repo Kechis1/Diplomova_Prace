@@ -27,24 +27,6 @@ public class DatabaseTable {
 
     public DatabaseTable() {}
 
-    public static boolean redundantJoinExists(String typeOfJoin, List<DatabaseTable> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides) {
-        for (DatabaseTable table : joins) {
-            boolean found = false;
-            for (ColumnItem cItem : allColumnsInSelect) {
-                if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || !cItem.getTable().getTableAlias().equals(tableAlias == null ? table.getTableAlias() : tableAlias)))
-                        || (!cItem.getName().equals("*") && !(databaseTable == null ? table : databaseTable).columnExists(cItem))) {
-                    found = true;
-                    break;
-                }
-            }
-            if ((!checkNullable && !found) || (checkNullable && !found && !ConditionItem.isConditionColumnNullable(newConditions, table, checkBothSides))) {
-                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " " + typeOfJoin + " JOIN");
-                return true;
-            }
-        }
-        return false;
-    }
-
     public List<ForeignKey> getForeignKeys() {
         return foreignKeys;
     }
@@ -109,7 +91,12 @@ public class DatabaseTable {
     }
 
     public static DatabaseTable create(DatabaseMetadata metadata, TSqlParser.Table_source_itemContext ctx) {
-        DatabaseTable newItem = metadata.findTable(ctx.table_name_with_hint().table_name().table.getText(), null);
+        DatabaseTable newItem;
+        if (ctx.table_name_with_hint() != null) {
+            newItem = metadata.findTable(ctx.table_name_with_hint().table_name().table.getText(), null);
+        } else {
+            newItem = new DatabaseTable();
+        }
         newItem.setTableAlias(ctx.as_table_alias() != null
                 ? ctx.as_table_alias().getText()
                 : ctx.table_name_with_hint().table_name().table.getText());
@@ -139,8 +126,40 @@ public class DatabaseTable {
         return newItems;
     }
 
+    public static boolean redundantJoinExists(String typeOfJoin, List<DatabaseTable> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides) {
+        for (DatabaseTable table : joins) {
+            boolean found = false;
+            for (ColumnItem cItem : allColumnsInSelect) {
+                if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || !cItem.getTable().getTableAlias().equals(tableAlias == null ? table.getTableAlias() : tableAlias)))
+                        || (!cItem.getName().equals("*") && !(databaseTable == null ? table : databaseTable).columnExists(cItem))) {
+                    found = true;
+                    break;
+                }
+            }
+            if ((!checkNullable && !found) || (checkNullable && !found && !ConditionItem.isConditionColumnNullable(newConditions, table, checkBothSides))) {
+                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " " + typeOfJoin + " JOIN");
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean columnExists(ColumnItem columnItem) {
         return ColumnItem.exists(getColumns(), columnItem);
+    }
+
+    public ColumnItem findColumn(String name) {
+        for (ColumnItem item : columns) {
+            if (item.getName().equalsIgnoreCase(name)) {
+                item.setTable(this);
+                return item;
+            }
+        }
+        return null;
+    }
+
+    public boolean isEmpty() {
+        return getRecordsCount() == 0;
     }
 
     @Override
@@ -150,15 +169,6 @@ public class DatabaseTable {
         DatabaseTable table = (DatabaseTable) o;
         return Objects.equals(tableName, table.tableName) &&
                 Objects.equals(tableAlias, table.tableAlias);
-    }
-
-    public ColumnItem findColumn(String name) {
-        for (ColumnItem item : columns) {
-            if (item.getName().equalsIgnoreCase(name)) {
-                return item;
-            }
-        }
-        return null;
     }
 
     @Override
@@ -172,4 +182,5 @@ public class DatabaseTable {
                 ", isColumnsTableSet=" + isColumnsTableSet +
                 '}';
     }
+
 }

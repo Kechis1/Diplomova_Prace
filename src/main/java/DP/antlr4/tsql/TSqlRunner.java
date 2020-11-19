@@ -217,8 +217,8 @@ public class TSqlRunner {
                     );
 
                     if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                        item.setLeftSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
-                        item.setRightSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 1));
+                        item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
+                        item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 1));
                     }
 
                     conditions.add(item);
@@ -231,8 +231,8 @@ public class TSqlRunner {
                     );
 
                     if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                        item.setLeftSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
-                        item.setRightSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 2));
+                        item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
+                        item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 2));
                     }
 
                     conditions.add(item);
@@ -276,6 +276,8 @@ public class TSqlRunner {
     public static boolean runEqualConditionInOperatorExists(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
         ParseTree select = parser.select_statement();
+        DatabaseTable fromTable = TSqlParseWalker.findFromTable(metadata, select).get(0);
+        TSqlParseWalker.findTablesList(metadata, select);
         final List<ExistItem> existTables = new ArrayList<>();
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
@@ -283,30 +285,45 @@ public class TSqlRunner {
             public void enterSearch_condition_and(TSqlParser.Search_condition_andContext ctx) {
                 for (int i = 0; i < ctx.search_condition_not().size(); i++) {
                     if (ctx.search_condition_not(i).predicate() != null && ctx.search_condition_not(i).predicate().EXISTS() != null) {
+                        ExistItem eItem = new ExistItem();
+                        eItem.setNot(ctx.search_condition_not(i).NOT() != null);
                         TSqlParser.Query_specificationContext qSpecContext = ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification();
-                        if (qSpecContext.FROM() != null) {
-                            boolean found = false;
-                            for (TSqlParser.Table_sourceContext TSctx : qSpecContext.table_sources().table_source()) {
-                                if (TSctx.table_source_item_joined().table_source_item().table_name_with_hint() != null) {
-                                    existTables.add(new ExistItem(metadata.findTable(TSctx.table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.toString(),
-                                            TSctx.table_source_item_joined().table_source_item().as_table_alias().toString()),
-                                            ctx.search_condition_not(i).NOT() != null));
-                                    found = true;
-                                }
-                            }
-                            if (!found) {
-                                existTables.add(new ExistItem(null, ctx.search_condition_not(i).NOT() != null));
-                            }
-                        } else {
-                            existTables.add(new ExistItem(null, ctx.search_condition_not(i).NOT() != null));
+                        if (qSpecContext.FROM() != null && qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().table_name_with_hint() != null) {
+                            eItem.setTable(metadata.findTable(qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText(),
+                                    qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().as_table_alias().getText()));
                         }
+                        if (qSpecContext.WHERE() != null) {
+                            List<ConditionItem> eConditions = new ArrayList<>();
+                            for (TSqlParser.Search_condition_notContext scnContext : qSpecContext.search_condition().get(0).search_condition_and().get(0).search_condition_not()) {
+                                ConditionItem item = new ConditionItem(ConditionItem.findDataType(scnContext.predicate().expression().get(0)),
+                                        ConditionItem.findSideValue(scnContext.predicate().expression().get(0)),
+                                        ConditionItem.findDataType(scnContext.predicate().expression().get(1)),
+                                        ConditionItem.findSideValue(scnContext.predicate().expression().get(1)),
+                                        scnContext.predicate().comparison_operator() != null
+                                                ? scnContext.predicate().comparison_operator().getText()
+                                                : null
+                                );
+                                if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
+                                    item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, scnContext, 0));
+                                    item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, scnContext, 1));
+                                }
+                                eConditions.add(item);
+                            }
+                            eItem.setConditions(eConditions);
+                        }
+
+                        existTables.add(eItem);
                     }
                 }
             }
         }, select);
 
         for (ExistItem exist : existTables) {
-            if (!exist.isNot() && exist.getTable() == null) {
+            if ((exist.isNot() && exist.getTable() != null && exist.getTable().isEmpty()) ||
+                    (!exist.isNot() && (exist.getTable() == null ||
+                            (!exist.getTable().isEmpty() &&
+                                (exist.getConditions().size() == 0) ||
+                                (exist.getConditions().size() == 1 && ConditionItem.isComparingForeignKey(fromTable, exist.getTable(), exist.getConditions().get(0))))))) {
                 System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS");
                 return false;
             }
@@ -334,8 +351,8 @@ public class TSqlRunner {
                     );
 
                     if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                        item.setLeftSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
-                        item.setRightSideColumnItem(ColumnItem.create(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 1));
+                        item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
+                        item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 1));
                     }
 
                     conditions.add(item);

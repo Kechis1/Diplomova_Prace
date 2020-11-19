@@ -4,6 +4,7 @@
   "tables": [
     {
       "table_name": "student",
+      "records_count": 18,
       "columns": [
         {
           "name": "sID",
@@ -24,6 +25,7 @@
     },
     {
       "table_name": "studuje",
+      "records_count": 46,
       "columns": [
         {
           "name": "pID",
@@ -62,6 +64,7 @@
     },
     {
       "table_name": "predmet",
+      "records_count": 11,
       "columns": [
         {
           "name": "pID",

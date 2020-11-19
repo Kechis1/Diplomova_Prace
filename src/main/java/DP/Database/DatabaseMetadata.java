@@ -2,7 +2,6 @@ package DP.Database;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONObject;
@@ -67,18 +66,9 @@ public class DatabaseMetadata {
                     tableColumns,
                     tablePrimaryKeys,
                     tableForeignKeys,
-                    tableObject.getString("table_name").toUpperCase()
+                    tableObject.getString("table_name").toUpperCase(),
+                    tableObject.getInt("records_count")
             );
-
-            JSONArray columns = tableObject.getJSONArray("columns");
-            for (Object o : columns) {
-                JSONObject item = (JSONObject) o;
-                tableColumns.add(new ColumnItem(object.getString("table_catalog").toUpperCase(),
-                        object.getString("table_schema").toUpperCase(),
-                        null,
-                        item.getString("name").toUpperCase(),
-                        item.getBoolean("is_nullable")));
-            }
             if (tableObject.has("foreign_keys")) {
                 JSONArray fKeys = tableObject.getJSONArray("foreign_keys");
                 for (Object o : fKeys) {
@@ -89,6 +79,35 @@ public class DatabaseMetadata {
                             null,
                             item.getString("references_table").toUpperCase(),
                             null));
+                }
+            }
+            JSONArray columns = tableObject.getJSONArray("columns");
+            for (Object o : columns) {
+                JSONObject item = (JSONObject) o;
+                int foundIndex = -1;
+                for (int fI = 0; fI < tableForeignKeys.size(); fI++) {
+                    if (tableForeignKeys.get(fI).getColumnName().equals(item.getString("name").toUpperCase())) {
+                        foundIndex = fI;
+                        break;
+                    }
+                }
+                if (foundIndex == -1) {
+                    tableColumns.add(new ColumnItem(object.getString("table_catalog").toUpperCase(),
+                            object.getString("table_schema").toUpperCase(),
+                            null,
+                            item.getString("name").toUpperCase(),
+                            item.getBoolean("is_nullable")));
+                } else {
+                    tableColumns.add(new ColumnItem(object.getString("table_catalog").toUpperCase(),
+                            object.getString("table_schema").toUpperCase(),
+                            null,
+                            item.getString("name").toUpperCase(),
+                            true,
+                            tableForeignKeys.get(foundIndex).getReferencesTableName(),
+                            tableForeignKeys.get(foundIndex).getReferencesColumnName(),
+                            tableForeignKeys.get(foundIndex).getReferencesTableObj(),
+                            tableForeignKeys.get(foundIndex).getReferencesColumnObj(),
+                            item.getBoolean("is_nullable")));
                 }
             }
             tableObject.getJSONArray("primary_keys").forEach(x -> tablePrimaryKeys.add(x.toString().toUpperCase()));

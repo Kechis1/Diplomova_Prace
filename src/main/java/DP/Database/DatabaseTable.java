@@ -13,14 +13,16 @@ public class DatabaseTable {
     private List<ColumnItem> columns;
     private List<String> primaryKeys;
     private List<ForeignKey> foreignKeys;
+    private int recordsCount;
     private boolean isColumnsTableSet = false;
 
-    public DatabaseTable(String tableName, List<ColumnItem> columns, List<String> primaryKeys, List<ForeignKey> foreignKeys, String tableAlias) {
+    public DatabaseTable(String tableName, List<ColumnItem> columns, List<String> primaryKeys, List<ForeignKey> foreignKeys, String tableAlias, int recordsCount) {
         this.tableName = tableName;
         this.columns = columns;
         this.primaryKeys = primaryKeys;
         this.foreignKeys = foreignKeys;
         this.tableAlias = tableAlias;
+        this.recordsCount = recordsCount;
     }
 
     public DatabaseTable() {}
@@ -87,6 +89,23 @@ public class DatabaseTable {
 
     public void setTableAlias(String tableAlias) {
         this.tableAlias = tableAlias;
+    }
+
+    public int getRecordsCount() {
+        return recordsCount;
+    }
+
+    public void setRecordsCount(int recordsCount) {
+        this.recordsCount = recordsCount;
+    }
+
+    public static int exists(DatabaseMetadata metadata, String name, String alias) {
+        if (name != null) {
+            return metadata.tableExists(name, null);
+        } else if (alias != null) {
+            return metadata.tableExists(null, alias);
+        }
+        return -1;
     }
 
     public static DatabaseTable create(DatabaseMetadata metadata, TSqlParser.Table_source_itemContext ctx) {

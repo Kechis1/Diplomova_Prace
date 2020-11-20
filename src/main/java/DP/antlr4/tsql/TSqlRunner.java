@@ -72,6 +72,22 @@ public class TSqlRunner {
     }
 
     /**
+     * @TODO
+     */
+    public static boolean runInconsistentCondition(final DatabaseMetadata metadata, String query) {
+
+        return true;
+    }
+
+    /**
+     * @TODO
+     */
+    public static boolean runSelectClause(final DatabaseMetadata metadata, String query) {
+
+        return true;
+    }
+
+    /**
      * @TODO OR, AND
      */
     public static boolean runEqualConditionInComparisonOperators(final DatabaseMetadata metadata, String query) {

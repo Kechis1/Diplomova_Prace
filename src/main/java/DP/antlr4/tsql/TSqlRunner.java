@@ -74,15 +74,17 @@ public class TSqlRunner {
     /**
      * @TODO
      */
-    public static boolean runInconsistentCondition(final DatabaseMetadata metadata, String query) {
-
-        return true;
-    }
-
-    /**
-     * @TODO
-     */
     public static boolean runSelectClause(final DatabaseMetadata metadata, String query) {
+        TSqlParser parser = runFromString(query);
+        ParseTree select = parser.select_statement();
+        final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
+        final List<ConditionItem> conditions = TSqlParseWalker.findConditions(metadata, select);
+        final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadata, select);
+
+
+        System.out.println("allTables: " + allTables);
+        System.out.println("conditions: " + conditions);
+        System.out.println("allColumnsInSelect: " + allColumnsInSelect);
 
         return true;
     }

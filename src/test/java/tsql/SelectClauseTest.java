@@ -86,7 +86,7 @@ public class SelectClauseTest {
                         "WHERE EXISTS (SELECT 1 FROM STUDUJE WHERE PREDMET.PID = STUDUJE.PID)"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
-                        "WHERE JMENO = 'DAIS'"),
+                        "WHERE JMENO <> 'DAIS'"),
                 Arguments.arguments("SELECT PID, SID, ROK, BODY " +
                         "FROM DBO.STUDUJE " +
                         "WHERE ROK = 2010 OR ROK = 2011"),

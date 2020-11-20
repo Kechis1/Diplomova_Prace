@@ -63,6 +63,18 @@ public class EqualConditionInComparisonOperatorsTest {
                         "WHERE 1 = 1"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
+                        "WHERE JMENO = 'DAIS' AND JMENO = 'UDBS'"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE ROCNIK = 2 AND ROCNIK > 1"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE ROCNIK = 2 AND PID < ROCNIK AND PID > 1"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE ROCNIK = 1 AND PID = 2 AND PID = ROCNIK"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
                         "WHERE 0 >= 0"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
@@ -125,6 +137,15 @@ public class EqualConditionInComparisonOperatorsTest {
         return Stream.of(Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 1 = 2"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE JMENO = 'DAIS' OR JMENO = 'UDBS'"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE JMENO = 'DAIS' AND ROCNIK = 2"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE PID = 1 AND ROCNIK = PID"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 0 >= 1"),

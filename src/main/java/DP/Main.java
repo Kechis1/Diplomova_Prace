@@ -8,8 +8,8 @@ public class Main {
     public static void main(String[] args) {
         DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
 
-        TSqlRunner.runInconsistentCondition(metadata, "SELECT * " +
+        TSqlRunner.runSelectClause(metadata, "SELECT PID, JMENO, JMENO " +
                 "FROM DBO.PREDMET " +
-                "WHERE JMENO = 'DAIS' AND JMENO = 'UDBS'");
+                "WHERE JMENO = 'DAIS'");
     }
 }

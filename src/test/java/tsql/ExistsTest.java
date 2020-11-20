@@ -1,5 +1,6 @@
 package tsql;
 
+import DP.Database.ColumnItem;
 import DP.Database.DatabaseMetadata;
 import DP.Database.DatabaseTable;
 import DP.Exceptions.UnnecessaryStatementException;
@@ -57,7 +58,7 @@ public class ExistsTest {
         assertTrue(result);
     }
 
-    @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}, recordsCount = {1}")
+    @ParameterizedTest(name = "doFindUnnecessaryConditionBasedOnRecordsCountTest {index} query = {0}, recordsCount = {1}")
     @MethodSource("doFindUnnecessaryConditionBasedOnRecordsCountSource")
     void doFindUnnecessaryConditionBasedOnRecordsCountTest(String query, int recordsCount) {
         DatabaseTable table = metadata.findTable("STUDUJE", "SDT");
@@ -65,6 +66,17 @@ public class ExistsTest {
         boolean result = TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS", this.consoleContent.toString().trim());
         assertFalse(result);
+    }
+
+    @ParameterizedTest(name = "doFindUnnecessaryConditionBasedOnNullableForeignKeyTest {index} query = {0}")
+    @MethodSource("doFindUnnecessaryConditionBasedOnNullableForeignKeySource")
+    void doFindUnnecessaryConditionBasedOnNullableForeignKeyTest(String query) {
+        DatabaseTable table = metadata.findTable("STUDUJE", "SDT");
+        ColumnItem column = table.findColumn("PID");
+        column.setNullable(true);
+        boolean result = TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
+        assertEquals("OK", this.consoleContent.toString().trim());
+        assertTrue(result);
     }
 
     public static Stream<Arguments> doFindUnnecessaryConditionBasedOnRecordsCountSource() {
@@ -98,6 +110,16 @@ public class ExistsTest {
                         "FROM DBO.PREDMET " +
                         "WHERE EXISTS (SELECT t1.a FROM (SELECT 1 as a) t1)"),
                 Arguments.arguments("SELECT * " +
+                        "FROM DBO.STUDUJE SDT " +
+                        "WHERE EXISTS (SELECT * " +
+                            "FROM DBO.PREDMET PDT " +
+                            "WHERE SDT.PID = PDT.PID " +
+                        ")")
+        );
+    }
+
+    public static Stream<Arguments> doFindUnnecessaryConditionBasedOnNullableForeignKeySource() {
+        return Stream.of(Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDUJE SDT " +
                         "WHERE EXISTS (SELECT * " +
                             "FROM DBO.PREDMET PDT " +

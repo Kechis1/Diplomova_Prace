@@ -56,12 +56,25 @@ public class EqualConditionInComparisonOperatorsTest {
         assertTrue(result);
     }
 
+    @ParameterizedTest(name="doFindInconsistentConditionTest {index} query = {0}")
+    @MethodSource("doFindInconsistentConditionSource")
+    void doFindInconsistentConditionTest(String query) {
+        boolean result = TSqlRunner.runEqualConditionInComparisonOperators(metadata, query);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " INCONSISTENT CONDITION", this.consoleContent.toString().trim());
+        assertFalse(result);
+    }
 
-    public static Stream<Arguments> doFindUnnecessaryConditionSource() {
+    @ParameterizedTest(name="doFindNotInconsistentConditionTest {index} query = {0}")
+    @MethodSource("doFindNotInconsistentConditionSource")
+    void doFindNotInconsistentConditionTest(String query) {
+        boolean result = TSqlRunner.runEqualConditionInComparisonOperators(metadata, query);
+        assertEquals("OK", this.consoleContent.toString().trim());
+        assertTrue(result);
+    }
+
+
+    public static Stream<Arguments> doFindInconsistentConditionSource() {
         return Stream.of(Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 1 = 1"),
-                Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE JMENO = 'DAIS' AND JMENO = 'UDBS'"),
                 Arguments.arguments("SELECT * " +
@@ -73,6 +86,48 @@ public class EqualConditionInComparisonOperatorsTest {
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE ROCNIK = 1 AND PID = 2 AND PID = ROCNIK"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE 'ba' < 'ba' OR 'bc' > 'bb'"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE 1 > 0 OR 1 < 0"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE 'ab' > 'aa' AND 'bb' >= 'ba'")
+        );
+    }
+
+    public static Stream<Arguments> doFindNotInconsistentConditionSource() {
+        return Stream.of(
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE JMENO = 'DAIS' OR JMENO = 'UDBS'"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE JMENO = 'DAIS' AND ROCNIK = 2"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE PID = 1 AND ROCNIK = PID"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE 1 < 0 OR 1 > 2"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE 'ba' < 'ba' OR 'bc' > 'db'"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE 1 > 2 AND 0 >= 2"),
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE 'ab' > 'ad' AND 'bb' >= 'bd'")
+        );
+    }
+
+    public static Stream<Arguments> doFindUnnecessaryConditionSource() {
+        return Stream.of(Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE 1 = 1"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 0 >= 0"),
@@ -96,9 +151,6 @@ public class EqualConditionInComparisonOperatorsTest {
                         "WHERE '1' = 1"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
-                        "WHERE 1 > 0 AND 0 >= 0"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
                         "WHERE 'a' = 'A'"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
@@ -114,16 +166,7 @@ public class EqualConditionInComparisonOperatorsTest {
                         "WHERE 'aa' < 'ab'"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
-                        "WHERE 'ba' < 'ba' OR 'bc' > 'bb'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
                         "WHERE 'aa' <> 'ab'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 1 > 0 OR 1 < 0"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'ab' > 'aa' AND 'bb' >= 'ba'"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT SDT " +
                         "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
@@ -137,15 +180,6 @@ public class EqualConditionInComparisonOperatorsTest {
         return Stream.of(Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 1 = 2"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE JMENO = 'DAIS' OR JMENO = 'UDBS'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE JMENO = 'DAIS' AND ROCNIK = 2"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE PID = 1 AND ROCNIK = PID"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 0 >= 1"),
@@ -169,12 +203,6 @@ public class EqualConditionInComparisonOperatorsTest {
                         "WHERE '1' = 2"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
-                        "WHERE 1 < 0 OR 1 > 2"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 1 > 2 AND 0 >= 2"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
                         "WHERE 'a' = 'B'"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
@@ -191,12 +219,6 @@ public class EqualConditionInComparisonOperatorsTest {
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 'aa' <> 'aa'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'ba' < 'ba' OR 'bc' > 'db'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'ab' > 'ad' AND 'bb' >= 'bd'"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT SDT " +
                         "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +

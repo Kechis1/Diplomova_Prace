@@ -58,8 +58,7 @@ public class SelectClauseTest {
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
         return Stream.of(
                 Arguments.arguments("SELECT PID, JMENO, JMENO " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE JMENO = 'DAIS'"),
+                        "FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT PDT.PID, STE.PID, PDT.JMENO " +
                         "FROM PREDMET PDT " +
                         "INNER JOIN STUDUJE STE ON PDT.PID = STE.PID " +

@@ -8,7 +8,6 @@ import DP.antlr4.tsql.TSqlRunner;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -68,8 +67,8 @@ public class ExistsTest {
         assertFalse(result);
     }
 
-    @ParameterizedTest(name = "doFindUnnecessaryConditionBasedOnNullableForeignKeyTest {index} query = {0}")
-    @MethodSource("doFindUnnecessaryConditionBasedOnNullableForeignKeySource")
+    @ParameterizedTest(name = "doFindNecessaryConditionBasedOnNullableForeignKeyTest {index} query = {0}")
+    @MethodSource("doFindNecessaryConditionBasedOnNullableForeignKeySource")
     void doFindUnnecessaryConditionBasedOnNullableForeignKeyTest(String query) {
         DatabaseTable table = metadata.findTable("STUDUJE", "SDT");
         ColumnItem column = table.findColumn("PID");
@@ -118,7 +117,7 @@ public class ExistsTest {
         );
     }
 
-    public static Stream<Arguments> doFindUnnecessaryConditionBasedOnNullableForeignKeySource() {
+    public static Stream<Arguments> doFindNecessaryConditionBasedOnNullableForeignKeySource() {
         return Stream.of(Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDUJE SDT " +
                         "WHERE EXISTS (SELECT * " +

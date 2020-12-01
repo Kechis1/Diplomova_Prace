@@ -109,6 +109,8 @@ public class DatabaseTable {
             newItem = metadata.findTable(name, null);
         } else if (alias != null) {
             newItem = metadata.findTable(null, alias);
+        } else if (metadata.getTables().size() == 1) {
+            newItem = metadata.getTables().get(0);
         } else {
             newItem = new DatabaseTable();
         }

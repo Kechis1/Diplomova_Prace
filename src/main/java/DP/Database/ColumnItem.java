@@ -15,6 +15,23 @@ public class ColumnItem {
     DatabaseTable referencesTable;
     ColumnItem referencesColumn;
     boolean isNullable = true;
+    boolean isConstant = false;
+    String value;
+
+    public ColumnItem(String database, String schema, DatabaseTable table, String name, boolean isForeignKey, String referencesTableName, String referencesColumnName, DatabaseTable referencesTable, ColumnItem referencesColumn, boolean isNullable, boolean isConstant, String value) {
+        this.database = database;
+        this.schema = schema;
+        this.table = table;
+        this.name = name;
+        this.isForeignKey = isForeignKey;
+        this.referencesTableName = referencesTableName;
+        this.referencesColumnName = referencesColumnName;
+        this.referencesTable = referencesTable;
+        this.referencesColumn = referencesColumn;
+        this.isNullable = isNullable;
+        this.isConstant = isConstant;
+        this.value = value;
+    }
 
     public ColumnItem(String database, String schema, DatabaseTable table, String name, boolean isForeignKey, String referencesTableName, String referencesColumnName, DatabaseTable referencesTable, ColumnItem referencesColumn, boolean isNullable) {
         this.database = database;
@@ -73,6 +90,8 @@ public class ColumnItem {
                         ctx.predicate().expression().get(index).full_column_name().column_name.getText());
             }
             return table.findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
+        } else if (metadata.getTables().size() == 1) {
+            return  metadata.getTables().get(0).findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
         }
 
         return new ColumnItem(
@@ -83,6 +102,46 @@ public class ColumnItem {
         );
     }
 
+    public static ColumnItem findOrCreate(DatabaseMetadata metadata, TSqlParser.Select_list_elemContext ctx) {
+        if (ctx.column_elem().table_name() != null) {
+            int tableIndex = DatabaseTable.exists(metadata,
+                    null,
+                    ctx.column_elem().table_name().table != null
+                    ? ctx.column_elem().table_name().table.getText()
+                    : null);
+            DatabaseTable table;
+            if (tableIndex == -1) {
+                table = new DatabaseTable();
+                table.setTableAlias(ctx.column_elem().table_name().table != null
+                                ? ctx.column_elem().table_name().table.getText()
+                                : null);
+            } else {
+                table = metadata.getTables().get(tableIndex);
+            }
+
+            if (tableIndex == -1) {
+                return new ColumnItem(ctx.column_elem().table_name().database != null
+                        ? ctx.column_elem().table_name().database.getText()
+                        : null,
+                        ctx.column_elem().table_name().schema != null
+                                ? ctx.column_elem().table_name().schema.getText()
+                                : null,
+                        table,
+                        ctx.column_elem().column_name.getText());
+            }
+            return table.findColumn(ctx.column_elem().column_name.getText());
+        } else if (metadata.getTables().size() == 1) {
+            return  metadata.getTables().get(0).findColumn(ctx.column_elem().column_name.getText());
+        }
+
+        return new ColumnItem(
+                null,
+                null,
+                null,
+                ctx.column_elem().column_name.getText()
+        );
+    }
+
     public static boolean exists(List<ColumnItem> allColumns, ColumnItem columnItem) {
         for (ColumnItem currentItem : allColumns) {
             if (!currentItem.getName().equals(columnItem.getName())) {
@@ -90,6 +149,17 @@ public class ColumnItem {
             }
             if (columnItem.getTable().getTableAlias() == null || currentItem.getTable().getTableAlias().equals(columnItem.getTable().getTableAlias())) {
                 return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean duplicatesExists(List<ColumnItem> columns) {
+        for (int i = 0; i < columns.size() - 1; i++) {
+            for (int j = i + 1; j < columns.size(); j++) {
+                if (columns.get(i).equals(columns.get(j))) {
+                    return true;
+                }
             }
         }
         return false;
@@ -175,6 +245,22 @@ public class ColumnItem {
         this.referencesColumn = referencesColumn;
     }
 
+    public boolean isConstant() {
+        return isConstant;
+    }
+
+    public void setConstant(boolean constant) {
+        isConstant = constant;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
     @Override
     public String toString() {
         String tableString = "";
@@ -188,7 +274,12 @@ public class ColumnItem {
                 ", schema='" + schema + '\'' +
                 ", table=" + tableString +
                 ", name='" + name + '\'' +
+                ", isForeignKey=" + isForeignKey +
+                ", referencesTableName='" + referencesTableName + '\'' +
+                ", referencesColumnName='" + referencesColumnName + '\'' +
                 ", isNullable=" + isNullable +
+                ", isConstant=" + isConstant +
+                ", value='" + value + '\'' +
                 '}';
     }
 }

@@ -43,7 +43,16 @@ public class SelectClauseTest {
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query) {
         boolean result = TSqlRunner.runSelectClause(metadata, query);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " SELECT Clause", this.consoleContent.toString().trim());
+        assertEquals(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE", this.consoleContent.toString().trim());
+        assertFalse(result);
+    }
+
+    @ParameterizedTest(name = "doFindUnnecessaryAttributeInSelectThatCanBeRewrittenTest {index} query = {0}")
+    @MethodSource("doFindUnnecessaryAttributeInSelectThatCanBeRewrittenSource")
+    void doFindUnnecessaryAttributeInSelectThatCanBeRewrittenTest(String query) {
+        boolean result = TSqlRunner.runSelectClause(metadata, query);
+        assertEquals( UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
+                this.consoleContent.toString().trim());
         assertFalse(result);
     }
 
@@ -65,7 +74,12 @@ public class SelectClauseTest {
                         "WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS'"),
                 Arguments.arguments("SELECT PID, JMENO, 2 " +
                         "FROM DBO.PREDMET " +
-                        "WHERE ROCNIK = 2"),
+                        "WHERE ROCNIK = 2")
+        );
+    }
+
+    public static Stream<Arguments> doFindUnnecessaryAttributeInSelectThatCanBeRewrittenSource() {
+        return Stream.of(
                 Arguments.arguments("SELECT PID, JMENO, ROCNIK " +
                         "FROM DBO.PREDMET " +
                         "WHERE ROCNIK = 2"),
@@ -80,6 +94,10 @@ public class SelectClauseTest {
 
     public static Stream<Arguments> doFindNecessaryConditionSource() {
         return Stream.of(
+                Arguments.arguments("SELECT PDT.PID, PDT.JMENO, STD.JMENO " +
+                        "FROM DBO.PREDMET PDT " +
+                        "JOIN DBO.STUDUJE STE ON PDT.PID = STE.PID " +
+                        "JOIN DBO.STUDENT SDT ON STE.SID = SDT.SID"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE EXISTS (SELECT 1 FROM STUDUJE WHERE PREDMET.PID = STUDUJE.PID)"),

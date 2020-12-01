@@ -98,6 +98,35 @@ public class ConditionItem {
         return false;
     }
 
+    public static List<ConditionItem> removeMultipleAttributeConditions(List<ConditionItem> conditions) {
+        boolean found;
+        for (int i = 0; i < conditions.size() - 1; i++) {
+            found = false;
+            for (int j = i + 1; j < conditions.size(); j++) {
+                if (conditions.get(i).getLeftSideDataType() != ConditionDataType.COLUMN && conditions.get(i).getRightSideDataType() != ConditionDataType.COLUMN) {
+                    break;
+                }
+                if (conditions.get(j).getLeftSideDataType() != ConditionDataType.COLUMN && conditions.get(j).getRightSideDataType() != ConditionDataType.COLUMN) {
+                    continue;
+                }
+
+                if ((conditions.get(i).getLeftSideDataType() == ConditionDataType.COLUMN &&
+                        ((conditions.get(j).getLeftSideDataType() == ConditionDataType.COLUMN && conditions.get(i).getLeftSideColumnItem().equals(conditions.get(j).getLeftSideColumnItem())) ||
+                                (conditions.get(j).getRightSideDataType() == ConditionDataType.COLUMN && conditions.get(i).getLeftSideColumnItem().equals(conditions.get(j).getRightSideColumnItem())))) ||
+                        (conditions.get(i).getRightSideDataType() == ConditionDataType.COLUMN &&
+                                ((conditions.get(j).getLeftSideDataType() == ConditionDataType.COLUMN && conditions.get(i).getRightSideColumnItem().equals(conditions.get(j).getLeftSideColumnItem())) ||
+                                        (conditions.get(j).getRightSideDataType() == ConditionDataType.COLUMN && conditions.get(i).getRightSideColumnItem().equals(conditions.get(j).getRightSideColumnItem()))))) {
+                    conditions.remove(j);
+                    found = true;
+                }
+            }
+            if (found) {
+                conditions.remove(i);
+            }
+        }
+        return conditions;
+    }
+
     public ConditionDataType getLeftSideDataType() {
         return leftSideDataType;
     }

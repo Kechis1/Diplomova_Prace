@@ -73,19 +73,63 @@ public class TSqlRunner {
 
     /**
      * @TODO
+     *
      */
     public static boolean runSelectClause(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
         ParseTree select = parser.select_statement();
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
-        final List<ConditionItem> conditions = TSqlParseWalker.findConditions(metadata, select);
-        final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadata, select);
-
+        DatabaseMetadata metadataWithTables = metadata.withTables(allTables);
+        final List<ConditionItem> conditions = TSqlParseWalker.findConditions(metadataWithTables, select);
+        final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadataWithTables, select);
+        final List<ConditionItem> uniqueAttributesConditions = ConditionItem.removeMultipleAttributeConditions(conditions);
 
         System.out.println("allTables: " + allTables);
         System.out.println("conditions: " + conditions);
         System.out.println("allColumnsInSelect: " + allColumnsInSelect);
 
+
+        boolean result = ColumnItem.duplicatesExists(allColumnsInSelect);
+        if (result) {
+            System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE");
+            return false;
+        }
+
+        for (ColumnItem item : allColumnsInSelect) {
+            if (item.isConstant()) {
+                System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE");
+                return false;
+            }
+        }
+
+        for (ConditionItem item : conditions) {
+            if (item.getOperator().equals("=") && item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
+                boolean bothInSelect = false;
+                for (ColumnItem column : allColumnsInSelect) {
+                    if (bothInSelect) {
+                        System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE");
+                        return false;
+                    }
+                    if (column.equals(item.getLeftSideColumnItem()) || column.equals(item.getRightSideColumnItem())) {
+                        bothInSelect = true;
+                    }
+                }
+            }
+        }
+
+        for (ConditionItem item : uniqueAttributesConditions) {
+            if (item.getOperator().equals("=") && (item.getLeftSideDataType() == ConditionDataType.COLUMN || item.getRightSideDataType() == ConditionDataType.COLUMN)) {
+                for (ColumnItem column : allColumnsInSelect) {
+                    if ((item.getLeftSideDataType() == ConditionDataType.COLUMN && column.equals(item.getLeftSideColumnItem()) && item.getRightSideDataType() != ConditionDataType.COLUMN) ||
+                            (item.getRightSideDataType() == ConditionDataType.COLUMN && column.equals(item.getRightSideColumnItem()) && item.getLeftSideDataType() != ConditionDataType.COLUMN)) {
+                        System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT");
+                        return false;
+                    }
+                }
+            }
+        }
+
+        System.out.println("OK");
         return true;
     }
 
@@ -260,9 +304,9 @@ public class TSqlRunner {
 
         boolean isConditionNecessary = true;
         boolean currentNecessary;
-        for (int i = 0; i < conditions.size(); i+=2) {
+        for (int i = 0; i < conditions.size(); i += 2) {
             currentNecessary = false;
-            for (int j = i; j <= i+1; j++) {
+            for (int j = i; j <= i + 1; j++) {
                 if ((conditions.get(j).getLeftSideDataType() == ConditionDataType.BINARY && Arrays.asList(ConditionDataType.BINARY, ConditionDataType.DECIMAL).contains(conditions.get(j).getRightSideDataType())) ||
                         (conditions.get(j).getLeftSideDataType() == ConditionDataType.DECIMAL && (conditions.get(j).getRightSideDataType().isNumeric || conditions.get(j).getRightSideDataType() == ConditionDataType.STRING_DECIMAL)) ||
                         (conditions.get(j).getLeftSideDataType() == ConditionDataType.FLOAT && ((conditions.get(j).getRightSideDataType().isNumeric && conditions.get(j).getRightSideDataType() != ConditionDataType.BINARY) || (Arrays.asList(ConditionDataType.STRING_DECIMAL, ConditionDataType.STRING_FLOAT).contains(conditions.get(j).getRightSideDataType())))) ||
@@ -309,8 +353,8 @@ public class TSqlRunner {
                         if (qSpecContext.FROM() != null && qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().table_name_with_hint() != null) {
                             eItem.setTable(metadata.findTable(qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText(),
                                     qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().as_table_alias() == null
-                                        ? null
-                                        : qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().as_table_alias().getText()));
+                                            ? null
+                                            : qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().as_table_alias().getText()));
                         }
                         if (qSpecContext.WHERE() != null) {
                             List<ConditionItem> eConditions = new ArrayList<>();
@@ -342,8 +386,8 @@ public class TSqlRunner {
             if ((exist.isNot() && exist.getTable() != null && exist.getTable().isEmpty()) ||
                     (!exist.isNot() && (exist.getTable() == null ||
                             (!exist.getTable().isEmpty() &&
-                                (exist.getConditions() == null || exist.getConditions().size() == 0 ||
-                                (exist.getConditions().size() == 1 && ConditionItem.isComparingForeignKey(fromTable, exist.getTable(), exist.getConditions().get(0)))))))) {
+                                    (exist.getConditions() == null || exist.getConditions().size() == 0 ||
+                                            (exist.getConditions().size() == 1 && ConditionItem.isComparingForeignKey(fromTable, exist.getTable(), exist.getConditions().get(0)))))))) {
                 System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS");
                 return false;
             }

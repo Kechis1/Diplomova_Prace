@@ -71,23 +71,38 @@ public class TSqlRunner {
         return true;
     }
 
-    /**
-     * @TODO
-     *
-     */
     public static boolean runSelectClause(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
         ParseTree select = parser.select_statement();
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
+        final List<Boolean> foundExistsNotConstant = new ArrayList<>();
+        final List<Boolean> foundUnion = new ArrayList<>();
         DatabaseMetadata metadataWithTables = metadata.withTables(allTables);
-        final List<ConditionItem> conditions = TSqlParseWalker.findConditions(metadataWithTables, select);
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            @Override
+            public void enterSearch_condition_and(TSqlParser.Search_condition_andContext ctx) {
+                for (int i = 0; i < ctx.search_condition_not().size(); i++) {
+                    if (ctx.search_condition_not(i).predicate() != null && ctx.search_condition_not(i).predicate().EXISTS() != null && ctx.search_condition_not(i).predicate().subquery() != null &&
+                            (ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().select_list_elem().size() > 1 ||
+                                    ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().select_list_elem().get(0).expression_elem() == null ||
+                                    ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().select_list_elem().get(0).expression_elem().expression().primitive_expression().constant() == null)) {
+                        foundExistsNotConstant.add(true);
+                    }
+                }
+            }
+
+            @Override
+            public void enterSql_union(TSqlParser.Sql_unionContext ctx) {
+                foundUnion.add(true);
+            }
+        }, select);
+
+        if (!foundExistsNotConstant.isEmpty()) {
+            System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT");
+            return false;
+        }
+
         final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadataWithTables, select);
-        final List<ConditionItem> uniqueAttributesConditions = ConditionItem.removeMultipleAttributeConditions(conditions);
-
-        System.out.println("allTables: " + allTables);
-        System.out.println("conditions: " + conditions);
-        System.out.println("allColumnsInSelect: " + allColumnsInSelect);
-
 
         boolean result = ColumnItem.duplicatesExists(allColumnsInSelect);
         if (result) {
@@ -96,22 +111,41 @@ public class TSqlRunner {
         }
 
         for (ColumnItem item : allColumnsInSelect) {
-            if (item.isConstant()) {
+            if (item.isConstant() && foundUnion.isEmpty()) {
                 System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE");
                 return false;
             }
         }
 
+        final List<ConditionItem> conditions = TSqlParseWalker.findConditions(metadataWithTables, select);
+        final List<ConditionItem> uniqueAttributesConditions = ConditionItem.removeMultipleAttributeConditions(conditions);
+
         for (ConditionItem item : conditions) {
             if (item.getOperator().equals("=") && item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                boolean bothInSelect = false;
+                int bothInSelect = -1;
+                List<ColumnItem> inSelect = new ArrayList<>();
                 for (ColumnItem column : allColumnsInSelect) {
-                    if (bothInSelect) {
+                    if (column.equals(item.getLeftSideColumnItem()) || column.equals(item.getRightSideColumnItem())) {
+                        if (column.equals(item.getLeftSideColumnItem())) {
+                            inSelect.add(item.getRightSideColumnItem());
+                        } else {
+                            inSelect.add(item.getLeftSideColumnItem());
+                        }
+                        bothInSelect++;
+                    }
+                    if (bothInSelect == 1) {
                         System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE");
                         return false;
                     }
-                    if (column.equals(item.getLeftSideColumnItem()) || column.equals(item.getRightSideColumnItem())) {
-                        bothInSelect = true;
+                }
+                if (bothInSelect == 0) {
+                    for (ConditionItem condition : conditions) {
+                        if (item.getOperator().equals("=") &&
+                                ((condition.getLeftSideColumnItem().equals(inSelect.get(0)) && condition.getRightSideDataType() != ConditionDataType.COLUMN) ||
+                                        (condition.getRightSideColumnItem().equals(inSelect.get(0)) && condition.getLeftSideDataType() != ConditionDataType.COLUMN))) {
+                            System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT");
+                            return false;
+                        }
                     }
                 }
             }

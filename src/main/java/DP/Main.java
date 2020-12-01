@@ -8,9 +8,9 @@ public class Main {
     public static void main(String[] args) {
         DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
 
-        TSqlRunner.runSelectClause(metadata, "SELECT SID, PID, BODY " +
-                "FROM STUDUJE " +
-                "WHERE EXISTS (SELECT * FROM STUDENT WHERE STUDUJE.SID = STUDENT.SID)");
+        TSqlRunner.runSelectClause(metadata, "SELECT SID, ROK, BODY " +
+                "FROM DBO.STUDUJE " +
+                "WHERE PID = 2 AND SID = PID");
 
     }
 }

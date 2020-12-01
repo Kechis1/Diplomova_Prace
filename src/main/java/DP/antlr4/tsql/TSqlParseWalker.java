@@ -89,19 +89,21 @@ public class TSqlParseWalker {
         List<ConditionItem> conditions = new ArrayList<>();
         for (TSqlParser.Search_condition_andContext ctxAnd : ctx.search_condition_and()) {
             for (TSqlParser.Search_condition_notContext ctxNot : ctxAnd.search_condition_not()) {
-                ConditionItem item = new ConditionItem(ConditionItem.findDataType(ctxNot.predicate().expression().get(0)),
-                        ConditionItem.findSideValue(ctxNot.predicate().expression().get(0)),
-                        ConditionItem.findDataType(ctxNot.predicate().expression().get(1)),
-                        ConditionItem.findSideValue(ctxNot.predicate().expression().get(1)),
-                        ctxNot.predicate().getChild(1).getText()
-                );
-                if (item.getLeftSideDataType() == ConditionDataType.COLUMN) {
-                    item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctxNot, 0));
+                if (ctxNot.predicate().EXISTS() == null) {
+                    ConditionItem item = new ConditionItem(ConditionItem.findDataType(ctxNot.predicate().expression().get(0)),
+                            ConditionItem.findSideValue(ctxNot.predicate().expression().get(0)),
+                            ConditionItem.findDataType(ctxNot.predicate().expression().get(1)),
+                            ConditionItem.findSideValue(ctxNot.predicate().expression().get(1)),
+                            ctxNot.predicate().getChild(1).getText()
+                    );
+                    if (item.getLeftSideDataType() == ConditionDataType.COLUMN) {
+                        item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctxNot, 0));
+                    }
+                    if (item.getRightSideDataType() == ConditionDataType.COLUMN) {
+                        item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctxNot, 1));
+                    }
+                    conditions.add(item);
                 }
-                if (item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                    item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctxNot, 1));
-                }
-                conditions.add(item);
             }
         }
         return conditions;
@@ -140,49 +142,55 @@ public class TSqlParseWalker {
 
     public static List<ColumnItem> findColumnsInSelect(final DatabaseMetadata metadata, ParseTree select) {
         final List<ColumnItem> columns = new ArrayList<>();
+        final List<Boolean> foundSelect = new ArrayList<>();
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
 
             @Override
-            public void enterSelect_list_elem(TSqlParser.Select_list_elemContext ctx) {
-                if (ctx.asterisk() != null) {
-                    columns.add(new ColumnItem(null,
-                            null,
-                            DatabaseTable.create(metadata,
+            public void enterSelect_statement(TSqlParser.Select_statementContext mCtx) {
+                if(foundSelect.isEmpty()) {
+                    foundSelect.add(true);
+                    for (TSqlParser.Select_list_elemContext ctx : mCtx.query_expression().query_specification().select_list().select_list_elem()) {
+                        if (ctx.asterisk() != null) {
+                            columns.add(new ColumnItem(null,
                                     null,
-                                    ctx.asterisk().table_name() != null
-                                            ? ctx.asterisk().table_name().getText()
-                                            : null),
-                            ctx.asterisk().STAR().getText())
-                    );
-                } else if (ctx.column_elem() != null) {
-                    columns.add(ColumnItem.findOrCreate(metadata, ctx));
-                } else if (ctx.expression_elem() != null) {
-                    if (ctx.expression_elem().expression().primitive_expression() != null) {
-                        columns.add(new ColumnItem(null,
-                                null,
-                                null,
-                                ctx.expression_elem().as_column_alias() == null
-                                        ? null
-                                        : ctx.expression_elem().as_column_alias().getText(),
-                                false,
-                                null,
-                                null,
-                                null,
-                                null,
-                                false,
-                                true,
-                                ctx.expression_elem().expression().primitive_expression().constant().getText()
-                        ));
-                    } else {
-                        columns.add(new ColumnItem(null,
-                                null,
-                                DatabaseTable.create(metadata,
+                                    DatabaseTable.create(metadata,
+                                            null,
+                                            ctx.asterisk().table_name() != null
+                                                    ? ctx.asterisk().table_name().getText()
+                                                    : null),
+                                    ctx.asterisk().STAR().getText())
+                            );
+                        } else if (ctx.column_elem() != null) {
+                            columns.add(ColumnItem.findOrCreate(metadata, ctx));
+                        } else if (ctx.expression_elem() != null) {
+                            if (ctx.expression_elem().expression().primitive_expression() != null) {
+                                columns.add(new ColumnItem(null,
                                         null,
-                                        ctx.expression_elem().expression().full_column_name().table_name() != null
-                                                ? ctx.expression_elem().expression().full_column_name().table_name().table.getText()
-                                                : null),
-                                ctx.expression_elem().expression().full_column_name().column_name.getText()
-                        ));
+                                        null,
+                                        ctx.expression_elem().as_column_alias() == null
+                                                ? null
+                                                : ctx.expression_elem().as_column_alias().getText(),
+                                        false,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        false,
+                                        true,
+                                        ctx.expression_elem().expression().primitive_expression().constant().getText()
+                                ));
+                            } else {
+                                columns.add(new ColumnItem(null,
+                                        null,
+                                        DatabaseTable.create(metadata,
+                                                null,
+                                                ctx.expression_elem().expression().full_column_name().table_name() != null
+                                                        ? ctx.expression_elem().expression().full_column_name().table_name().table.getText()
+                                                        : null),
+                                        ctx.expression_elem().expression().full_column_name().column_name.getText()
+                                ));
+                            }
+                        }
                     }
                 }
             }

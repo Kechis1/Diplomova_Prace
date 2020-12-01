@@ -99,6 +99,7 @@ public class ConditionItem {
     }
 
     public static List<ConditionItem> removeMultipleAttributeConditions(List<ConditionItem> conditions) {
+        List<ConditionItem> newConditions = new ArrayList<>(conditions);
         boolean found;
         for (int i = 0; i < conditions.size() - 1; i++) {
             found = false;
@@ -116,15 +117,15 @@ public class ConditionItem {
                         (conditions.get(i).getRightSideDataType() == ConditionDataType.COLUMN &&
                                 ((conditions.get(j).getLeftSideDataType() == ConditionDataType.COLUMN && conditions.get(i).getRightSideColumnItem().equals(conditions.get(j).getLeftSideColumnItem())) ||
                                         (conditions.get(j).getRightSideDataType() == ConditionDataType.COLUMN && conditions.get(i).getRightSideColumnItem().equals(conditions.get(j).getRightSideColumnItem()))))) {
-                    conditions.remove(j);
+                    newConditions.remove(j);
                     found = true;
                 }
             }
             if (found) {
-                conditions.remove(i);
+                newConditions.remove(i);
             }
         }
-        return conditions;
+        return newConditions;
     }
 
     public ConditionDataType getLeftSideDataType() {

@@ -1,6 +1,7 @@
 package tsql;
 
 import DP.Database.DatabaseMetadata;
+import DP.Database.Respond;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
 import org.junit.jupiter.api.AfterEach;
@@ -31,7 +32,6 @@ public class GroupByTest {
     @AfterEach
     public void restoreStreams() {
         System.setOut(this.originalStdOut);
-        // System.out.println(this.consoleContent.toString());
         this.consoleContent = new ByteArrayOutputStream();
     }
 
@@ -44,25 +44,25 @@ public class GroupByTest {
     @ParameterizedTest(name="doFindUnnecessaryGroupByTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryGroupBySource")
     void doFindUnnecessaryGroupByTest(String query) {
-        boolean result = TSqlRunner.runGroupBy(metadata, query);
+        Respond respond = TSqlRunner.runGroupBy(metadata, query);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY", this.consoleContent.toString().trim());
-        assertFalse(result);
+        assertFalse(respond.isUnnecessaryStatement());
     }
 
     @ParameterizedTest(name="doFindNecessaryGroupByTest {index} query = {0}")
     @MethodSource("doFindNecessaryGroupBySource")
     void doFindNecessaryGroupByTest(String query) {
-        boolean result = TSqlRunner.runGroupBy(metadata, query);
+        Respond respond = TSqlRunner.runGroupBy(metadata, query);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(result);
+        assertTrue(respond.isUnnecessaryStatement());
     }
 
     @ParameterizedTest(name="doFindRewrittenableAggregateFunctionsTest {index} query = {0}, message = {1}")
     @MethodSource("doFindRewrittenableAggregateFunctionsSource")
     void doFindRewrittenableAggregateFunctionsTest(String query, String message) {
-        boolean result = TSqlRunner.runGroupBy(metadata, query);
+        Respond respond = TSqlRunner.runGroupBy(metadata, query);
         assertEquals(message, this.consoleContent.toString().trim());
-        assertFalse(result);
+        assertFalse(respond.isUnnecessaryStatement());
     }
 
 

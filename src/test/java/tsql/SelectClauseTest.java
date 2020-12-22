@@ -1,6 +1,7 @@
 package tsql;
 
 import DP.Database.DatabaseMetadata;
+import DP.Database.Respond;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
@@ -42,26 +43,26 @@ public class SelectClauseTest {
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query) {
-        boolean result = TSqlRunner.runSelectClause(metadata, query);
+        Respond respond = TSqlRunner.runSelectClause(metadata, query);
         assertEquals(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE", this.consoleContent.toString().trim());
-        assertFalse(result);
+        assertFalse(respond.isUnnecessaryStatement());
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryAttributeInSelectThatCanBeRewrittenTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryAttributeInSelectThatCanBeRewrittenSource")
     void doFindUnnecessaryAttributeInSelectThatCanBeRewrittenTest(String query) {
-        boolean result = TSqlRunner.runSelectClause(metadata, query);
+        Respond respond = TSqlRunner.runSelectClause(metadata, query);
         assertEquals( UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                 this.consoleContent.toString().trim());
-        assertFalse(result);
+        assertFalse(respond.isUnnecessaryStatement());
     }
 
     @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String query) {
-        boolean result = TSqlRunner.runSelectClause(metadata, query);
+        Respond respond = TSqlRunner.runSelectClause(metadata, query);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(result);
+        assertTrue(respond.isUnnecessaryStatement());
     }
 
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {

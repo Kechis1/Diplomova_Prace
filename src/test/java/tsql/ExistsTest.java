@@ -3,6 +3,7 @@ package tsql;
 import DP.Database.ColumnItem;
 import DP.Database.DatabaseMetadata;
 import DP.Database.DatabaseTable;
+import DP.Database.Respond;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
@@ -44,17 +45,17 @@ public class ExistsTest {
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query) {
-        boolean result = TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
+        Respond respond = TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS" , this.consoleContent.toString().trim());
-        assertFalse(result);
+        assertFalse(respond.isUnnecessaryStatement());
     }
 
     @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String query) {
-        boolean result = TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
+        Respond respond = TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(result);
+        assertTrue(respond.isUnnecessaryStatement());
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryConditionBasedOnRecordsCountTest {index} query = {0}, recordsCount = {1}")
@@ -62,9 +63,9 @@ public class ExistsTest {
     void doFindUnnecessaryConditionBasedOnRecordsCountTest(String query, int recordsCount) {
         DatabaseTable table = metadata.findTable("STUDUJE", "SDT");
         table.setRecordsCount(recordsCount);
-        boolean result = TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
+        Respond respond = TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS", this.consoleContent.toString().trim());
-        assertFalse(result);
+        assertFalse(respond.isUnnecessaryStatement());
     }
 
     @ParameterizedTest(name = "doFindNecessaryConditionBasedOnNullableForeignKeyTest {index} query = {0}")
@@ -73,9 +74,9 @@ public class ExistsTest {
         DatabaseTable table = metadata.findTable("STUDUJE", "SDT");
         ColumnItem column = table.findColumn("PID");
         column.setNullable(true);
-        boolean result = TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
+        Respond respond = TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(result);
+        assertTrue(respond.isUnnecessaryStatement());
     }
 
     public static Stream<Arguments> doFindUnnecessaryConditionBasedOnRecordsCountSource() {

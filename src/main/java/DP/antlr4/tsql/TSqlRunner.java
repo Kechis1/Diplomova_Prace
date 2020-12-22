@@ -13,9 +13,10 @@ import org.antlr.v4.runtime.tree.*;
 import java.util.*;
 
 public class TSqlRunner {
-    public static boolean runGroupBy(final DatabaseMetadata metadata, String query) {
+    public static Respond runGroupBy(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
         ParseTree select = parser.select_statement();
+        Respond respond = new Respond(query);
 
         final ArrayList<AggregateItem> allAggregateFunctions = new ArrayList<>();
         final List<AggregateItem> aggregateFunctionsInSelect = TSqlParseWalker.findAggregateFunctionsInSelect(select);
@@ -50,10 +51,12 @@ public class TSqlRunner {
         if (allAggregateFunctions.isEmpty()) {
             if (columnsInGroupBy.containsAll(newMetadata.getAllPrimaryKeys())) {
                 System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY");
-                return false;
+                respond.setUnnecessaryStatement(false);
+                return respond;
             }
             System.out.println("OK");
-            return true;
+            respond.setUnnecessaryStatement(true);
+            return respond;
         }
 
         if (columnsInGroupBy.containsAll(newMetadata.getAllPrimaryKeys()) && !aggregateFunctionsInSelect.isEmpty()) {
@@ -64,16 +67,20 @@ public class TSqlRunner {
                     System.out.println(item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " " + item.getFullColumnName());
                 }
             }
-            return false;
+            respond.setUnnecessaryStatement(false);
+            return respond;
         }
 
         System.out.println("OK");
-        return true;
+
+        respond.setUnnecessaryStatement(true);
+        return respond;
     }
 
-    public static boolean runSelectClause(final DatabaseMetadata metadata, String query) {
+    public static Respond runSelectClause(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
         ParseTree select = parser.select_statement();
+        Respond respond = new Respond(query);
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
         final List<Boolean> foundExistsNotConstant = new ArrayList<>();
         final List<Boolean> foundUnion = new ArrayList<>();
@@ -99,7 +106,9 @@ public class TSqlRunner {
 
         if (!foundExistsNotConstant.isEmpty()) {
             System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT");
-            return false;
+
+            respond.setUnnecessaryStatement(false);
+            return respond;
         }
 
         final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadataWithTables, select);
@@ -107,13 +116,17 @@ public class TSqlRunner {
         boolean result = ColumnItem.duplicatesExists(allColumnsInSelect);
         if (result) {
             System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE");
-            return false;
+
+            respond.setUnnecessaryStatement(false);
+            return respond;
         }
 
         for (ColumnItem item : allColumnsInSelect) {
             if (item.isConstant() && foundUnion.isEmpty()) {
                 System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE");
-                return false;
+
+                respond.setUnnecessaryStatement(false);
+                return respond;
             }
         }
 
@@ -135,7 +148,9 @@ public class TSqlRunner {
                     }
                     if (bothInSelect == 1) {
                         System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE");
-                        return false;
+
+                        respond.setUnnecessaryStatement(false);
+                        return respond;
                     }
                 }
                 if (bothInSelect == 0) {
@@ -144,7 +159,9 @@ public class TSqlRunner {
                                 ((condition.getLeftSideColumnItem().equals(inSelect.get(0)) && condition.getRightSideDataType() != ConditionDataType.COLUMN) ||
                                         (condition.getRightSideColumnItem().equals(inSelect.get(0)) && condition.getLeftSideDataType() != ConditionDataType.COLUMN))) {
                             System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT");
-                            return false;
+
+                            respond.setUnnecessaryStatement(false);
+                            return respond;
                         }
                     }
                 }
@@ -157,21 +174,23 @@ public class TSqlRunner {
                     if ((item.getLeftSideDataType() == ConditionDataType.COLUMN && column.equals(item.getLeftSideColumnItem()) && item.getRightSideDataType() != ConditionDataType.COLUMN) ||
                             (item.getRightSideDataType() == ConditionDataType.COLUMN && column.equals(item.getRightSideColumnItem()) && item.getLeftSideDataType() != ConditionDataType.COLUMN)) {
                         System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT");
-                        return false;
+
+                        respond.setUnnecessaryStatement(false);
+                        return respond;
                     }
                 }
             }
         }
 
         System.out.println("OK");
-        return true;
+
+        respond.setUnnecessaryStatement(true);
+        return respond;
     }
 
-    /**
-     * @TODO OR, AND
-     */
-    public static boolean runEqualConditionInComparisonOperators(final DatabaseMetadata metadata, String query) {
+    public static Respond runEqualConditionInComparisonOperators(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
+        Respond respond = new Respond(query);
 
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = TSqlParseWalker.findConditions(metadata, select);
@@ -202,11 +221,13 @@ public class TSqlRunner {
         } else {
             System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION");
         }
-        return isConditionNecessary;
+        respond.setUnnecessaryStatement(isConditionNecessary);
+        return respond;
     }
 
-    public static boolean runRedundantJoinConditions(final DatabaseMetadata metadata, String query) {
+    public static Respond runRedundantJoinConditions(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
+        Respond respond = new Respond(query);
 
         ParseTree select = parser.select_statement();
         final List<ConditionItem> leftJoinConditions = new ArrayList<>();
@@ -250,11 +271,13 @@ public class TSqlRunner {
         if (!foundDuplicateCondition) {
             System.out.println("OK");
         }
-        return !foundDuplicateCondition;
+        respond.setUnnecessaryStatement(!foundDuplicateCondition);
+        return respond;
     }
 
-    public static boolean runRedundantJoinTables(final DatabaseMetadata metadata, String query) {
+    public static Respond runRedundantJoinTables(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
+        Respond respond = new Respond(query);
 
         ParseTree select = parser.select_statement();
         final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadata, select);
@@ -277,7 +300,8 @@ public class TSqlRunner {
 
         if (isDistinctInSelect.isEmpty()) {
             System.out.println("OK");
-            return true;
+            respond.setUnnecessaryStatement(true);
+            return respond;
         }
 
         boolean foundRedundantJoin = DatabaseTable.redundantJoinExists("LEFT", joinTables.get("leftJoin"),
@@ -292,11 +316,13 @@ public class TSqlRunner {
         if (!foundRedundantJoin) {
             System.out.println("OK");
         }
-        return !foundRedundantJoin;
+        respond.setUnnecessaryStatement(!foundRedundantJoin);
+        return respond;
     }
 
-    public static boolean runEqualConditionInOperatorBetween(final DatabaseMetadata metadata, String query) {
+    public static Respond runEqualConditionInOperatorBetween(final DatabaseMetadata metadata, String query) {
         TSqlParser parser = runFromString(query);
+        Respond respond = new Respond(query);
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = new ArrayList<>();
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
@@ -366,10 +392,12 @@ public class TSqlRunner {
         } else {
             System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION BETWEEN");
         }
-        return isConditionNecessary;
+        respond.setUnnecessaryStatement(isConditionNecessary);
+        return respond;
     }
 
-    public static boolean runEqualConditionInOperatorExists(final DatabaseMetadata metadata, String query) {
+    public static Respond runEqualConditionInOperatorExists(final DatabaseMetadata metadata, String query) {
+        Respond respond = new Respond(query);
         TSqlParser parser = runFromString(query);
         ParseTree select = parser.select_statement();
         DatabaseTable fromTable = TSqlParseWalker.findFromTable(metadata, select).get(0);
@@ -423,15 +451,20 @@ public class TSqlRunner {
                                     (exist.getConditions() == null || exist.getConditions().size() == 0 ||
                                             (exist.getConditions().size() == 1 && ConditionItem.isComparingForeignKey(fromTable, exist.getTable(), exist.getConditions().get(0)))))))) {
                 System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS");
-                return false;
+
+                respond.setUnnecessaryStatement(false);
+                return respond;
             }
         }
 
         System.out.println("OK");
-        return true;
+
+        respond.setUnnecessaryStatement(true);
+        return respond;
     }
 
-    public static boolean runEqualConditionInOperatorLike(final DatabaseMetadata metadata, String query) {
+    public static Respond runEqualConditionInOperatorLike(final DatabaseMetadata metadata, String query) {
+        Respond respond = new Respond(query);
         TSqlParser parser = runFromString(query);
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = new ArrayList<>();
@@ -464,23 +497,27 @@ public class TSqlRunner {
             if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
                 if (SQLLogicalOperators.like(condition.getLeftSideValue(), condition.getRightSideValue())) {
                     System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE");
-                    return false;
+                    respond.setUnnecessaryStatement(false);
+                    return respond;
                 }
             } else if (condition.getLeftSideDataType() == ConditionDataType.COLUMN &&
                     (condition.getRightSideDataType() == ConditionDataType.COLUMN || condition.getRightSideDataType() == ConditionDataType.STRING)) {
                 if (condition.getRightSideDataType() == ConditionDataType.STRING) {
                     if (condition.getRightSideValue().matches("^[%]+$")) {
                         System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE");
-                        return false;
+                        respond.setUnnecessaryStatement(false);
+                        return respond;
                     }
                 } else if (newMetadata.columnsEqual(condition.getLeftSideColumnItem(), condition.getRightSideColumnItem())) {
                     System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE");
-                    return false;
+                    respond.setUnnecessaryStatement(false);
+                    return respond;
                 }
             }
         }
         System.out.println("OK");
-        return true;
+        respond.setUnnecessaryStatement(true);
+        return respond;
     }
 
     public static TSqlParser runFromString(String query) {

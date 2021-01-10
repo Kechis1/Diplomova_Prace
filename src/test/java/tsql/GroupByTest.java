@@ -14,8 +14,6 @@ import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 
 import org.junit.jupiter.api.BeforeEach;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
@@ -25,20 +23,9 @@ public class GroupByTest {
     @Mock
     private DatabaseMetadata metadata;
 
-    private final PrintStream originalStdOut = System.out;
-    private ByteArrayOutputStream consoleContent = new ByteArrayOutputStream();
-
-
-    @AfterEach
-    public void restoreStreams() {
-        System.setOut(this.originalStdOut);
-        this.consoleContent = new ByteArrayOutputStream();
-    }
-
     @BeforeEach
     void init() {
         metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        System.setOut(new PrintStream(this.consoleContent));
     }
 
     @ParameterizedTest(name="doFindUnnecessaryGroupByTest {index} query = {0}")
@@ -46,8 +33,10 @@ public class GroupByTest {
     void doFindUnnecessaryGroupByTest(String query) {
         Respond respond = new Respond(query, query);
         TSqlRunner.runGroupBy(metadata, respond);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY", this.consoleContent.toString().trim());
         assertTrue(respond.isChanged());
+        assertNotEquals(respond.getCurrentQuery(), respond.getOriginalQuery());
+        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY", respond.getQueryTransforms().get(0).getMessage());
     }
 
     @ParameterizedTest(name="doFindNecessaryGroupByTest {index} query = {0}")
@@ -55,8 +44,10 @@ public class GroupByTest {
     void doFindNecessaryGroupByTest(String query) {
         Respond respond = new Respond(query, query);
         TSqlRunner.runGroupBy(metadata, respond);
-        assertEquals("OK", this.consoleContent.toString().trim());
         assertFalse(respond.isChanged());
+        assertEquals(respond.getCurrentQuery(), respond.getOriginalQuery());
+        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
+        assertEquals("OK", respond.getQueryTransforms().get(0).getMessage());
     }
 
     @ParameterizedTest(name="doFindRewrittenableAggregateFunctionsTest {index} query = {0}, message = {1}")
@@ -64,8 +55,10 @@ public class GroupByTest {
     void doFindRewrittenableAggregateFunctionsTest(String query, String message) {
         Respond respond = new Respond(query, query);
         TSqlRunner.runGroupBy(metadata, respond);
-        assertEquals(message, this.consoleContent.toString().trim());
         assertTrue(respond.isChanged());
+        assertNotEquals(respond.getCurrentQuery(), respond.getOriginalQuery());
+        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
+        assertEquals(message, respond.getQueryTransforms().get(0).getMessage());
     }
 
 

@@ -1,7 +1,7 @@
 package tsql;
 
 import DP.Database.DatabaseMetadata;
-import DP.Database.Respond;
+import DP.Database.Respond.Respond;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
 import org.junit.jupiter.api.AfterEach;
@@ -44,17 +44,19 @@ public class EqualConditionInComparisonOperatorsTest {
     @ParameterizedTest(name="doFindUnnecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query) {
-        Respond respond = TSqlRunner.runEqualConditionInComparisonOperators(metadata, query);
+        Respond respond = new Respond(query);
+        TSqlRunner.runEqualConditionInComparisonOperators(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION", this.consoleContent.toString().trim());
-        assertFalse(respond.isUnnecessaryStatement());
+        assertFalse(respond.isChanged());
     }
 
     @ParameterizedTest(name="doFindNecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String query) {
-        Respond respond = TSqlRunner.runEqualConditionInComparisonOperators(metadata, query);
+        Respond respond = new Respond(query);
+        TSqlRunner.runEqualConditionInComparisonOperators(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(respond.isUnnecessaryStatement());
+        assertTrue(respond.isChanged());
     }
 
 /*

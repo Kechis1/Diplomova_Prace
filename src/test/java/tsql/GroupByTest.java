@@ -1,7 +1,7 @@
 package tsql;
 
 import DP.Database.DatabaseMetadata;
-import DP.Database.Respond;
+import DP.Database.Respond.Respond;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
 import org.junit.jupiter.api.AfterEach;
@@ -44,25 +44,28 @@ public class GroupByTest {
     @ParameterizedTest(name="doFindUnnecessaryGroupByTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryGroupBySource")
     void doFindUnnecessaryGroupByTest(String query) {
-        Respond respond = TSqlRunner.runGroupBy(metadata, query);
+        Respond respond = new Respond(query);
+        TSqlRunner.runGroupBy(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY", this.consoleContent.toString().trim());
-        assertFalse(respond.isUnnecessaryStatement());
+        assertFalse(respond.isChanged());
     }
 
     @ParameterizedTest(name="doFindNecessaryGroupByTest {index} query = {0}")
     @MethodSource("doFindNecessaryGroupBySource")
     void doFindNecessaryGroupByTest(String query) {
-        Respond respond = TSqlRunner.runGroupBy(metadata, query);
+        Respond respond = new Respond(query);
+        TSqlRunner.runGroupBy(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(respond.isUnnecessaryStatement());
+        assertTrue(respond.isChanged());
     }
 
     @ParameterizedTest(name="doFindRewrittenableAggregateFunctionsTest {index} query = {0}, message = {1}")
     @MethodSource("doFindRewrittenableAggregateFunctionsSource")
     void doFindRewrittenableAggregateFunctionsTest(String query, String message) {
-        Respond respond = TSqlRunner.runGroupBy(metadata, query);
+        Respond respond = new Respond(query);
+        TSqlRunner.runGroupBy(metadata, query, respond);
         assertEquals(message, this.consoleContent.toString().trim());
-        assertFalse(respond.isUnnecessaryStatement());
+        assertFalse(respond.isChanged());
     }
 
 

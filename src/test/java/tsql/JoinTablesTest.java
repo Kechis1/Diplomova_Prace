@@ -3,7 +3,7 @@ package tsql;
 import DP.Database.ColumnItem;
 import DP.Database.DatabaseMetadata;
 import DP.Database.DatabaseTable;
-import DP.Database.Respond;
+import DP.Database.Respond.Respond;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
@@ -48,25 +48,28 @@ public class JoinTablesTest {
         DatabaseTable table = metadata.findTable("STUDENT", null);
         ColumnItem sId = table.findColumn("SID");
         sId.setNullable(true);
-        Respond respond = TSqlRunner.runRedundantJoinTables(metadata, query);
+        Respond respond = new Respond(query);
+        TSqlRunner.runRedundantJoinTables(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(respond.isUnnecessaryStatement());
+        assertTrue(respond.isChanged());
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, message = {1}")
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query, String message) {
-        Respond respond = TSqlRunner.runRedundantJoinTables(metadata, query);
+        Respond respond = new Respond(query);
+        TSqlRunner.runRedundantJoinTables(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " " + message, this.consoleContent.toString().trim());
-        assertFalse(respond.isUnnecessaryStatement());
+        assertFalse(respond.isChanged());
     }
 
     @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String query) {
-        Respond respond = TSqlRunner.runRedundantJoinTables(metadata, query);
+        Respond respond = new Respond(query);
+        TSqlRunner.runRedundantJoinTables(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(respond.isUnnecessaryStatement());
+        assertTrue(respond.isChanged());
     }
 
     public static Stream<Arguments> doFindNecessaryConditionWithNullableSource() {

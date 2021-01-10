@@ -1,7 +1,7 @@
 package tsql;
 
 import DP.Database.DatabaseMetadata;
-import DP.Database.Respond;
+import DP.Database.Respond.Respond;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
@@ -43,17 +43,19 @@ public class JoinConditionsTest {
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query) {
-        Respond respond = TSqlRunner.runRedundantJoinConditions(metadata, query);
+        Respond respond = new Respond(query);
+        TSqlRunner.runRedundantJoinConditions(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION", this.consoleContent.toString().trim());
-        assertFalse(respond.isUnnecessaryStatement());
+        assertFalse(respond.isChanged());
     }
 
     @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String query) {
-        Respond respond = TSqlRunner.runRedundantJoinConditions(metadata, query);
+        Respond respond = new Respond(query);
+        TSqlRunner.runRedundantJoinConditions(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(respond.isUnnecessaryStatement());
+        assertTrue(respond.isChanged());
     }
 
 

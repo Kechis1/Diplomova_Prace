@@ -43,7 +43,7 @@ public class EqualConditionInOperatorLikeTest {
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query) {
-        Respond respond = new Respond(query);
+        Respond respond = new Respond(query, query);
         TSqlRunner.runEqualConditionInOperatorLike(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE", this.consoleContent.toString().trim());
         assertTrue(respond.isChanged());
@@ -52,7 +52,7 @@ public class EqualConditionInOperatorLikeTest {
     @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String query) {
-        Respond respond = new Respond(query);
+        Respond respond = new Respond(query, query);
         TSqlRunner.runEqualConditionInOperatorLike(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
         assertFalse(respond.isChanged());

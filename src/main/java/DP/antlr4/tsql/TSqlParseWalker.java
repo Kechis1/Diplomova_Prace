@@ -18,7 +18,9 @@ public class TSqlParseWalker {
                 if (ctx.expression_elem() != null && ctx.expression_elem().expression().function_call() != null) {
                     TSqlParser.AGGREGATE_WINDOWED_FUNCContext aggCtx =
                             (TSqlParser.AGGREGATE_WINDOWED_FUNCContext) ctx.expression_elem().expression().function_call().getRuleContext();
-                    aggregateFunctionsInSelect.add(new AggregateItem(ctx.expression_elem().expression().function_call().getChild(0).getChild(2).getText(),
+                    aggregateFunctionsInSelect.add(new AggregateItem(ctx.expression_elem().expression().function_call().getStart().getStartIndex(),
+                            ctx.expression_elem().expression().function_call().getStop().getStopIndex(),
+                            ctx.expression_elem().expression().function_call().getChild(0).getChild(2).getText(),
                             aggCtx.aggregate_windowed_function().STAR() != null
                                     ? "*"
                                     : aggCtx.aggregate_windowed_function().all_distinct_expression().expression().full_column_name().column_name.getText(),

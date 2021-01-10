@@ -48,7 +48,7 @@ public class JoinTablesTest {
         DatabaseTable table = metadata.findTable("STUDENT", null);
         ColumnItem sId = table.findColumn("SID");
         sId.setNullable(true);
-        Respond respond = new Respond(query);
+        Respond respond = new Respond(query, query);
         TSqlRunner.runRedundantJoinTables(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
         assertFalse(respond.isChanged());
@@ -57,7 +57,7 @@ public class JoinTablesTest {
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, message = {1}")
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query, String message) {
-        Respond respond = new Respond(query);
+        Respond respond = new Respond(query, query);
         TSqlRunner.runRedundantJoinTables(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " " + message, this.consoleContent.toString().trim());
         assertTrue(respond.isChanged());
@@ -66,7 +66,7 @@ public class JoinTablesTest {
     @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String query) {
-        Respond respond = new Respond(query);
+        Respond respond = new Respond(query, query);
         TSqlRunner.runRedundantJoinTables(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
         assertFalse(respond.isChanged());

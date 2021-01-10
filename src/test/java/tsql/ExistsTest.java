@@ -45,7 +45,7 @@ public class ExistsTest {
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query) {
-        Respond respond = new Respond(query);
+        Respond respond = new Respond(query, query);
         TSqlRunner.runEqualConditionInOperatorExists(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS" , this.consoleContent.toString().trim());
         assertTrue(respond.isChanged());
@@ -54,7 +54,7 @@ public class ExistsTest {
     @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String query) {
-        Respond respond = new Respond(query);
+        Respond respond = new Respond(query, query);
         TSqlRunner.runEqualConditionInOperatorExists(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
         assertFalse(respond.isChanged());
@@ -64,7 +64,7 @@ public class ExistsTest {
     @MethodSource("doFindUnnecessaryConditionBasedOnRecordsCountSource")
     void doFindUnnecessaryConditionBasedOnRecordsCountTest(String query, int recordsCount) {
         DatabaseTable table = metadata.findTable("STUDUJE", "SDT");
-        Respond respond = new Respond(query);
+        Respond respond = new Respond(query, query);
         table.setRecordsCount(recordsCount);
         TSqlRunner.runEqualConditionInOperatorExists(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS", this.consoleContent.toString().trim());
@@ -77,7 +77,7 @@ public class ExistsTest {
         DatabaseTable table = metadata.findTable("STUDUJE", "SDT");
         ColumnItem column = table.findColumn("PID");
         column.setNullable(true);
-        Respond respond = new Respond(query);
+        Respond respond = new Respond(query, query);
         TSqlRunner.runEqualConditionInOperatorExists(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
         assertFalse(respond.isChanged());

@@ -1,5 +1,6 @@
 package DP.Database.Respond;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Respond {
@@ -8,8 +9,9 @@ public class Respond {
     List<Transform> queryTransforms;
     boolean changed;
 
-    public Respond(String originalQuery) {
+    public Respond(String originalQuery, String currentQuery) {
         this.originalQuery = originalQuery;
+        this.currentQuery = currentQuery;
     }
 
     public String getOriginalQuery() {
@@ -44,6 +46,13 @@ public class Respond {
         this.changed = changed;
     }
 
+    public void addTransform(Transform transform) {
+        if (this.queryTransforms == null) {
+            this.queryTransforms = new ArrayList<>();
+        }
+        queryTransforms.add(transform);
+    }
+
     @Override
     public String toString() {
         return "Respond{" +
@@ -53,4 +62,5 @@ public class Respond {
                 ", changed=" + changed +
                 '}';
     }
+
 }

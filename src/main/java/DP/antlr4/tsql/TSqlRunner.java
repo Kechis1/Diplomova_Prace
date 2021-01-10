@@ -2,6 +2,7 @@ package DP.antlr4.tsql;
 
 import DP.Database.*;
 import DP.Database.Respond.Respond;
+import DP.Database.Respond.Transform;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlLexer;
 import DP.antlr4.tsql.parser.TSqlParser;
@@ -14,8 +15,8 @@ import org.antlr.v4.runtime.tree.*;
 import java.util.*;
 
 public class TSqlRunner {
-    public static Respond runGroupBy(final DatabaseMetadata metadata, String query, Respond respond) {
-        TSqlParser parser = runFromString(query);
+    public static Respond runGroupBy(final DatabaseMetadata metadata, Respond respond) {
+        TSqlParser parser = runFromString(respond.getCurrentQuery());
         ParseTree select = parser.select_statement();
 
         final ArrayList<AggregateItem> allAggregateFunctions = new ArrayList<>();
@@ -38,7 +39,9 @@ public class TSqlRunner {
 
             @Override
             public void enterAggregate_windowed_function(@NotNull TSqlParser.Aggregate_windowed_functionContext ctx) {
-                allAggregateFunctions.add(new AggregateItem(ctx.getChild(2).getText(),
+                allAggregateFunctions.add(new AggregateItem(ctx.getStart().getStartIndex(),
+                        ctx.getStop().getStopIndex() + 1,
+                        ctx.getChild(2).getText(),
                         ctx.STAR() != null
                                 ? "*"
                                 : ctx.all_distinct_expression().expression().full_column_name().column_name.getText(),
@@ -50,29 +53,57 @@ public class TSqlRunner {
 
         if (allAggregateFunctions.isEmpty()) {
             if (columnsInGroupBy.containsAll(newMetadata.getAllPrimaryKeys())) {
-                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY");
+                respond.addTransform(new Transform(respond.getCurrentQuery(),
+                        respond.getCurrentQuery().substring(0, respond.getCurrentQuery().indexOf("GROUP BY")),
+                        UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY",
+                        "runGroupBy",
+                        false
+                ));
+                respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
                 respond.setChanged(true);
                 return respond;
             }
-            System.out.println("OK");
+            respond.addTransform(new Transform(respond.getCurrentQuery(),
+                    respond.getCurrentQuery(),
+                    "OK",
+                    "runGroupBy",
+                    false
+            ));
             respond.setChanged(false);
             return respond;
         }
 
         if (columnsInGroupBy.containsAll(newMetadata.getAllPrimaryKeys()) && !aggregateFunctionsInSelect.isEmpty()) {
             for (AggregateItem item : aggregateFunctionsInSelect) {
+                Transform transform;
                 if (item.getFunctionName().equals("COUNT")) {
-                    System.out.println(item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " 1");
+                    transform = new Transform(respond.getCurrentQuery(),
+                            respond.getCurrentQuery().substring(0, item.getStartAt()) + "1" + respond.getCurrentQuery().substring(item.getStopAt() + 1),
+                            item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " 1",
+                            "runGroupBy",
+                            true
+                    );
                 } else {
-                    System.out.println(item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " " + item.getFullColumnName());
+                    transform = new Transform(respond.getCurrentQuery(),
+                            respond.getCurrentQuery().substring(0, item.getStartAt()) + item.getFullColumnName() + respond.getCurrentQuery().substring(item.getStopAt() + 1),
+                            item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " " + item.getFullColumnName(),
+                            "runGroupBy",
+                            true
+                    );
                 }
+                respond.addTransform(transform);
             }
+            respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
             respond.setChanged(true);
             return respond;
         }
 
-        System.out.println("OK");
-
+        respond.addTransform(new Transform(respond.getCurrentQuery(),
+                respond.getCurrentQuery(),
+                "OK",
+                "runGroupBy",
+                false
+        ));
         respond.setChanged(false);
         return respond;
     }

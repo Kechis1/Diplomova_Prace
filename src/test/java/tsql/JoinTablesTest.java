@@ -51,7 +51,7 @@ public class JoinTablesTest {
         Respond respond = new Respond(query);
         TSqlRunner.runRedundantJoinTables(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(respond.isChanged());
+        assertFalse(respond.isChanged());
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, message = {1}")
@@ -60,7 +60,7 @@ public class JoinTablesTest {
         Respond respond = new Respond(query);
         TSqlRunner.runRedundantJoinTables(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " " + message, this.consoleContent.toString().trim());
-        assertFalse(respond.isChanged());
+        assertTrue(respond.isChanged());
     }
 
     @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
@@ -69,7 +69,7 @@ public class JoinTablesTest {
         Respond respond = new Respond(query);
         TSqlRunner.runRedundantJoinTables(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(respond.isChanged());
+        assertFalse(respond.isChanged());
     }
 
     public static Stream<Arguments> doFindNecessaryConditionWithNullableSource() {

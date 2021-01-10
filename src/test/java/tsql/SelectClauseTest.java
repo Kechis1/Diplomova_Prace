@@ -46,7 +46,7 @@ public class SelectClauseTest {
         Respond respond = new Respond(query);
         TSqlRunner.runSelectClause(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE", this.consoleContent.toString().trim());
-        assertFalse(respond.isChanged());
+        assertTrue(respond.isChanged());
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryAttributeInSelectThatCanBeRewrittenTest {index} query = {0}")
@@ -56,7 +56,7 @@ public class SelectClauseTest {
         TSqlRunner.runSelectClause(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                 this.consoleContent.toString().trim());
-        assertFalse(respond.isChanged());
+        assertTrue(respond.isChanged());
     }
 
     @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
@@ -65,7 +65,7 @@ public class SelectClauseTest {
         Respond respond = new Respond(query);
         TSqlRunner.runSelectClause(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(respond.isChanged());
+        assertFalse(respond.isChanged());
     }
 
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {

@@ -48,7 +48,7 @@ public class ExistsTest {
         Respond respond = new Respond(query);
         TSqlRunner.runEqualConditionInOperatorExists(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS" , this.consoleContent.toString().trim());
-        assertFalse(respond.isChanged());
+        assertTrue(respond.isChanged());
     }
 
     @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
@@ -57,7 +57,7 @@ public class ExistsTest {
         Respond respond = new Respond(query);
         TSqlRunner.runEqualConditionInOperatorExists(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(respond.isChanged());
+        assertFalse(respond.isChanged());
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryConditionBasedOnRecordsCountTest {index} query = {0}, recordsCount = {1}")
@@ -68,7 +68,7 @@ public class ExistsTest {
         table.setRecordsCount(recordsCount);
         TSqlRunner.runEqualConditionInOperatorExists(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS", this.consoleContent.toString().trim());
-        assertFalse(respond.isChanged());
+        assertTrue(respond.isChanged());
     }
 
     @ParameterizedTest(name = "doFindNecessaryConditionBasedOnNullableForeignKeyTest {index} query = {0}")
@@ -80,7 +80,7 @@ public class ExistsTest {
         Respond respond = new Respond(query);
         TSqlRunner.runEqualConditionInOperatorExists(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(respond.isChanged());
+        assertFalse(respond.isChanged());
     }
 
     public static Stream<Arguments> doFindUnnecessaryConditionBasedOnRecordsCountSource() {

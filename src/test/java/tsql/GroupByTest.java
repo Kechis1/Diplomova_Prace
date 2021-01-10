@@ -47,7 +47,7 @@ public class GroupByTest {
         Respond respond = new Respond(query);
         TSqlRunner.runGroupBy(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY", this.consoleContent.toString().trim());
-        assertFalse(respond.isChanged());
+        assertTrue(respond.isChanged());
     }
 
     @ParameterizedTest(name="doFindNecessaryGroupByTest {index} query = {0}")
@@ -56,7 +56,7 @@ public class GroupByTest {
         Respond respond = new Respond(query);
         TSqlRunner.runGroupBy(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(respond.isChanged());
+        assertFalse(respond.isChanged());
     }
 
     @ParameterizedTest(name="doFindRewrittenableAggregateFunctionsTest {index} query = {0}, message = {1}")
@@ -65,7 +65,7 @@ public class GroupByTest {
         Respond respond = new Respond(query);
         TSqlRunner.runGroupBy(metadata, query, respond);
         assertEquals(message, this.consoleContent.toString().trim());
-        assertFalse(respond.isChanged());
+        assertTrue(respond.isChanged());
     }
 
 

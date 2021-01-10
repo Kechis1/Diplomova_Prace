@@ -47,7 +47,7 @@ public class EqualConditionInComparisonOperatorsTest {
         Respond respond = new Respond(query);
         TSqlRunner.runEqualConditionInComparisonOperators(metadata, query, respond);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION", this.consoleContent.toString().trim());
-        assertFalse(respond.isChanged());
+        assertTrue(respond.isChanged());
     }
 
     @ParameterizedTest(name="doFindNecessaryConditionTest {index} query = {0}")
@@ -56,7 +56,7 @@ public class EqualConditionInComparisonOperatorsTest {
         Respond respond = new Respond(query);
         TSqlRunner.runEqualConditionInComparisonOperators(metadata, query, respond);
         assertEquals("OK", this.consoleContent.toString().trim());
-        assertTrue(respond.isChanged());
+        assertFalse(respond.isChanged());
     }
 
 /*

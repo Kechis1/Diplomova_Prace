@@ -108,8 +108,8 @@ public class TSqlRunner {
         return respond;
     }
 
-    public static Respond runSelectClause(final DatabaseMetadata metadata, String query, Respond respond) {
-        TSqlParser parser = runFromString(query);
+    public static Respond runSelectClause(final DatabaseMetadata metadata, Respond respond) {
+        TSqlParser parser = runFromString(respond.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
         final List<Boolean> foundExistsNotConstant = new ArrayList<>();
@@ -135,8 +135,13 @@ public class TSqlRunner {
         }, select);
 
         if (!foundExistsNotConstant.isEmpty()) {
-            System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT");
-
+            respond.addTransform(new Transform(respond.getCurrentQuery(),
+                    respond.getCurrentQuery(),
+                    UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
+                    "runSelectClause",
+                    true
+            ));
+            respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
             respond.setChanged(true);
             return respond;
         }
@@ -145,16 +150,26 @@ public class TSqlRunner {
 
         boolean result = ColumnItem.duplicatesExists(allColumnsInSelect);
         if (result) {
-            System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE");
-
+            respond.addTransform(new Transform(respond.getCurrentQuery(),
+                    respond.getCurrentQuery(),
+                    UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
+                    "runSelectClause",
+                    true
+            ));
+            respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
             respond.setChanged(true);
             return respond;
         }
 
         for (ColumnItem item : allColumnsInSelect) {
             if (item.isConstant() && foundUnion.isEmpty()) {
-                System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE");
-
+                respond.addTransform(new Transform(respond.getCurrentQuery(),
+                        respond.getCurrentQuery(),
+                        UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
+                        "runSelectClause",
+                        true
+                ));
+                respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
                 respond.setChanged(true);
                 return respond;
             }
@@ -177,8 +192,13 @@ public class TSqlRunner {
                         bothInSelect++;
                     }
                     if (bothInSelect == 1) {
-                        System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE");
-
+                        respond.addTransform(new Transform(respond.getCurrentQuery(),
+                                respond.getCurrentQuery(),
+                                UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
+                                "runSelectClause",
+                                true
+                        ));
+                        respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
                         respond.setChanged(true);
                         return respond;
                     }
@@ -188,8 +208,13 @@ public class TSqlRunner {
                         if (item.getOperator().equals("=") &&
                                 ((condition.getLeftSideColumnItem().equals(inSelect.get(0)) && condition.getRightSideDataType() != ConditionDataType.COLUMN) ||
                                         (condition.getRightSideColumnItem().equals(inSelect.get(0)) && condition.getLeftSideDataType() != ConditionDataType.COLUMN))) {
-                            System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT");
-
+                            respond.addTransform(new Transform(respond.getCurrentQuery(),
+                                    respond.getCurrentQuery(),
+                                    UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
+                                    "runSelectClause",
+                                    true
+                            ));
+                            respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
                             respond.setChanged(true);
                             return respond;
                         }
@@ -203,8 +228,13 @@ public class TSqlRunner {
                 for (ColumnItem column : allColumnsInSelect) {
                     if ((item.getLeftSideDataType() == ConditionDataType.COLUMN && column.equals(item.getLeftSideColumnItem()) && item.getRightSideDataType() != ConditionDataType.COLUMN) ||
                             (item.getRightSideDataType() == ConditionDataType.COLUMN && column.equals(item.getRightSideColumnItem()) && item.getLeftSideDataType() != ConditionDataType.COLUMN)) {
-                        System.out.println(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT");
-
+                        respond.addTransform(new Transform(respond.getCurrentQuery(),
+                                respond.getCurrentQuery(),
+                                UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
+                                "runSelectClause",
+                                true
+                        ));
+                        respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
                         respond.setChanged(true);
                         return respond;
                     }
@@ -212,8 +242,12 @@ public class TSqlRunner {
             }
         }
 
-        System.out.println("OK");
-
+        respond.addTransform(new Transform(respond.getCurrentQuery(),
+                respond.getCurrentQuery(),
+                "OK",
+                "runSelectClause",
+                false
+        ));
         respond.setChanged(false);
         return respond;
     }

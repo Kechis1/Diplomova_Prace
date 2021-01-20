@@ -18,9 +18,13 @@ public class ConditionItem {
     private String operator;
     private double leftSideNumberValue;
     private double rightSideNumberValue;
+    private int startAt;
+    private int stopAt;
 
 
-    public ConditionItem(ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator) {
+    public ConditionItem(int startAt, int stopAt, ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator) {
+        this.startAt = startAt;
+        this.stopAt = stopAt;
         this.leftSideDataType = leftSideDataType;
         this.leftSideValue = leftSideValue;
         this.rightSideDataType = rightSideDataType;
@@ -126,6 +130,22 @@ public class ConditionItem {
             }
         }
         return newConditions;
+    }
+
+    public int getStartAt() {
+        return startAt;
+    }
+
+    public void setStartAt(int startAt) {
+        this.startAt = startAt;
+    }
+
+    public int getStopAt() {
+        return stopAt;
+    }
+
+    public void setStopAt(int stopAt) {
+        this.stopAt = stopAt;
     }
 
     public ConditionDataType getLeftSideDataType() {

@@ -92,7 +92,9 @@ public class TSqlParseWalker {
         for (TSqlParser.Search_condition_andContext ctxAnd : ctx.search_condition_and()) {
             for (TSqlParser.Search_condition_notContext ctxNot : ctxAnd.search_condition_not()) {
                 if (ctxNot.predicate().EXISTS() == null) {
-                    ConditionItem item = new ConditionItem(ConditionItem.findDataType(ctxNot.predicate().expression().get(0)),
+                    ConditionItem item = new ConditionItem(ctxNot.predicate().getStart().getStartIndex(),
+                            ctxNot.predicate().getStop().getStopIndex() + 1,
+                            ConditionItem.findDataType(ctxNot.predicate().expression().get(0)),
                             ConditionItem.findSideValue(ctxNot.predicate().expression().get(0)),
                             ConditionItem.findDataType(ctxNot.predicate().expression().get(1)),
                             ConditionItem.findSideValue(ctxNot.predicate().expression().get(1)),

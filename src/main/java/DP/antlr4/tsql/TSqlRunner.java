@@ -395,7 +395,9 @@ public class TSqlRunner {
             @Override
             public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
                 if (ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().BETWEEN() != null) {
-                    ConditionItem item = new ConditionItem(ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                    ConditionItem item = new ConditionItem(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getStart().getStartIndex(),
+                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getStop().getStopIndex() + 1,
+                            ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
                             ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
                             ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
                             ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
@@ -409,7 +411,9 @@ public class TSqlRunner {
 
                     conditions.add(item);
 
-                    item = new ConditionItem(ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                    item = new ConditionItem(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getStart().getStartIndex(),
+                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getStop().getStopIndex() + 1,
+                            ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
                             ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
                             ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(2)),
                             ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(2)),
@@ -485,7 +489,9 @@ public class TSqlRunner {
                         if (qSpecContext.WHERE() != null) {
                             List<ConditionItem> eConditions = new ArrayList<>();
                             for (TSqlParser.Search_condition_notContext scnContext : qSpecContext.search_condition().get(0).search_condition_and().get(0).search_condition_not()) {
-                                ConditionItem item = new ConditionItem(ConditionItem.findDataType(scnContext.predicate().expression().get(0)),
+                                ConditionItem item = new ConditionItem(scnContext.predicate().getStart().getStartIndex(),
+                                        scnContext.predicate().getStop().getStopIndex() + 1,
+                                        ConditionItem.findDataType(scnContext.predicate().expression().get(0)),
                                         ConditionItem.findSideValue(scnContext.predicate().expression().get(0)),
                                         ConditionItem.findDataType(scnContext.predicate().expression().get(1)),
                                         ConditionItem.findSideValue(scnContext.predicate().expression().get(1)),
@@ -527,9 +533,9 @@ public class TSqlRunner {
         return respond;
     }
 
-    public static Respond runEqualConditionInOperatorLike(final DatabaseMetadata metadata, String query, Respond respond) {
+    public static Respond runEqualConditionInOperatorLike(final DatabaseMetadata metadata, Respond respond) {
         
-        TSqlParser parser = runFromString(query);
+        TSqlParser parser = runFromString(respond.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = new ArrayList<>();
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
@@ -538,7 +544,9 @@ public class TSqlRunner {
             @Override
             public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
                 if (ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().LIKE() != null) {
-                    ConditionItem item = new ConditionItem(ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
+                    ConditionItem item = new ConditionItem(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getStart().getStartIndex(),
+                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getStop().getStopIndex() + 1,
+                            ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
                             ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
                             ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
                             ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
@@ -549,7 +557,6 @@ public class TSqlRunner {
                         item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
                         item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 1));
                     }
-
                     conditions.add(item);
                 }
             }
@@ -560,7 +567,13 @@ public class TSqlRunner {
         for (ConditionItem condition : conditions) {
             if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
                 if (SQLLogicalOperators.like(condition.getLeftSideValue(), condition.getRightSideValue())) {
-                    System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE");
+                    respond.addTransform(new Transform(respond.getCurrentQuery(),
+                            (respond.getCurrentQuery().substring(0, respond.getCurrentQuery().indexOf("WHERE")) + respond.getCurrentQuery().substring(condition.getStopAt())).trim(),
+                            UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
+                            "runEqualConditionInOperatorLike",
+                            true
+                    ));
+                    respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
                     respond.setChanged(true);
                     return respond;
                 }
@@ -568,18 +581,35 @@ public class TSqlRunner {
                     (condition.getRightSideDataType() == ConditionDataType.COLUMN || condition.getRightSideDataType() == ConditionDataType.STRING)) {
                 if (condition.getRightSideDataType() == ConditionDataType.STRING) {
                     if (condition.getRightSideValue().matches("^[%]+$")) {
-                        System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE");
+                        respond.addTransform(new Transform(respond.getCurrentQuery(),
+                                (respond.getCurrentQuery().substring(0, respond.getCurrentQuery().indexOf("WHERE")) + respond.getCurrentQuery().substring(condition.getStopAt())).trim(),
+                                UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
+                                "runEqualConditionInOperatorLike",
+                                true
+                        ));
+                        respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
                         respond.setChanged(true);
                         return respond;
                     }
                 } else if (newMetadata.columnsEqual(condition.getLeftSideColumnItem(), condition.getRightSideColumnItem())) {
-                    System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE");
+                    respond.addTransform(new Transform(respond.getCurrentQuery(),
+                            (respond.getCurrentQuery().substring(0, respond.getCurrentQuery().indexOf("WHERE")) + respond.getCurrentQuery().substring(condition.getStopAt())).trim(),
+                            UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
+                            "runEqualConditionInOperatorLike",
+                            true
+                    ));
+                    respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
                     respond.setChanged(true);
                     return respond;
                 }
             }
         }
-        System.out.println("OK");
+        respond.addTransform(new Transform(respond.getCurrentQuery(),
+                respond.getCurrentQuery(),
+                "OK",
+                "runEqualConditionInOperatorLike",
+                false
+        ));
         respond.setChanged(false);
         return respond;
     }

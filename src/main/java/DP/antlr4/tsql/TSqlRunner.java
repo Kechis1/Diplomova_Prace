@@ -54,10 +54,10 @@ public class TSqlRunner {
         if (allAggregateFunctions.isEmpty()) {
             if (columnsInGroupBy.containsAll(newMetadata.getAllPrimaryKeys())) {
                 respond.addTransform(new Transform(respond.getCurrentQuery(),
-                        respond.getCurrentQuery().substring(0, respond.getCurrentQuery().indexOf("GROUP BY")),
+                        respond.getCurrentQuery().substring(0, respond.getCurrentQuery().indexOf("GROUP BY")).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY",
                         "runGroupBy",
-                        false
+                        true
                 ));
                 respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
                 respond.setChanged(true);
@@ -78,14 +78,14 @@ public class TSqlRunner {
                 Transform transform;
                 if (item.getFunctionName().equals("COUNT")) {
                     transform = new Transform(respond.getCurrentQuery(),
-                            respond.getCurrentQuery().substring(0, item.getStartAt()) + "1" + respond.getCurrentQuery().substring(item.getStopAt() + 1),
+                            (respond.getCurrentQuery().substring(0, item.getStartAt()) + "1" + respond.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
                             item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " 1",
                             "runGroupBy",
                             true
                     );
                 } else {
                     transform = new Transform(respond.getCurrentQuery(),
-                            respond.getCurrentQuery().substring(0, item.getStartAt()) + item.getFullColumnName() + respond.getCurrentQuery().substring(item.getStopAt() + 1),
+                            (respond.getCurrentQuery().substring(0, item.getStartAt()) + item.getFullColumnName() + respond.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
                             item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " " + item.getFullColumnName(),
                             "runGroupBy",
                             true
@@ -568,7 +568,7 @@ public class TSqlRunner {
             if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
                 if (SQLLogicalOperators.like(condition.getLeftSideValue(), condition.getRightSideValue())) {
                     respond.addTransform(new Transform(respond.getCurrentQuery(),
-                            (respond.getCurrentQuery().substring(0, respond.getCurrentQuery().indexOf("WHERE")) + respond.getCurrentQuery().substring(condition.getStopAt())).trim(),
+                            (respond.getCurrentQuery().substring(0, condition.getStartAt()) + respond.getCurrentQuery().substring(condition.getStopAt())).trim(),
                             UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
                             "runEqualConditionInOperatorLike",
                             true
@@ -582,7 +582,7 @@ public class TSqlRunner {
                 if (condition.getRightSideDataType() == ConditionDataType.STRING) {
                     if (condition.getRightSideValue().matches("^[%]+$")) {
                         respond.addTransform(new Transform(respond.getCurrentQuery(),
-                                (respond.getCurrentQuery().substring(0, respond.getCurrentQuery().indexOf("WHERE")) + respond.getCurrentQuery().substring(condition.getStopAt())).trim(),
+                                (respond.getCurrentQuery().substring(0, condition.getStartAt()) + respond.getCurrentQuery().substring(condition.getStopAt())).trim(),
                                 UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
                                 "runEqualConditionInOperatorLike",
                                 true
@@ -593,7 +593,7 @@ public class TSqlRunner {
                     }
                 } else if (newMetadata.columnsEqual(condition.getLeftSideColumnItem(), condition.getRightSideColumnItem())) {
                     respond.addTransform(new Transform(respond.getCurrentQuery(),
-                            (respond.getCurrentQuery().substring(0, respond.getCurrentQuery().indexOf("WHERE")) + respond.getCurrentQuery().substring(condition.getStopAt())).trim(),
+                            (respond.getCurrentQuery().substring(0, condition.getStartAt()) + respond.getCurrentQuery().substring(condition.getStopAt())).trim(),
                             UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
                             "runEqualConditionInOperatorLike",
                             true

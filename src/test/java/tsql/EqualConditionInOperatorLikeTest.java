@@ -32,9 +32,9 @@ public class EqualConditionInOperatorLikeTest {
         Respond respond = new Respond(query, query);
         TSqlRunner.runEqualConditionInOperatorLike(metadata, respond);
 
-        assertNotEquals(respond.getCurrentQuery(), respond.getOriginalQuery());
+        assertNotEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
         assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
-        assertEquals(respond.getCurrentQuery(), resultQuery);
+        assertEquals(respond.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE", respond.getQueryTransforms().get(0).getMessage());
         assertTrue(respond.isChanged());
     }
@@ -45,7 +45,7 @@ public class EqualConditionInOperatorLikeTest {
         Respond respond = new Respond(query, query);
         TSqlRunner.runEqualConditionInOperatorLike(metadata, respond);
 
-        assertEquals(respond.getCurrentQuery(), respond.getOriginalQuery());
+        assertEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
         assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
         assertEquals("OK", respond.getQueryTransforms().get(0).getMessage());
         assertFalse(respond.isChanged());
@@ -53,14 +53,14 @@ public class EqualConditionInOperatorLikeTest {
 
 
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
-        return Stream.of(Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE 1", "SELECT * FROM DBO.PREDMET"),
-                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '1'", "SELECT * FROM DBO.PREDMET"),
-                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '%1'", "SELECT * FROM DBO.PREDMET"),
-                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '%1%'", "SELECT * FROM DBO.PREDMET"),
-                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '1%'", "SELECT * FROM DBO.PREDMET"),
-                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE '1' LIKE '1'", "SELECT * FROM DBO.PREDMET"),
-                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'string' LIKE 'str%'", "SELECT * FROM DBO.PREDMET"),
-                Arguments.arguments("SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE stt.sID LIKE stt.sID", "SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID")
+        return Stream.of(Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE 1", "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '1'", "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '%1'", "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '%1%'", "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '1%'", "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE '1' LIKE '1'", "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'string' LIKE 'str%'", "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE stt.sID LIKE stt.sID", "SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE")
         );
     }
 

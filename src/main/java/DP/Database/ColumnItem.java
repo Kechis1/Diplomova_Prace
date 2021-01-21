@@ -110,7 +110,7 @@ public class ColumnItem {
             }
             return table.findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
         } else if (metadata.getTables().size() == 1) {
-            return  metadata.getTables().get(0).findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
+            return metadata.getTables().get(0).findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
         }
 
         return new ColumnItem(

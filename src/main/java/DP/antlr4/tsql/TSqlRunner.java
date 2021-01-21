@@ -183,8 +183,10 @@ public class TSqlRunner {
             if (item.getOperator().equals("=") && item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
                 int bothInSelect = -1;
                 List<ColumnItem> inSelect = new ArrayList<>();
+                ColumnItem columnInSelect = null;
                 for (ColumnItem column : allColumnsInSelect) {
                     if (column.equals(item.getLeftSideColumnItem()) || column.equals(item.getRightSideColumnItem())) {
+                        columnInSelect = column;
                         if (column.equals(item.getLeftSideColumnItem())) {
                             inSelect.add(item.getRightSideColumnItem());
                         } else {
@@ -209,8 +211,9 @@ public class TSqlRunner {
                         if (item.getOperator().equals("=") &&
                                 ((condition.getLeftSideColumnItem().equals(inSelect.get(0)) && condition.getRightSideDataType() != ConditionDataType.COLUMN) ||
                                         (condition.getRightSideColumnItem().equals(inSelect.get(0)) && condition.getLeftSideDataType() != ConditionDataType.COLUMN))) {
+                            String value = condition.getLeftSideDataType() != ConditionDataType.COLUMN ? condition.getLeftSideValue() : condition.getRightSideValue();
                             respond.addTransform(new Transform(respond.getCurrentQuery(),
-                                    respond.getCurrentQuery(),
+                                    (respond.getCurrentQuery().substring(0, columnInSelect.getStartAt()) + value + " AS " + columnInSelect.getName() + respond.getCurrentQuery().substring(columnInSelect.getStopAt() + 1)).trim(),
                                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                                     "runSelectClause",
                                     true
@@ -231,7 +234,7 @@ public class TSqlRunner {
                             (item.getRightSideDataType() == ConditionDataType.COLUMN && column.equals(item.getRightSideColumnItem()) && item.getLeftSideDataType() != ConditionDataType.COLUMN)) {
                         String value = item.getLeftSideDataType() != ConditionDataType.COLUMN ? item.getLeftSideValue() : item.getRightSideValue();
                         respond.addTransform(new Transform(respond.getCurrentQuery(),
-                                (respond.getCurrentQuery().substring(0, column.getStartAt()) + " " + value + " AS " + column.getName() + " " + respond.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
+                                (respond.getCurrentQuery().substring(0, column.getStartAt()) + value + " AS " + column.getName() + respond.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
                                 UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                                 "runSelectClause",
                                 true

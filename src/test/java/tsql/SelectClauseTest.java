@@ -76,7 +76,7 @@ public class SelectClauseTest {
     public static Stream<Arguments> doFindUnnecessaryAttributeInSelectThatCanBeRewrittenSource() {
         return Stream.of(
                 Arguments.arguments("SELECT PID, JMENO, ROCNIK FROM DBO.PREDMET WHERE ROCNIK = 2",
-                        "SELECT PID, JMENO,  2 AS ROCNIK  FROM DBO.PREDMET WHERE ROCNIK = 2"),
+                        "SELECT PID, JMENO, 2 AS ROCNIK FROM DBO.PREDMET WHERE ROCNIK = 2"),
                 Arguments.arguments("SELECT SID, ROK, BODY FROM DBO.STUDUJE WHERE PID = 2 AND SID = PID",
                         "SELECT 2 AS SID, ROK, BODY FROM DBO.STUDUJE WHERE PID = 2 AND SID = PID"),
                 Arguments.arguments("SELECT SID, PID, BODY FROM STUDUJE WHERE EXISTS (SELECT * FROM STUDENT WHERE STUDUJE.SID = STUDENT.SID)",

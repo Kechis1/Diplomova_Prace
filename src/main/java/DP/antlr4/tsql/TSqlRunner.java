@@ -252,10 +252,8 @@ public class TSqlRunner {
         return respond;
     }
 
-    public static Respond runEqualConditionInComparisonOperators(final DatabaseMetadata metadata, String query, Respond respond) {
-        TSqlParser parser = runFromString(query);
-        
-
+    public static Respond runEqualConditionInComparisonOperators(final DatabaseMetadata metadata, Respond respond) {
+        TSqlParser parser = runFromString(respond.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = TSqlParseWalker.findConditions(metadata, select);
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
@@ -289,10 +287,8 @@ public class TSqlRunner {
         return respond;
     }
 
-    public static Respond runRedundantJoinConditions(final DatabaseMetadata metadata, String query, Respond respond) {
-        TSqlParser parser = runFromString(query);
-        
-
+    public static Respond runRedundantJoinConditions(final DatabaseMetadata metadata, Respond respond) {
+        TSqlParser parser = runFromString(respond.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<ConditionItem> leftJoinConditions = new ArrayList<>();
         final HashMap<Integer, List<ConditionItem>> rightJoinConditions = new HashMap<>();
@@ -339,10 +335,8 @@ public class TSqlRunner {
         return respond;
     }
 
-    public static Respond runRedundantJoinTables(final DatabaseMetadata metadata, String query, Respond respond) {
-        TSqlParser parser = runFromString(query);
-        
-
+    public static Respond runRedundantJoinTables(final DatabaseMetadata metadata, Respond respond) {
+        TSqlParser parser = runFromString(respond.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadata, select);
         final List<Boolean> isDistinctInSelect = TSqlParseWalker.findDistinctInSelect(select);
@@ -384,9 +378,8 @@ public class TSqlRunner {
         return respond;
     }
 
-    public static Respond runEqualConditionInOperatorBetween(final DatabaseMetadata metadata, String query, Respond respond) {
-        TSqlParser parser = runFromString(query);
-        
+    public static Respond runEqualConditionInOperatorBetween(final DatabaseMetadata metadata, Respond respond) {
+        TSqlParser parser = runFromString(respond.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = new ArrayList<>();
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
@@ -464,9 +457,8 @@ public class TSqlRunner {
         return respond;
     }
 
-    public static Respond runEqualConditionInOperatorExists(final DatabaseMetadata metadata, String query, Respond respond) {
-        
-        TSqlParser parser = runFromString(query);
+    public static Respond runEqualConditionInOperatorExists(final DatabaseMetadata metadata, Respond respond) {
+        TSqlParser parser = runFromString(respond.getCurrentQuery());
         ParseTree select = parser.select_statement();
         DatabaseTable fromTable = TSqlParseWalker.findFromTable(metadata, select).get(0);
         TSqlParseWalker.findTablesList(metadata, select);

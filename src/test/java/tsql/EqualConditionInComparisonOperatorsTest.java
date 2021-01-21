@@ -4,7 +4,6 @@ import DP.Database.DatabaseMetadata;
 import DP.Database.Respond.Respond;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -14,8 +13,6 @@ import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 
 import org.junit.jupiter.api.BeforeEach;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
@@ -25,28 +22,17 @@ public class EqualConditionInComparisonOperatorsTest {
     @Mock
     private DatabaseMetadata metadata;
 
-    private final PrintStream originalStdOut = System.out;
-    private ByteArrayOutputStream consoleContent = new ByteArrayOutputStream();
-
-
-    @AfterEach
-    public void restoreStreams() {
-        System.setOut(this.originalStdOut);
-        this.consoleContent = new ByteArrayOutputStream();
-    }
-
     @BeforeEach
     void init() {
         metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        System.setOut(new PrintStream(this.consoleContent));
     }
 
     @ParameterizedTest(name="doFindUnnecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String query) {
         Respond respond = new Respond(query, query);
-        TSqlRunner.runEqualConditionInComparisonOperators(metadata, query, respond);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION", this.consoleContent.toString().trim());
+        TSqlRunner.runEqualConditionInComparisonOperators(metadata, respond);
+        // assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION", this.consoleContent.toString().trim());
         assertTrue(respond.isChanged());
     }
 
@@ -54,8 +40,8 @@ public class EqualConditionInComparisonOperatorsTest {
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String query) {
         Respond respond = new Respond(query, query);
-        TSqlRunner.runEqualConditionInComparisonOperators(metadata, query, respond);
-        assertEquals("OK", this.consoleContent.toString().trim());
+        TSqlRunner.runEqualConditionInComparisonOperators(metadata, respond);
+        // assertEquals("OK", this.consoleContent.toString().trim());
         assertFalse(respond.isChanged());
     }
 

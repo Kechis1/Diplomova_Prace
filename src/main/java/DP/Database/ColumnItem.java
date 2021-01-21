@@ -2,6 +2,7 @@ package DP.Database;
 
 import DP.antlr4.tsql.parser.TSqlParser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ColumnItem {
@@ -17,6 +18,8 @@ public class ColumnItem {
     boolean isNullable = true;
     boolean isConstant = false;
     String value;
+    int startAt;
+    int stopAt;
 
     public ColumnItem(String database, String schema, DatabaseTable table, String name, boolean isForeignKey, String referencesTableName, String referencesColumnName, DatabaseTable referencesTable, ColumnItem referencesColumn, boolean isNullable, boolean isConstant, String value) {
         this.database = database;
@@ -60,6 +63,22 @@ public class ColumnItem {
         this.schema = schema;
         this.table = table;
         this.name = name;
+    }
+
+    public int getStartAt() {
+        return startAt;
+    }
+
+    public void setStartAt(int startAt) {
+        this.startAt = startAt;
+    }
+
+    public int getStopAt() {
+        return stopAt;
+    }
+
+    public void setStopAt(int stopAt) {
+        this.stopAt = stopAt;
     }
 
     public static ColumnItem findOrCreate(DatabaseMetadata metadata, TSqlParser.Search_condition_notContext ctx, int index) {
@@ -120,7 +139,7 @@ public class ColumnItem {
             }
 
             if (tableIndex == -1) {
-                return new ColumnItem(ctx.column_elem().table_name().database != null
+                ColumnItem it = new ColumnItem(ctx.column_elem().table_name().database != null
                         ? ctx.column_elem().table_name().database.getText()
                         : null,
                         ctx.column_elem().table_name().schema != null
@@ -128,18 +147,30 @@ public class ColumnItem {
                                 : null,
                         table,
                         ctx.column_elem().column_name.getText());
+                it.setStartAt(ctx.column_elem().getStart().getStartIndex());
+                it.setStopAt(ctx.column_elem().getStop().getStopIndex());
+                return it;
             }
-            return table.findColumn(ctx.column_elem().column_name.getText());
+            ColumnItem it = table.findColumn(ctx.column_elem().column_name.getText());
+            it.setStartAt(ctx.column_elem().getStart().getStartIndex());
+            it.setStopAt(ctx.column_elem().getStop().getStopIndex());
+            return it;
         } else if (metadata.getTables().size() == 1) {
-            return  metadata.getTables().get(0).findColumn(ctx.column_elem().column_name.getText());
+            ColumnItem it = metadata.getTables().get(0).findColumn(ctx.column_elem().column_name.getText());
+            it.setStartAt(ctx.column_elem().getStart().getStartIndex());
+            it.setStopAt(ctx.column_elem().getStop().getStopIndex());
+            return it;
         }
 
-        return new ColumnItem(
+        ColumnItem it = new ColumnItem(
                 null,
                 null,
                 null,
                 ctx.column_elem().column_name.getText()
         );
+        it.setStartAt(ctx.column_elem().getStart().getStartIndex());
+        it.setStopAt(ctx.column_elem().getStop().getStopIndex());
+        return it;
     }
 
     public static boolean exists(List<ColumnItem> allColumns, ColumnItem columnItem) {
@@ -154,15 +185,15 @@ public class ColumnItem {
         return false;
     }
 
-    public static boolean duplicatesExists(List<ColumnItem> columns) {
+    public static ColumnItem duplicatesExists(List<ColumnItem> columns) {
         for (int i = 0; i < columns.size() - 1; i++) {
             for (int j = i + 1; j < columns.size(); j++) {
                 if (columns.get(i).equals(columns.get(j))) {
-                    return true;
+                    return columns.get(i);
                 }
             }
         }
-        return false;
+        return null;
     }
 
     public String getDatabase() {

@@ -149,15 +149,15 @@ public class TSqlRunner {
 
         final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadataWithTables, select);
 
-        boolean result = ColumnItem.duplicatesExists(allColumnsInSelect);
-        if (result) {
+        ColumnItem equals = ColumnItem.duplicatesExists(allColumnsInSelect);
+        if (equals != null) {
             respond.addTransform(new Transform(respond.getCurrentQuery(),
-                    respond.getCurrentQuery(),
+                    (respond.getCurrentQuery().substring(0, equals.getStartAt()) + respond.getCurrentQuery().substring(equals.getStopAt() + 1)).trim(),
                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
                     "runSelectClause",
                     true
             ));
-            respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
+            respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size() - 1).getOutputQuery());
             respond.setChanged(true);
             return respond;
         }
@@ -165,7 +165,7 @@ public class TSqlRunner {
         for (ColumnItem item : allColumnsInSelect) {
             if (item.isConstant() && foundUnion.isEmpty()) {
                 respond.addTransform(new Transform(respond.getCurrentQuery(),
-                        respond.getCurrentQuery(),
+                        (respond.getCurrentQuery().substring(0, item.getStartAt()) + respond.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
                         UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
                         "runSelectClause",
                         true
@@ -194,7 +194,7 @@ public class TSqlRunner {
                     }
                     if (bothInSelect == 1) {
                         respond.addTransform(new Transform(respond.getCurrentQuery(),
-                                respond.getCurrentQuery(),
+                                (respond.getCurrentQuery().substring(0, column.getStartAt()) + respond.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
                                 UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
                                 "runSelectClause",
                                 true
@@ -229,8 +229,9 @@ public class TSqlRunner {
                 for (ColumnItem column : allColumnsInSelect) {
                     if ((item.getLeftSideDataType() == ConditionDataType.COLUMN && column.equals(item.getLeftSideColumnItem()) && item.getRightSideDataType() != ConditionDataType.COLUMN) ||
                             (item.getRightSideDataType() == ConditionDataType.COLUMN && column.equals(item.getRightSideColumnItem()) && item.getLeftSideDataType() != ConditionDataType.COLUMN)) {
+                        String value = item.getLeftSideDataType() != ConditionDataType.COLUMN ? item.getLeftSideValue() : item.getRightSideValue();
                         respond.addTransform(new Transform(respond.getCurrentQuery(),
-                                respond.getCurrentQuery(),
+                                (respond.getCurrentQuery().substring(0, column.getStartAt()) + " " + value + " AS " + column.getName() + " " + respond.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
                                 UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                                 "runSelectClause",
                                 true

@@ -155,20 +155,22 @@ public class TSqlParseWalker {
                     foundSelect.add(true);
                     for (TSqlParser.Select_list_elemContext ctx : mCtx.query_expression().query_specification().select_list().select_list_elem()) {
                         if (ctx.asterisk() != null) {
-                            columns.add(new ColumnItem(null,
+                            ColumnItem it = new ColumnItem(null,
                                     null,
                                     DatabaseTable.create(metadata,
                                             null,
                                             ctx.asterisk().table_name() != null
                                                     ? ctx.asterisk().table_name().getText()
                                                     : null),
-                                    ctx.asterisk().STAR().getText())
-                            );
+                                    ctx.asterisk().STAR().getText());
+                            it.setStartAt(ctx.getStart().getStartIndex());
+                            it.setStopAt(ctx.getStop().getStopIndex());
+                            columns.add(it);
                         } else if (ctx.column_elem() != null) {
                             columns.add(ColumnItem.findOrCreate(metadata, ctx));
                         } else if (ctx.expression_elem() != null) {
                             if (ctx.expression_elem().expression().primitive_expression() != null) {
-                                columns.add(new ColumnItem(null,
+                                ColumnItem it = new ColumnItem(null,
                                         null,
                                         null,
                                         ctx.expression_elem().as_column_alias() == null
@@ -182,9 +184,12 @@ public class TSqlParseWalker {
                                         false,
                                         true,
                                         ctx.expression_elem().expression().primitive_expression().constant().getText()
-                                ));
+                                );
+                                it.setStartAt(ctx.expression_elem().expression().primitive_expression().getStart().getStartIndex());
+                                it.setStopAt(ctx.expression_elem().expression().primitive_expression().getStop().getStopIndex());
+                                columns.add(it);
                             } else {
-                                columns.add(new ColumnItem(null,
+                                ColumnItem it = new ColumnItem(null,
                                         null,
                                         DatabaseTable.create(metadata,
                                                 null,
@@ -192,7 +197,10 @@ public class TSqlParseWalker {
                                                         ? ctx.expression_elem().expression().full_column_name().table_name().table.getText()
                                                         : null),
                                         ctx.expression_elem().expression().full_column_name().column_name.getText()
-                                ));
+                                );
+                                it.setStartAt(ctx.expression_elem().expression().getStart().getStartIndex());
+                                it.setStopAt(ctx.expression_elem().expression().getStop().getStopIndex());
+                                columns.add(it);
                             }
                         }
                     }

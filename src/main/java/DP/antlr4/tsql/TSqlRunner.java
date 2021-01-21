@@ -112,7 +112,7 @@ public class TSqlRunner {
         TSqlParser parser = runFromString(respond.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
-        final List<Boolean> foundExistsNotConstant = new ArrayList<>();
+        final List<ExistItem> foundExistsNotConstant = new ArrayList<>();
         final List<Boolean> foundUnion = new ArrayList<>();
         DatabaseMetadata metadataWithTables = metadata.withTables(allTables);
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
@@ -123,7 +123,8 @@ public class TSqlRunner {
                             (ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().select_list_elem().size() > 1 ||
                                     ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().select_list_elem().get(0).expression_elem() == null ||
                                     ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().select_list_elem().get(0).expression_elem().expression().primitive_expression().constant() == null)) {
-                        foundExistsNotConstant.add(true);
+                        foundExistsNotConstant.add(new ExistItem(ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().getStart().getStartIndex(),
+                                ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().getStop().getStopIndex()));
                     }
                 }
             }
@@ -136,7 +137,7 @@ public class TSqlRunner {
 
         if (!foundExistsNotConstant.isEmpty()) {
             respond.addTransform(new Transform(respond.getCurrentQuery(),
-                    respond.getCurrentQuery(),
+                    (respond.getCurrentQuery().substring(0, foundExistsNotConstant.get(0).getSelectListStartAt()) + "1" + respond.getCurrentQuery().substring(foundExistsNotConstant.get(0).getSelectListStopAt() + 1)).trim(),
                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                     "runSelectClause",
                     true

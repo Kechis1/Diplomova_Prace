@@ -6,6 +6,8 @@ public class ExistItem {
     DatabaseTable table;
     boolean not;
     List<ConditionItem> conditions;
+    int selectListStartAt;
+    int selectListStopAt;
 
     public ExistItem(DatabaseTable table, List<ConditionItem> conditions, boolean not) {
         this.table = table;
@@ -13,7 +15,28 @@ public class ExistItem {
         this.not = not;
     }
 
+    public ExistItem(int selectListStartAt, int selectListStopAt) {
+        this.selectListStartAt = selectListStartAt;
+        this.selectListStopAt = selectListStopAt;
+    }
+
     public ExistItem() {
+    }
+
+    public int getSelectListStartAt() {
+        return selectListStartAt;
+    }
+
+    public void setSelectListStartAt(int selectListStartAt) {
+        this.selectListStartAt = selectListStartAt;
+    }
+
+    public int getSelectListStopAt() {
+        return selectListStopAt;
+    }
+
+    public void setSelectListStopAt(int selectListStopAt) {
+        this.selectListStopAt = selectListStopAt;
     }
 
     public DatabaseTable getTable() {

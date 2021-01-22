@@ -42,32 +42,42 @@ public class TSqlParseWalker {
         return allTables;
     }
 
-    public static Map<String, List<DatabaseTable>> findJoinTablesList(final DatabaseMetadata metadata, ParseTree select) {
-        final List<DatabaseTable> outerJoinTables = new ArrayList<>();
-        final List<DatabaseTable> innerJoinTables = new ArrayList<>();
-        final List<DatabaseTable> leftJoinTables = new ArrayList<>();
-        final List<DatabaseTable> rightJoinTables = new ArrayList<>();
-        final List<DatabaseTable> fullOuterJoinTables = new ArrayList<>();
+    public static Map<String, List<JoinTable>> findJoinTablesList(final DatabaseMetadata metadata, ParseTree select) {
+        final List<JoinTable> outerJoinTables = new ArrayList<>();
+        final List<JoinTable> innerJoinTables = new ArrayList<>();
+        final List<JoinTable> leftJoinTables = new ArrayList<>();
+        final List<JoinTable> rightJoinTables = new ArrayList<>();
+        final List<JoinTable> fullOuterJoinTables = new ArrayList<>();
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterTable_source_item_joined(TSqlParser.Table_source_item_joinedContext ctx) {
                 for (int i = 0; i < ctx.join_part().size(); i++) {
                     if (ctx.join_part().get(i).OUTER() != null || ctx.join_part().get(i).LEFT() != null || ctx.join_part().get(i).RIGHT() != null) {
-                        outerJoinTables.add(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()));
+                        outerJoinTables.add(new JoinTable(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()),
+                                ctx.join_part().get(i).getStart().getStartIndex(),
+                                ctx.join_part().get(i).getStop().getStopIndex()));
                         if (ctx.join_part().get(i).LEFT() != null) {
-                            leftJoinTables.add(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()));
+                            leftJoinTables.add(new JoinTable(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()),
+                                    ctx.join_part().get(i).getStart().getStartIndex(),
+                                    ctx.join_part().get(i).getStop().getStopIndex()));
                         } else if (ctx.join_part().get(i).RIGHT() != null) {
-                            rightJoinTables.add(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()));
+                            rightJoinTables.add(new JoinTable(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()),
+                                    ctx.join_part().get(i).getStart().getStartIndex(),
+                                    ctx.join_part().get(i).getStop().getStopIndex()));
                         } else {
-                            fullOuterJoinTables.add(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()));
+                            fullOuterJoinTables.add(new JoinTable(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()),
+                                    ctx.join_part().get(i).getStart().getStartIndex(),
+                                    ctx.join_part().get(i).getStop().getStopIndex()));
                         }
                     } else {
-                        innerJoinTables.add(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()));
+                        innerJoinTables.add(new JoinTable(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()),
+                                ctx.join_part().get(i).getStart().getStartIndex(),
+                                ctx.join_part().get(i).getStop().getStopIndex()));
                     }
                 }
             }
         }, select);
-        Map<String, List<DatabaseTable>> map = new HashMap<>();
+        Map<String, List<JoinTable>> map = new HashMap<>();
         map.put("outerJoin", outerJoinTables);
         map.put("innerJoin", innerJoinTables);
         map.put("leftJoin", leftJoinTables);

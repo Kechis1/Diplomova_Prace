@@ -1,5 +1,7 @@
 package DP.Database;
 
+import DP.Database.Respond.Respond;
+import DP.Database.Respond.Transform;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlParser;
 
@@ -128,9 +130,10 @@ public class DatabaseTable {
         return newItems;
     }
 
-    public static boolean redundantJoinExists(String typeOfJoin, List<DatabaseTable> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides) {
-        for (DatabaseTable table : joins) {
+    public static boolean redundantJoinExists(Respond respond, String typeOfJoin, List<JoinTable> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides) {
+        for (JoinTable joinTable : joins) {
             boolean found = false;
+            DatabaseTable table = joinTable.getDatabaseTable();
             for (ColumnItem cItem : allColumnsInSelect) {
                 if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || !cItem.getTable().getTableAlias().equals(tableAlias == null ? table.getTableAlias() : tableAlias)))
                         || (!cItem.getName().equals("*") && !(databaseTable == null ? table : databaseTable).columnExists(cItem))) {
@@ -139,7 +142,14 @@ public class DatabaseTable {
                 }
             }
             if ((!checkNullable && !found) || (checkNullable && !found && !ConditionItem.isConditionColumnNullable(newConditions, table, checkBothSides))) {
-                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " " + typeOfJoin + " JOIN");
+                respond.addTransform(new Transform(respond.getCurrentQuery(),
+                        (respond.getCurrentQuery().substring(0, joinTable.getStartAt()) + respond.getCurrentQuery().substring(joinTable.getStopAt() + 1)).trim(),
+                        UnnecessaryStatementException.messageUnnecessaryStatement + " " + typeOfJoin + " JOIN",
+                        "runRedundantJoinTables",
+                        true
+                ));
+                respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
+                respond.setChanged(true);
                 return true;
             }
         }

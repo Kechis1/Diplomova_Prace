@@ -345,7 +345,7 @@ public class TSqlRunner {
         ParseTree select = parser.select_statement();
         final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadata, select);
         final List<Boolean> isDistinctInSelect = TSqlParseWalker.findDistinctInSelect(select);
-        final Map<String, List<DatabaseTable>> joinTables = TSqlParseWalker.findJoinTablesList(metadata, select);
+        final Map<String, List<JoinTable>> joinTables = TSqlParseWalker.findJoinTablesList(metadata, select);
         final List<ConditionItem> fullOuterJoinConditions = new ArrayList<>();
         final List<ConditionItem> innerConditions = new ArrayList<>();
         final List<DatabaseTable> fromTable = TSqlParseWalker.findFromTable(metadata, select);
@@ -362,24 +362,35 @@ public class TSqlRunner {
         }, select);
 
         if (isDistinctInSelect.isEmpty()) {
-            System.out.println("OK");
+            respond.addTransform(new Transform(respond.getCurrentQuery(),
+                    respond.getCurrentQuery(),
+                    "OK",
+                    "runRedundantJoinTables",
+                    false
+            ));
             respond.setChanged(false);
             return respond;
         }
 
-        boolean foundRedundantJoin = DatabaseTable.redundantJoinExists("LEFT", joinTables.get("leftJoin"),
+        boolean foundRedundantJoin = DatabaseTable.redundantJoinExists(respond, "LEFT", joinTables.get("leftJoin"),
                 fromTable.get(0).getTableAlias(), fromTable.get(0), allColumnsInSelect, false, null, false);
-        foundRedundantJoin |= DatabaseTable.redundantJoinExists("RIGHT", joinTables.get("rightJoin"),
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists(respond, "RIGHT", joinTables.get("rightJoin"),
                 null, null, allColumnsInSelect, false, null, false);
-        foundRedundantJoin |= DatabaseTable.redundantJoinExists("FULL OUTER", joinTables.get("fullOuterJoin"), fromTable.get(0).getTableAlias(),
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists(respond, "FULL OUTER", joinTables.get("fullOuterJoin"), fromTable.get(0).getTableAlias(),
                 fromTable.get(0), allColumnsInSelect, true, metadata.setNullableColumns(fullOuterJoinConditions), true);
-        foundRedundantJoin |= DatabaseTable.redundantJoinExists("INNER", joinTables.get("innerJoin"), null,
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists(respond, "INNER", joinTables.get("innerJoin"), null,
                 null, allColumnsInSelect, true, metadata.setNullableColumns(innerConditions), true);
 
         if (!foundRedundantJoin) {
-            System.out.println("OK");
+            respond.addTransform(new Transform(respond.getCurrentQuery(),
+                    respond.getCurrentQuery(),
+                    "OK",
+                    "runRedundantJoinTables",
+                    false
+            ));
+            respond.setChanged(false);
+            return respond;
         }
-        respond.setChanged(foundRedundantJoin);
         return respond;
     }
 

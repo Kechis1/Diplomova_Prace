@@ -11,11 +11,13 @@ public class Main {
     public static void main(String[] args) {
         // init data
         DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        String query = "SELECT * FROM DBO.PREDMET WHERE EXISTS (SELECT 1)";
+        String query = "SELECT * " +
+                "FROM DBO.STUDENT " +
+                "WHERE SID BETWEEN 5 AND 10";
         Respond respond = new Respond(query, query);
 
         // run methods
-        respond = TSqlRunner.runEqualConditionInOperatorExists(metadata, respond);
+        respond = TSqlRunner.runEqualConditionInOperatorBetween(metadata, respond);
 
         for (Transform r : respond.getQueryTransforms()) {
             System.out.println(r.getOutputQuery());

@@ -2,6 +2,7 @@ package tsql;
 
 import DP.Database.DatabaseMetadata;
 import DP.Database.Respond.Respond;
+import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,12 +26,15 @@ public class EqualConditionInOperatorBetweenTest {
         metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
     }
 
-    @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}")
+    @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryConditionSource")
-    void doFindUnnecessaryConditionTest(String query) {
+    void doFindUnnecessaryConditionTest(String query, String resultQuery) {
         Respond respond = new Respond(query, query);
         TSqlRunner.runEqualConditionInOperatorBetween(metadata, respond);
-        // assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION BETWEEN", this.consoleContent.toString().trim());
+        assertNotEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
+        assertEquals(respond.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION BETWEEN", respond.getQueryTransforms().get(0).getMessage());
         assertTrue(respond.isChanged());
     }
 
@@ -39,28 +43,25 @@ public class EqualConditionInOperatorBetweenTest {
     void doFindNecessaryConditionTest(String query) {
         Respond respond = new Respond(query, query);
         TSqlRunner.runEqualConditionInOperatorBetween(metadata, respond);
-        // assertEquals("OK", this.consoleContent.toString().trim());
+        assertEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
+        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
+        assertEquals("OK", respond.getQueryTransforms().get(0).getMessage());
         assertFalse(respond.isChanged());
     }
 
 
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
         return Stream.of(
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.STUDENT " +
-                        "WHERE 'b' BETWEEN 'a' AND 'c'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.STUDENT " +
-                        "WHERE 'abc' BETWEEN 'aaa' AND 'abc'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.STUDENT " +
-                        "WHERE 1 BETWEEN 0 AND 2"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.STUDENT " +
-                        "WHERE 1.5 BETWEEN 1.2 AND 1.7"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.STUDENT " +
-                        "WHERE jmeno BETWEEN jmeno AND jmeno")
+                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 'b' BETWEEN 'a' AND 'c'",
+                        "SELECT * FROM DBO.STUDENT WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 'abc' BETWEEN 'aaa' AND 'abc'",
+                        "SELECT * FROM DBO.STUDENT WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 1 BETWEEN 0 AND 2",
+                        "SELECT * FROM DBO.STUDENT WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 1.5 BETWEEN 1.2 AND 1.7",
+                        "SELECT * FROM DBO.STUDENT WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE jmeno BETWEEN jmeno AND jmeno",
+                        "SELECT * FROM DBO.STUDENT WHERE")
         );
     }
 

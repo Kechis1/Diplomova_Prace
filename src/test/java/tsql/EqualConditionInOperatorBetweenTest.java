@@ -82,12 +82,12 @@ public class EqualConditionInOperatorBetweenTest {
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT STT " +
                         "INNER JOIN DBO.STUDUJE SDE ON STT.SID = SDE.SID " +
-                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID" +
+                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID " +
                         "WHERE SDE.SID BETWEEN 5 AND 10"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT STT " +
                         "INNER JOIN DBO.STUDUJE SDE ON STT.SID = SDE.SID " +
-                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID" +
+                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID " +
                         "WHERE SDE.SID BETWEEN STT.SID AND PDT.SID")
         );
     }

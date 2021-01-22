@@ -407,6 +407,9 @@ public class TSqlRunner {
                         item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 1));
                     }
 
+                    item.setStartAt(ctx.search_condition_and().get(0).search_condition_not().get(0).getStart().getStartIndex());
+                    item.setStopAt(ctx.search_condition_and().get(0).search_condition_not().get(0).getStop().getStopIndex());
+
                     conditions.add(item);
 
                     item = new ConditionItem(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getStart().getStartIndex(),
@@ -418,6 +421,9 @@ public class TSqlRunner {
                             "<="
                     );
 
+                    item.setStartAt(ctx.search_condition_and().get(0).search_condition_not().get(0).getStart().getStartIndex());
+                    item.setStopAt(ctx.search_condition_and().get(0).search_condition_not().get(0).getStop().getStopIndex());
+
                     if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
                         item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
                         item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 2));
@@ -428,7 +434,6 @@ public class TSqlRunner {
             }
         }, select);
 
-        boolean isConditionNecessary = true;
         boolean currentNecessary;
         for (int i = 0; i < conditions.size(); i += 2) {
             currentNecessary = false;
@@ -448,17 +453,30 @@ public class TSqlRunner {
                 } else if (conditions.get(j).getRightSideDataType() == ConditionDataType.COLUMN && conditions.get(j).getRightSideDataType() == ConditionDataType.COLUMN) {
                     DatabaseMetadata newMetadata = metadata.withTables(allTables);
                     currentNecessary |= conditions.get(j).compareColumnAgainstColumn(newMetadata);
+                } else {
+                    currentNecessary = true;
                 }
             }
-            isConditionNecessary &= currentNecessary;
+            if (!currentNecessary) {
+                respond.addTransform(new Transform(respond.getCurrentQuery(),
+                        (respond.getCurrentQuery().substring(0, conditions.get(i).getStartAt()) + respond.getCurrentQuery().substring(conditions.get(i).getStopAt() + 1)).trim(),
+                        UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION BETWEEN",
+                        "runEqualConditionInOperatorBetween",
+                        true
+                ));
+                respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
+                respond.setChanged(true);
+                return respond;
+            }
         }
 
-        if (isConditionNecessary) {
-            System.out.println("OK");
-        } else {
-            System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION BETWEEN");
-        }
-        respond.setChanged(!isConditionNecessary);
+        respond.addTransform(new Transform(respond.getCurrentQuery(),
+                respond.getCurrentQuery(),
+                "OK",
+                "runEqualConditionInOperatorBetween",
+                false
+        ));
+        respond.setChanged(false);
         return respond;
     }
 

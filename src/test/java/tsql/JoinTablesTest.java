@@ -4,6 +4,7 @@ import DP.Database.ColumnItem;
 import DP.Database.DatabaseMetadata;
 import DP.Database.DatabaseTable;
 import DP.Database.Respond.Respond;
+import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlRunner;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,16 +36,21 @@ public class JoinTablesTest {
         sId.setNullable(true);
         Respond respond = new Respond(query, query);
         TSqlRunner.runRedundantJoinTables(metadata, respond);
-        // assertEquals("OK", this.consoleContent.toString().trim());
+        assertEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
+        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
+        assertEquals("OK", respond.getQueryTransforms().get(0).getMessage());
         assertFalse(respond.isChanged());
     }
 
-    @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, message = {1}")
+    @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, message = {1}, resultQuery = {2}")
     @MethodSource("doFindUnnecessaryConditionSource")
-    void doFindUnnecessaryConditionTest(String query, String message) {
+    void doFindUnnecessaryConditionTest(String query, String message, String resultQuery) {
         Respond respond = new Respond(query, query);
         TSqlRunner.runRedundantJoinTables(metadata, respond);
-        // assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " " + message, this.consoleContent.toString().trim());
+        assertNotEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
+        assertEquals(respond.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " " + message, respond.getQueryTransforms().get(0).getMessage());
         assertTrue(respond.isChanged());
     }
 
@@ -53,7 +59,9 @@ public class JoinTablesTest {
     void doFindNecessaryConditionTest(String query) {
         Respond respond = new Respond(query, query);
         TSqlRunner.runRedundantJoinTables(metadata, respond);
-        // assertEquals("OK", this.consoleContent.toString().trim());
+        assertEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
+        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
+        assertEquals("OK", respond.getQueryTransforms().get(0).getMessage());
         assertFalse(respond.isChanged());
     }
 

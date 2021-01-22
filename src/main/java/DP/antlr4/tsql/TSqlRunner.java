@@ -476,6 +476,8 @@ public class TSqlRunner {
                     if (ctx.search_condition_not(i).predicate() != null && ctx.search_condition_not(i).predicate().EXISTS() != null) {
                         ExistItem eItem = new ExistItem();
                         eItem.setNot(ctx.search_condition_not(i).NOT() != null);
+                        eItem.setPredicateStartAt(ctx.search_condition_not(i).getStart().getStartIndex());
+                        eItem.setPredicateStopAt(ctx.search_condition_not(i).getStop().getStopIndex());
                         TSqlParser.Query_specificationContext qSpecContext = ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification();
                         if (qSpecContext.FROM() != null && qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().table_name_with_hint() != null) {
                             eItem.setTable(metadata.findTable(qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText(),
@@ -517,15 +519,23 @@ public class TSqlRunner {
                             (!exist.getTable().isEmpty() &&
                                     (exist.getConditions() == null || exist.getConditions().size() == 0 ||
                                             (exist.getConditions().size() == 1 && ConditionItem.isComparingForeignKey(fromTable, exist.getTable(), exist.getConditions().get(0)))))))) {
-                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS");
-
+                respond.addTransform(new Transform(respond.getCurrentQuery(),
+                        (respond.getCurrentQuery().substring(0, exist.getPredicateStartAt()) + respond.getCurrentQuery().substring(exist.getPredicateStopAt() + 1)).trim(),
+                        UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS",
+                        "runEqualConditionInOperatorExists",
+                        true
+                ));
+                respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
                 respond.setChanged(true);
                 return respond;
             }
         }
-
-        System.out.println("OK");
-
+        respond.addTransform(new Transform(respond.getCurrentQuery(),
+                respond.getCurrentQuery(),
+                "OK",
+                "runEqualConditionInOperatorExists",
+                false
+        ));
         respond.setChanged(false);
         return respond;
     }

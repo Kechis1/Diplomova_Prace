@@ -8,6 +8,8 @@ public class ExistItem {
     List<ConditionItem> conditions;
     int selectListStartAt;
     int selectListStopAt;
+    int predicateStartAt;
+    int predicateStopAt;
 
     public ExistItem(DatabaseTable table, List<ConditionItem> conditions, boolean not) {
         this.table = table;
@@ -21,6 +23,22 @@ public class ExistItem {
     }
 
     public ExistItem() {
+    }
+
+    public int getPredicateStartAt() {
+        return predicateStartAt;
+    }
+
+    public void setPredicateStartAt(int predicateStartAt) {
+        this.predicateStartAt = predicateStartAt;
+    }
+
+    public int getPredicateStopAt() {
+        return predicateStopAt;
+    }
+
+    public void setPredicateStopAt(int predicateStopAt) {
+        this.predicateStopAt = predicateStopAt;
     }
 
     public int getSelectListStartAt() {

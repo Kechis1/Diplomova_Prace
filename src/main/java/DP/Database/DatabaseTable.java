@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class DatabaseTable {
+    private String queryName;
     private String tableName;
     private String tableAlias;
     private List<ColumnItem> columns;
@@ -17,8 +18,11 @@ public class DatabaseTable {
     private List<ForeignKey> foreignKeys;
     private int recordsCount;
     private boolean isColumnsTableSet = false;
+    private int fromTableStartAt;
+    private int fromTableStopAt;
 
-    public DatabaseTable(String tableName, List<ColumnItem> columns, List<String> primaryKeys, List<ForeignKey> foreignKeys, String tableAlias, int recordsCount) {
+    public DatabaseTable(String queryName, String tableName, List<ColumnItem> columns, List<String> primaryKeys, List<ForeignKey> foreignKeys, String tableAlias, int recordsCount) {
+        this.queryName = queryName;
         this.tableName = tableName;
         this.columns = columns;
         this.primaryKeys = primaryKeys;
@@ -27,7 +31,40 @@ public class DatabaseTable {
         this.recordsCount = recordsCount;
     }
 
-    public DatabaseTable() {}
+    public DatabaseTable() {
+    }
+
+    public String getQueryName() {
+        return queryName;
+    }
+
+    public void setQueryName(String queryName) {
+        this.queryName = queryName;
+    }
+
+    public boolean isColumnsTableSet() {
+        return isColumnsTableSet;
+    }
+
+    public void setColumnsTableSet(boolean columnsTableSet) {
+        isColumnsTableSet = columnsTableSet;
+    }
+
+    public int getFromTableStartAt() {
+        return fromTableStartAt;
+    }
+
+    public void setFromTableStartAt(int fromTableStartAt) {
+        this.fromTableStartAt = fromTableStartAt;
+    }
+
+    public int getFromTableStopAt() {
+        return fromTableStopAt;
+    }
+
+    public void setFromTableStopAt(int fromTableStopAt) {
+        this.fromTableStopAt = fromTableStopAt;
+    }
 
     public List<ForeignKey> getForeignKeys() {
         return foreignKeys;
@@ -99,6 +136,13 @@ public class DatabaseTable {
         } else {
             newItem = new DatabaseTable();
         }
+        if (ctx.as_table_alias() != null && ctx.table_name_with_hint() != null) {
+            newItem.setQueryName(ctx.table_name_with_hint().getText() + " " + ctx.as_table_alias().getText());
+        } else if (ctx.as_table_alias() != null) {
+            newItem.setQueryName(ctx.as_table_alias().getText());
+        } else {
+            newItem.setQueryName(ctx.getText());
+        }
         newItem.setTableAlias(ctx.as_table_alias() != null
                 ? ctx.as_table_alias().getText()
                 : ctx.table_name_with_hint().table_name().table.getText());
@@ -123,14 +167,14 @@ public class DatabaseTable {
     public static List<DatabaseTable> difference(List<DatabaseTable> allItems, List<DatabaseTable> filteredItems) {
         List<DatabaseTable> newItems = new ArrayList<>(allItems);
 
-        for (DatabaseTable filteredItem: filteredItems) {
+        for (DatabaseTable filteredItem : filteredItems) {
             newItems.removeIf(item -> item.equals(filteredItem));
         }
 
         return newItems;
     }
 
-    public static boolean redundantJoinExists(Respond respond, String typeOfJoin, List<JoinTable> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides) {
+    public static boolean redundantJoinExists(Respond respond, String typeOfJoin, List<JoinTable> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides, DatabaseTable fromTable) {
         for (JoinTable joinTable : joins) {
             boolean found = false;
             DatabaseTable table = joinTable.getDatabaseTable();
@@ -142,13 +186,21 @@ public class DatabaseTable {
                 }
             }
             if ((!checkNullable && !found) || (checkNullable && !found && !ConditionItem.isConditionColumnNullable(newConditions, table, checkBothSides))) {
+                String currentQuery;
+                if (typeOfJoin.equals("RIGHT") || typeOfJoin.equals("INNER")) {
+                    currentQuery = (respond.getCurrentQuery().substring(0, fromTable.getFromTableStartAt()) + joinTable.getDatabaseTable().getQueryName() +
+                            respond.getCurrentQuery().substring(fromTable.getFromTableStopAt() + 1, joinTable.getStartAt()) + respond.getCurrentQuery().substring(joinTable.getStopAt() + 1)).trim();
+                } else {
+                    currentQuery = (respond.getCurrentQuery().substring(0, joinTable.getStartAt()) + respond.getCurrentQuery().substring(joinTable.getStopAt() + 1)).trim();
+                }
+
                 respond.addTransform(new Transform(respond.getCurrentQuery(),
-                        (respond.getCurrentQuery().substring(0, joinTable.getStartAt()) + respond.getCurrentQuery().substring(joinTable.getStopAt() + 1)).trim(),
+                        currentQuery,
                         UnnecessaryStatementException.messageUnnecessaryStatement + " " + typeOfJoin + " JOIN",
                         "runRedundantJoinTables",
                         true
                 ));
-                respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
+                respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size() - 1).getOutputQuery());
                 respond.setChanged(true);
                 return true;
             }

@@ -42,9 +42,9 @@ public class JoinTablesTest {
         assertFalse(respond.isChanged());
     }
 
-    @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, message = {1}, resultQuery = {2}")
+    @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, resultQuery = {1}, message = {2}")
     @MethodSource("doFindUnnecessaryConditionSource")
-    void doFindUnnecessaryConditionTest(String query, String message, String resultQuery) {
+    void doFindUnnecessaryConditionTest(String query, String resultQuery, String message) {
         Respond respond = new Respond(query, query);
         TSqlRunner.runRedundantJoinTables(metadata, respond);
         assertNotEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
@@ -84,30 +84,30 @@ public class JoinTablesTest {
 
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
         return Stream.of(
-                Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +
-                        "FROM DBO.STUDENT SDT " +
-                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID", "LEFT JOIN"),
-                Arguments.arguments("SELECT distinct SDT.* " +
-                        "FROM DBO.STUDENT SDT " +
-                        "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID", "LEFT JOIN"),
-                Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +
-                        "FROM DBO.STUDENT SDT " +
-                        "FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID", "FULL OUTER JOIN"),
-                Arguments.arguments("SELECT distinct SDT.* " +
-                        "FROM DBO.STUDENT SDT " +
-                        "FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID", "FULL OUTER JOIN"),
-                Arguments.arguments("SELECT distinct SDE.SID, SDE.body " +
-                        "FROM dbo.student SDT " +
-                        "RIGHT JOIN dbo.STUDUJE SDE ON SDT.SID = SDE.SID", "RIGHT JOIN"),
-                Arguments.arguments("SELECT distinct SDE.* " +
-                        "FROM dbo.student SDT " +
-                        "RIGHT JOIN dbo.STUDUJE SDE ON SDT.SID = SDE.SID", "RIGHT JOIN"),
-                Arguments.arguments("SELECT distinct SDE.SID, SDE.body " +
-                        "FROM DBO.STUDENT SDT " +
-                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID", "INNER JOIN"),
-                Arguments.arguments("SELECT distinct SDE.* " +
-                        "FROM DBO.STUDENT SDT " +
-                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID", "INNER JOIN")
+                Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO FROM DBO.STUDENT SDT LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID",
+                        "SELECT distinct SDT.SID, SDT.JMENO FROM DBO.STUDENT SDT",
+                        "LEFT JOIN"),
+                Arguments.arguments("SELECT distinct SDT.* FROM DBO.STUDENT SDT LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID",
+                        "SELECT distinct SDT.* FROM DBO.STUDENT SDT",
+                        "LEFT JOIN"),
+                Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO FROM DBO.STUDENT SDT FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID",
+                        "SELECT distinct SDT.SID, SDT.JMENO FROM DBO.STUDENT SDT",
+                        "FULL OUTER JOIN"),
+                Arguments.arguments("SELECT distinct SDT.* FROM DBO.STUDENT SDT FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID",
+                        "SELECT distinct SDT.* FROM DBO.STUDENT SDT",
+                        "FULL OUTER JOIN"),
+                Arguments.arguments("SELECT distinct SDE.SID, SDE.body FROM dbo.student SDT RIGHT JOIN dbo.STUDUJE SDE ON SDT.SID = SDE.SID",
+                        "SELECT distinct SDE.SID, SDE.body FROM dbo.STUDUJE SDE",
+                        "RIGHT JOIN"),
+                Arguments.arguments("SELECT distinct SDE.* FROM dbo.student SDT RIGHT JOIN dbo.STUDUJE SDE ON SDT.SID = SDE.SID",
+                        "SELECT distinct SDE.* FROM dbo.STUDUJE SDE",
+                        "RIGHT JOIN"),
+                Arguments.arguments("SELECT distinct SDE.SID, SDE.body FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID",
+                        "SELECT distinct SDE.SID, SDE.body FROM DBO.STUDUJE SDE",
+                        "INNER JOIN"),
+                Arguments.arguments("SELECT distinct SDE.* FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID",
+                        "SELECT distinct SDE.* FROM DBO.STUDUJE SDE",
+                        "INNER JOIN")
         );
     }
 

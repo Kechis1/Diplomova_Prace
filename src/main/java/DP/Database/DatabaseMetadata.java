@@ -62,7 +62,8 @@ public class DatabaseMetadata {
             List<String> tablePrimaryKeys = new ArrayList<>();
             List<ForeignKey> tableForeignKeys = new ArrayList<>();
 
-            DatabaseTable table = new DatabaseTable(tableObject.getString("table_name").toUpperCase(),
+            DatabaseTable table = new DatabaseTable(null,
+                    tableObject.getString("table_name").toUpperCase(),
                     tableColumns,
                     tablePrimaryKeys,
                     tableForeignKeys,

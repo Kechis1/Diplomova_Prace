@@ -390,13 +390,13 @@ public class TSqlRunner {
         }
 
         boolean foundRedundantJoin = DatabaseTable.redundantJoinExists(respond, "LEFT", joinTables.get("leftJoin"),
-                fromTable.get(0).getTableAlias(), fromTable.get(0), allColumnsInSelect, false, null, false);
+                fromTable.get(0).getTableAlias(), fromTable.get(0), allColumnsInSelect, false, null, false, null);
         foundRedundantJoin |= DatabaseTable.redundantJoinExists(respond, "RIGHT", joinTables.get("rightJoin"),
-                null, null, allColumnsInSelect, false, null, false);
+                null, null, allColumnsInSelect, false, null, false, fromTable.get(0));
         foundRedundantJoin |= DatabaseTable.redundantJoinExists(respond, "FULL OUTER", joinTables.get("fullOuterJoin"), fromTable.get(0).getTableAlias(),
-                fromTable.get(0), allColumnsInSelect, true, metadata.setNullableColumns(fullOuterJoinConditions), true);
-        foundRedundantJoin |= DatabaseTable.redundantJoinExists(respond, "INNER", joinTables.get("innerJoin"), null,
-                null, allColumnsInSelect, true, metadata.setNullableColumns(innerConditions), true);
+                fromTable.get(0), allColumnsInSelect, true, metadata.setNullableColumns(fullOuterJoinConditions), true, null);
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists(respond, "INNER", joinTables.get("innerJoin"), null, null,
+                allColumnsInSelect, true, metadata.setNullableColumns(innerConditions), true, fromTable.get(0));
 
         if (!foundRedundantJoin) {
             respond.addTransform(new Transform(respond.getCurrentQuery(),

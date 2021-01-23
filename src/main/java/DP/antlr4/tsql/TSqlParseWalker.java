@@ -133,6 +133,8 @@ public class TSqlParseWalker {
                     if (ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias() != null) {
                         found.setTableAlias(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias().getText());
                     }
+                    found.setFromTableStartAt(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().getStart().getStartIndex());
+                    found.setFromTableStopAt(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().getStop().getStopIndex());
                     fromTable.add(found);
                 }
             }

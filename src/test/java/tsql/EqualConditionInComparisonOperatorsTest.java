@@ -27,12 +27,15 @@ public class EqualConditionInComparisonOperatorsTest {
         metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
     }
 
-    @ParameterizedTest(name="doFindUnnecessaryConditionTest {index} query = {0}")
+    @ParameterizedTest(name="doFindUnnecessaryConditionTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryConditionSource")
-    void doFindUnnecessaryConditionTest(String query) {
+    void doFindUnnecessaryConditionTest(String query, String resultQuery) {
         Respond respond = new Respond(query, query);
         TSqlRunner.runEqualConditionInComparisonOperators(metadata, respond);
-        // assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION", this.consoleContent.toString().trim());
+        assertNotEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
+        assertEquals(respond.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION", respond.getQueryTransforms().get(0).getMessage());
         assertTrue(respond.isChanged());
     }
 
@@ -41,7 +44,9 @@ public class EqualConditionInComparisonOperatorsTest {
     void doFindNecessaryConditionTest(String query) {
         Respond respond = new Respond(query, query);
         TSqlRunner.runEqualConditionInComparisonOperators(metadata, respond);
-        // assertEquals("OK", this.consoleContent.toString().trim());
+        assertEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
+        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
+        assertEquals("OK", respond.getQueryTransforms().get(0).getMessage());
         assertFalse(respond.isChanged());
     }
 
@@ -115,54 +120,36 @@ public class EqualConditionInComparisonOperatorsTest {
 */
 
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
-        return Stream.of(Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 1 = 1"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 0 >= 0"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 1 > 0"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 0 <= 1"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 0 < 1"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 1 <> 0"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 1 = '1'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE '1' = 1"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'a' = 'A'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'ba' >= 'aa'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'ba' > 'aa'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'ab' <= 'ac'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'aa' < 'ab'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'aa' <> 'ab'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.STUDENT SDT " +
-                        "INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
-                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID " +
-                        "WHERE SDT.SID = SDT.SID " +
-                        "ORDER BY SDT.SID")
+        return Stream.of(Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 = 1",
+                "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 0 >= 0",
+                        "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 > 0",
+                        "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 0 <= 1",
+                        "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 0 < 1",
+                        "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 <> 0",
+                        "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 = '1'",
+                        "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE '1' = 1",
+                        "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'a' = 'A'",
+                        "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'ba' >= 'aa'",
+                        "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'ba' > 'aa'",
+                        "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'ab' <= 'ac'",
+                        "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'aa' < 'ab'",
+                        "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'aa' <> 'ab'",
+                        "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID WHERE SDT.SID = SDT.SID ORDER BY SDT.SID",
+                        "SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID WHERE ORDER BY SDT.SID")
         );
     }
 

@@ -272,23 +272,35 @@ public class TSqlRunner {
                     (condition.getLeftSideDataType() == ConditionDataType.STRING_DECIMAL && condition.getRightSideDataType() != ConditionDataType.BINARY) ||
                     (condition.getLeftSideDataType() == ConditionDataType.STRING_FLOAT && Arrays.asList(ConditionDataType.REAL, ConditionDataType.FLOAT).contains(condition.getRightSideDataType())) ||
                     (condition.getLeftSideDataType() == ConditionDataType.STRING_REAL && condition.getRightSideDataType() == ConditionDataType.REAL)) {
-                isConditionNecessary &= condition.compareNumberAgainstNumber();
+                isConditionNecessary = condition.compareNumberAgainstNumber();
             } else if (condition.getRightSideDataType() == ConditionDataType.STRING &&
                     Arrays.asList(ConditionDataType.STRING_BINARY, ConditionDataType.STRING_DECIMAL, ConditionDataType.STRING_FLOAT, ConditionDataType.STRING_REAL, ConditionDataType.STRING)
                             .contains(condition.getLeftSideDataType())) {
-                isConditionNecessary &= condition.compareStringAgainstString();
+                isConditionNecessary = condition.compareStringAgainstString();
             } else if (condition.getRightSideDataType() == ConditionDataType.COLUMN && condition.getRightSideDataType() == ConditionDataType.COLUMN) {
                 DatabaseMetadata newMetadata = metadata.withTables(allTables);
-                isConditionNecessary &= condition.compareColumnAgainstColumn(newMetadata);
+                isConditionNecessary = condition.compareColumnAgainstColumn(newMetadata);
+            }
+
+            if (!isConditionNecessary) {
+                respond.addTransform(new Transform(respond.getCurrentQuery(),
+                        (respond.getCurrentQuery().substring(0, condition.getStartAt()) + respond.getCurrentQuery().substring(condition.getStopAt())).trim(),
+                        UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION",
+                        "runEqualConditionInComparisonOperators",
+                        true
+                ));
+                respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
+                respond.setChanged(true);
+                return respond;
             }
         }
-
-        if (isConditionNecessary) {
-            System.out.println("OK");
-        } else {
-            System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION");
-        }
-        respond.setChanged(!isConditionNecessary);
+        respond.addTransform(new Transform(respond.getCurrentQuery(),
+                respond.getCurrentQuery(),
+                "OK",
+                "runEqualConditionInComparisonOperators",
+                false
+        ));
+        respond.setChanged(false);
         return respond;
     }
 

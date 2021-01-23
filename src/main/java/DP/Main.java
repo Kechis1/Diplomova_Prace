@@ -11,11 +11,11 @@ public class Main {
     public static void main(String[] args) {
         // init data
         DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        String query = "SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID WHERE SDT.SID = SDT.SID ORDER BY SDT.SID";
+        String query = "SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID WHERE SDT.SID = SDE.SID";
         Respond respond = new Respond(query, query);
 
         // run methods
-        respond = TSqlRunner.runEqualConditionInComparisonOperators(metadata, respond);
+        respond = TSqlRunner.runRedundantJoinConditions(metadata, respond);
 
         for (Transform r : respond.getQueryTransforms()) {
             System.out.println(r.getOutputQuery());

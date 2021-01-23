@@ -1,5 +1,7 @@
 package DP.Database;
 
+import DP.Database.Respond.Respond;
+import DP.Database.Respond.Transform;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlParser;
 
@@ -45,11 +47,19 @@ public class ConditionItem {
         return items;
     }
 
-    public static boolean duplicatesExists(DatabaseMetadata metadata, HashMap<Integer, List<ConditionItem>> conditions) {
+    public static boolean duplicatesExists(Respond respond, DatabaseMetadata metadata, HashMap<Integer, List<ConditionItem>> conditions) {
         for (int x = 0; x < conditions.size(); x++) {
             for (int i = 0; i < conditions.get(x).size() - 1; i++) {
                 for (int j = i + 1; j < conditions.get(x).size(); j++) {
                     if (!conditions.get(x).get(i).compareToCondition(metadata, conditions.get(x).get(j))) {
+                        respond.addTransform(new Transform(respond.getCurrentQuery(),
+                                (respond.getCurrentQuery().substring(0, conditions.get(x).get(j).getStartAt()) + respond.getCurrentQuery().substring(conditions.get(x).get(j).getStopAt())).trim(),
+                                UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION",
+                                "runRedundantJoinConditions",
+                                true
+                        ));
+                        respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
+                        respond.setChanged(true);
                         return true;
                     }
                 }
@@ -58,10 +68,18 @@ public class ConditionItem {
         return false;
     }
 
-    public static boolean duplicatesExists(DatabaseMetadata metadata, List<ConditionItem> conditions) {
+    public static boolean duplicatesExists(Respond respond, DatabaseMetadata metadata, List<ConditionItem> conditions) {
         for (int i = 0; i < conditions.size() - 1; i++) {
             for (int j = i + 1; j < conditions.size(); j++) {
                 if (!conditions.get(i).compareToCondition(metadata, conditions.get(j))) {
+                    respond.addTransform(new Transform(respond.getCurrentQuery(),
+                            (respond.getCurrentQuery().substring(0, conditions.get(j).getStartAt()) + respond.getCurrentQuery().substring(conditions.get(j).getStopAt())).trim(),
+                            UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION",
+                            "runRedundantJoinConditions",
+                            true
+                    ));
+                    respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
+                    respond.setChanged(true);
                     return true;
                 }
             }
@@ -240,7 +258,6 @@ public class ConditionItem {
                 conditionItem.getLeftSideDataType() == ConditionDataType.COLUMN && conditionItem.getLeftSideDataType() == ConditionDataType.COLUMN) {
             if (metadata.columnsEqual(getLeftSideColumnItem(), conditionItem.getLeftSideColumnItem()) &&
                     metadata.columnsEqual(getRightSideColumnItem(), conditionItem.getRightSideColumnItem())) {
-                System.out.println(UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION");
                 return false;
             }
         }

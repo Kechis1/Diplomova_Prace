@@ -340,15 +340,20 @@ public class TSqlRunner {
         if (!(leftJoinConditions.size() != 0 || rightJoinConditions.size() != 0 || fullOuterJoinConditions.size() != 0)) {
             innerConditions.addAll(whereConditions);
         }
-        boolean foundDuplicateCondition = ConditionItem.duplicatesExists(metadata, innerConditions);
-        foundDuplicateCondition |= ConditionItem.duplicatesExists(metadata, leftJoinConditions);
-        foundDuplicateCondition |= ConditionItem.duplicatesExists(metadata, rightJoinConditions);
-        foundDuplicateCondition |= ConditionItem.duplicatesExists(metadata, fullOuterJoinConditions);
+        boolean foundDuplicateCondition = ConditionItem.duplicatesExists(respond, metadata, innerConditions);
+        foundDuplicateCondition |= ConditionItem.duplicatesExists(respond, metadata, leftJoinConditions);
+        foundDuplicateCondition |= ConditionItem.duplicatesExists(respond, metadata, rightJoinConditions);
+        foundDuplicateCondition |= ConditionItem.duplicatesExists(respond, metadata, fullOuterJoinConditions);
 
         if (!foundDuplicateCondition) {
-            System.out.println("OK");
+            respond.addTransform(new Transform(respond.getCurrentQuery(),
+                    respond.getCurrentQuery(),
+                    "OK",
+                    "runRedundantJoinConditions",
+                    false
+            ));
+            respond.setChanged(false);
         }
-        respond.setChanged(foundDuplicateCondition);
         return respond;
     }
 
@@ -401,7 +406,6 @@ public class TSqlRunner {
                     false
             ));
             respond.setChanged(false);
-            return respond;
         }
         return respond;
     }

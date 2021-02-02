@@ -191,7 +191,7 @@ public class DatabaseMetadata {
 
         for (DatabaseTable item : tables) {
             for (DatabaseTable DatabaseTable : inTables) {
-                if (DatabaseTable.getTableName().equals(item.getTableName())) {
+                if (DatabaseTable.getTableName() != null && DatabaseTable.getTableName().equals(item.getTableName())) {
                     item.setTableAlias(DatabaseTable.getTableAlias());
                     newTables.add(item);
 

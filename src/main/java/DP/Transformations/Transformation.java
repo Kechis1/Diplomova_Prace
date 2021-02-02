@@ -1,16 +1,16 @@
 package DP.Transformations;
 
-public class Transform {
+public class Transformation {
     String inputQuery;
     String outputQuery;
     String message;
     String action;
     boolean changed;
 
-    public Transform() {
+    public Transformation() {
     }
 
-    public Transform(String inputQuery, String outputQuery, String message, String action, boolean changed) {
+    public Transformation(String inputQuery, String outputQuery, String message, String action, boolean changed) {
         this.inputQuery = inputQuery;
         this.outputQuery = outputQuery;
         this.message = message;

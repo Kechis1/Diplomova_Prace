@@ -7,13 +7,12 @@ import DP.antlr4.tsql.parser.TSqlParser;
 import DP.antlr4.tsql.parser.TSqlParserBaseListener;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ExistsTransformation extends QueryHandler {
+    private final String action = "ExistsTransformation";
 
     public ExistsTransformation(QueryHandler handler) {
         super(handler);
@@ -82,10 +81,10 @@ public class ExistsTransformation extends QueryHandler {
                             (!exist.getTable().isEmpty() &&
                                     (exist.getConditions() == null || exist.getConditions().size() == 0 ||
                                             (exist.getConditions().size() == 1 && ConditionItem.isComparingForeignKey(fromTable, exist.getTable(), exist.getConditions().get(0)))))))) {
-                query.addTransform(new Transform(query.getCurrentQuery(),
+                query.addTransform(new Transformation(query.getCurrentQuery(),
                         (query.getCurrentQuery().substring(0, exist.getPredicateStartAt()) + query.getCurrentQuery().substring(exist.getPredicateStopAt() + 1)).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS",
-                        "runEqualConditionInOperatorExists",
+                        action,
                         true
                 ));
                 query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
@@ -93,10 +92,10 @@ public class ExistsTransformation extends QueryHandler {
                 return query;
             }
         }
-        query.addTransform(new Transform(query.getCurrentQuery(),
+        query.addTransform(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
-                "runEqualConditionInOperatorExists",
+                action,
                 false
         ));
         query.setChanged(false);

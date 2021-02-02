@@ -1,7 +1,7 @@
 package DP.Database;
 
 import DP.Transformations.Query;
-import DP.Transformations.Transform;
+import DP.Transformations.Transformation;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlParser;
 
@@ -52,7 +52,7 @@ public class ConditionItem {
             for (int i = 0; i < conditions.get(x).size() - 1; i++) {
                 for (int j = i + 1; j < conditions.get(x).size(); j++) {
                     if (!conditions.get(x).get(i).compareToCondition(metadata, conditions.get(x).get(j))) {
-                        query.addTransform(new Transform(query.getCurrentQuery(),
+                        query.addTransform(new Transformation(query.getCurrentQuery(),
                                 (query.getCurrentQuery().substring(0, conditions.get(x).get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(x).get(j).getStopAt())).trim(),
                                 UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION",
                                 "runRedundantJoinConditions",
@@ -72,7 +72,7 @@ public class ConditionItem {
         for (int i = 0; i < conditions.size() - 1; i++) {
             for (int j = i + 1; j < conditions.size(); j++) {
                 if (!conditions.get(i).compareToCondition(metadata, conditions.get(j))) {
-                    query.addTransform(new Transform(query.getCurrentQuery(),
+                    query.addTransform(new Transformation(query.getCurrentQuery(),
                             (query.getCurrentQuery().substring(0, conditions.get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(j).getStopAt())).trim(),
                             UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION",
                             "runRedundantJoinConditions",

@@ -1,7 +1,7 @@
 package DP.Database;
 
 import DP.Transformations.Query;
-import DP.Transformations.Transform;
+import DP.Transformations.Transformation;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlParser;
 
@@ -194,7 +194,7 @@ public class DatabaseTable {
                     currentQuery = (query.getCurrentQuery().substring(0, joinTable.getStartAt()) + query.getCurrentQuery().substring(joinTable.getStopAt() + 1)).trim();
                 }
 
-                query.addTransform(new Transform(query.getCurrentQuery(),
+                query.addTransform(new Transformation(query.getCurrentQuery(),
                         currentQuery,
                         UnnecessaryStatementException.messageUnnecessaryStatement + " " + typeOfJoin + " JOIN",
                         "runRedundantJoinTables",

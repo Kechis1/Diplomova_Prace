@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GroupByTransformation extends QueryHandler {
+    private final String action = "GroupByTransformation";
 
     public GroupByTransformation(QueryHandler handler) {
         super(handler);
@@ -22,7 +23,11 @@ public class GroupByTransformation extends QueryHandler {
 
     @Override
     public void handleQuery(Query query) {
-        super.handleQuery(query);
+    /*    if (RequestType.DEFEND_CASTLE == req.getRequestType()) {
+            req.markHandled();
+        } else {
+            super.handleQuery(query);
+        }*/
     }
 
     @Override
@@ -64,20 +69,20 @@ public class GroupByTransformation extends QueryHandler {
 
         if (allAggregateFunctions.isEmpty()) {
             if (columnsInGroupBy.containsAll(newMetadata.getAllPrimaryKeys())) {
-                query.addTransform(new Transform(query.getCurrentQuery(),
+                query.addTransform(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery().substring(0, query.getCurrentQuery().indexOf("GROUP BY")).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY",
-                        "runGroupBy",
+                        action,
                         true
                 ));
                 query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size() - 1).getOutputQuery());
                 query.setChanged(true);
                 return query;
             }
-            query.addTransform(new Transform(query.getCurrentQuery(),
+            query.addTransform(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
-                    "runGroupBy",
+                    action,
                     false
             ));
             query.setChanged(false);
@@ -86,19 +91,19 @@ public class GroupByTransformation extends QueryHandler {
 
         if (columnsInGroupBy.containsAll(newMetadata.getAllPrimaryKeys()) && !aggregateFunctionsInSelect.isEmpty()) {
             for (AggregateItem item : aggregateFunctionsInSelect) {
-                Transform transform;
+                Transformation transform;
                 if (item.getFunctionName().equals("COUNT")) {
-                    transform = new Transform(query.getCurrentQuery(),
+                    transform = new Transformation(query.getCurrentQuery(),
                             (query.getCurrentQuery().substring(0, item.getStartAt()) + "1" + query.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
                             item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " 1",
-                            "runGroupBy",
+                            action,
                             true
                     );
                 } else {
-                    transform = new Transform(query.getCurrentQuery(),
+                    transform = new Transformation(query.getCurrentQuery(),
                             (query.getCurrentQuery().substring(0, item.getStartAt()) + item.getFullColumnName() + query.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
                             item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " " + item.getFullColumnName(),
-                            "runGroupBy",
+                            action,
                             true
                     );
                 }
@@ -109,10 +114,10 @@ public class GroupByTransformation extends QueryHandler {
             return query;
         }
 
-        query.addTransform(new Transform(query.getCurrentQuery(),
+        query.addTransform(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
-                "runGroupBy",
+                action,
                 false
         ));
         query.setChanged(false);

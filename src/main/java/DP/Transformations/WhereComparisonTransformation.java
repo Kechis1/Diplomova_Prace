@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class WhereComparisonTransformation extends QueryHandler {
+    private final String action = "WhereComparisonTransformation";
 
     public WhereComparisonTransformation(QueryHandler handler) {
         super(handler);
@@ -47,10 +48,10 @@ public class WhereComparisonTransformation extends QueryHandler {
             }
 
             if (!isConditionNecessary) {
-                query.addTransform(new Transform(query.getCurrentQuery(),
+                query.addTransform(new Transformation(query.getCurrentQuery(),
                         (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION",
-                        "runEqualConditionInComparisonOperators",
+                        action,
                         true
                 ));
                 query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
@@ -58,10 +59,10 @@ public class WhereComparisonTransformation extends QueryHandler {
                 return query;
             }
         }
-        query.addTransform(new Transform(query.getCurrentQuery(),
+        query.addTransform(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
-                "runEqualConditionInComparisonOperators",
+                action,
                 false
         ));
         query.setChanged(false);

@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class JoinConditionTransformation extends QueryHandler {
+    private final String action = "JoinConditionTransformation";
 
     public JoinConditionTransformation(QueryHandler handler) {
         super(handler);
@@ -66,10 +67,10 @@ public class JoinConditionTransformation extends QueryHandler {
         foundDuplicateCondition |= ConditionItem.duplicatesExists(query, metadata, fullOuterJoinConditions);
 
         if (!foundDuplicateCondition) {
-            query.addTransform(new Transform(query.getCurrentQuery(),
+            query.addTransform(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
-                    "runRedundantJoinConditions",
+                    action,
                     false
             ));
             query.setChanged(false);

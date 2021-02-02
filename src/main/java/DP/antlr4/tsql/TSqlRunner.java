@@ -2,7 +2,7 @@ package DP.antlr4.tsql;
 
 import DP.Database.*;
 import DP.Transformations.Query;
-import DP.Transformations.Transform;
+import DP.Transformations.Transformation;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlLexer;
 import DP.antlr4.tsql.parser.TSqlParser;
@@ -53,7 +53,7 @@ public class TSqlRunner {
 
         if (allAggregateFunctions.isEmpty()) {
             if (columnsInGroupBy.containsAll(newMetadata.getAllPrimaryKeys())) {
-                query.addTransform(new Transform(query.getCurrentQuery(),
+                query.addTransform(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery().substring(0, query.getCurrentQuery().indexOf("GROUP BY")).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY",
                         "runGroupBy",
@@ -63,7 +63,7 @@ public class TSqlRunner {
                 query.setChanged(true);
                 return query;
             }
-            query.addTransform(new Transform(query.getCurrentQuery(),
+            query.addTransform(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
                     "runGroupBy",
@@ -75,16 +75,16 @@ public class TSqlRunner {
 
         if (columnsInGroupBy.containsAll(newMetadata.getAllPrimaryKeys()) && !aggregateFunctionsInSelect.isEmpty()) {
             for (AggregateItem item : aggregateFunctionsInSelect) {
-                Transform transform;
+                Transformation transform;
                 if (item.getFunctionName().equals("COUNT")) {
-                    transform = new Transform(query.getCurrentQuery(),
+                    transform = new Transformation(query.getCurrentQuery(),
                             (query.getCurrentQuery().substring(0, item.getStartAt()) + "1" + query.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
                             item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " 1",
                             "runGroupBy",
                             true
                     );
                 } else {
-                    transform = new Transform(query.getCurrentQuery(),
+                    transform = new Transformation(query.getCurrentQuery(),
                             (query.getCurrentQuery().substring(0, item.getStartAt()) + item.getFullColumnName() + query.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
                             item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " " + item.getFullColumnName(),
                             "runGroupBy",
@@ -98,7 +98,7 @@ public class TSqlRunner {
             return query;
         }
 
-        query.addTransform(new Transform(query.getCurrentQuery(),
+        query.addTransform(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
                 "runGroupBy",
@@ -136,7 +136,7 @@ public class TSqlRunner {
         }, select);
 
         if (!foundExistsNotConstant.isEmpty()) {
-            query.addTransform(new Transform(query.getCurrentQuery(),
+            query.addTransform(new Transformation(query.getCurrentQuery(),
                     (query.getCurrentQuery().substring(0, foundExistsNotConstant.get(0).getSelectListStartAt()) + "1" + query.getCurrentQuery().substring(foundExistsNotConstant.get(0).getSelectListStopAt() + 1)).trim(),
                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                     "runSelectClause",
@@ -151,7 +151,7 @@ public class TSqlRunner {
 
         ColumnItem equals = ColumnItem.duplicatesExists(allColumnsInSelect);
         if (equals != null) {
-            query.addTransform(new Transform(query.getCurrentQuery(),
+            query.addTransform(new Transformation(query.getCurrentQuery(),
                     (query.getCurrentQuery().substring(0, equals.getStartAt()) + query.getCurrentQuery().substring(equals.getStopAt() + 1)).trim(),
                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
                     "runSelectClause",
@@ -164,7 +164,7 @@ public class TSqlRunner {
 
         for (ColumnItem item : allColumnsInSelect) {
             if (item.isConstant() && foundUnion.isEmpty()) {
-                query.addTransform(new Transform(query.getCurrentQuery(),
+                query.addTransform(new Transformation(query.getCurrentQuery(),
                         (query.getCurrentQuery().substring(0, item.getStartAt()) + query.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
                         UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
                         "runSelectClause",
@@ -195,7 +195,7 @@ public class TSqlRunner {
                         bothInSelect++;
                     }
                     if (bothInSelect == 1) {
-                        query.addTransform(new Transform(query.getCurrentQuery(),
+                        query.addTransform(new Transformation(query.getCurrentQuery(),
                                 (query.getCurrentQuery().substring(0, column.getStartAt()) + query.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
                                 UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
                                 "runSelectClause",
@@ -212,7 +212,7 @@ public class TSqlRunner {
                                 ((condition.getLeftSideColumnItem().equals(inSelect.get(0)) && condition.getRightSideDataType() != ConditionDataType.COLUMN) ||
                                         (condition.getRightSideColumnItem().equals(inSelect.get(0)) && condition.getLeftSideDataType() != ConditionDataType.COLUMN))) {
                             String value = condition.getLeftSideDataType() != ConditionDataType.COLUMN ? condition.getLeftSideValue() : condition.getRightSideValue();
-                            query.addTransform(new Transform(query.getCurrentQuery(),
+                            query.addTransform(new Transformation(query.getCurrentQuery(),
                                     (query.getCurrentQuery().substring(0, columnInSelect.getStartAt()) + value + " AS " + columnInSelect.getName() + query.getCurrentQuery().substring(columnInSelect.getStopAt() + 1)).trim(),
                                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                                     "runSelectClause",
@@ -233,7 +233,7 @@ public class TSqlRunner {
                     if ((item.getLeftSideDataType() == ConditionDataType.COLUMN && column.equals(item.getLeftSideColumnItem()) && item.getRightSideDataType() != ConditionDataType.COLUMN) ||
                             (item.getRightSideDataType() == ConditionDataType.COLUMN && column.equals(item.getRightSideColumnItem()) && item.getLeftSideDataType() != ConditionDataType.COLUMN)) {
                         String value = item.getLeftSideDataType() != ConditionDataType.COLUMN ? item.getLeftSideValue() : item.getRightSideValue();
-                        query.addTransform(new Transform(query.getCurrentQuery(),
+                        query.addTransform(new Transformation(query.getCurrentQuery(),
                                 (query.getCurrentQuery().substring(0, column.getStartAt()) + value + " AS " + column.getName() + query.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
                                 UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                                 "runSelectClause",
@@ -247,7 +247,7 @@ public class TSqlRunner {
             }
         }
 
-        query.addTransform(new Transform(query.getCurrentQuery(),
+        query.addTransform(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
                 "runSelectClause",
@@ -283,7 +283,7 @@ public class TSqlRunner {
             }
 
             if (!isConditionNecessary) {
-                query.addTransform(new Transform(query.getCurrentQuery(),
+                query.addTransform(new Transformation(query.getCurrentQuery(),
                         (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION",
                         "runEqualConditionInComparisonOperators",
@@ -294,7 +294,7 @@ public class TSqlRunner {
                 return query;
             }
         }
-        query.addTransform(new Transform(query.getCurrentQuery(),
+        query.addTransform(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
                 "runEqualConditionInComparisonOperators",
@@ -346,7 +346,7 @@ public class TSqlRunner {
         foundDuplicateCondition |= ConditionItem.duplicatesExists(query, metadata, fullOuterJoinConditions);
 
         if (!foundDuplicateCondition) {
-            query.addTransform(new Transform(query.getCurrentQuery(),
+            query.addTransform(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
                     "runRedundantJoinConditions",
@@ -379,7 +379,7 @@ public class TSqlRunner {
         }, select);
 
         if (isDistinctInSelect.isEmpty()) {
-            query.addTransform(new Transform(query.getCurrentQuery(),
+            query.addTransform(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
                     "runRedundantJoinTables",
@@ -399,7 +399,7 @@ public class TSqlRunner {
                 allColumnsInSelect, true, metadata.setNullableColumns(innerConditions), true, fromTable.get(0));
 
         if (!foundRedundantJoin) {
-            query.addTransform(new Transform(query.getCurrentQuery(),
+            query.addTransform(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
                     "runRedundantJoinTables",
@@ -485,7 +485,7 @@ public class TSqlRunner {
                 }
             }
             if (!currentNecessary) {
-                query.addTransform(new Transform(query.getCurrentQuery(),
+                query.addTransform(new Transformation(query.getCurrentQuery(),
                         (query.getCurrentQuery().substring(0, conditions.get(i).getStartAt()) + query.getCurrentQuery().substring(conditions.get(i).getStopAt() + 1)).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION BETWEEN",
                         "runEqualConditionInOperatorBetween",
@@ -497,7 +497,7 @@ public class TSqlRunner {
             }
         }
 
-        query.addTransform(new Transform(query.getCurrentQuery(),
+        query.addTransform(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
                 "runEqualConditionInOperatorBetween",
@@ -564,7 +564,7 @@ public class TSqlRunner {
                             (!exist.getTable().isEmpty() &&
                                     (exist.getConditions() == null || exist.getConditions().size() == 0 ||
                                             (exist.getConditions().size() == 1 && ConditionItem.isComparingForeignKey(fromTable, exist.getTable(), exist.getConditions().get(0)))))))) {
-                query.addTransform(new Transform(query.getCurrentQuery(),
+                query.addTransform(new Transformation(query.getCurrentQuery(),
                         (query.getCurrentQuery().substring(0, exist.getPredicateStartAt()) + query.getCurrentQuery().substring(exist.getPredicateStopAt() + 1)).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS",
                         "runEqualConditionInOperatorExists",
@@ -575,7 +575,7 @@ public class TSqlRunner {
                 return query;
             }
         }
-        query.addTransform(new Transform(query.getCurrentQuery(),
+        query.addTransform(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
                 "runEqualConditionInOperatorExists",
@@ -619,7 +619,7 @@ public class TSqlRunner {
         for (ConditionItem condition : conditions) {
             if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
                 if (SQLLogicalOperators.like(condition.getLeftSideValue(), condition.getRightSideValue())) {
-                    query.addTransform(new Transform(query.getCurrentQuery(),
+                    query.addTransform(new Transformation(query.getCurrentQuery(),
                             (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                             UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
                             "runEqualConditionInOperatorLike",
@@ -633,7 +633,7 @@ public class TSqlRunner {
                     (condition.getRightSideDataType() == ConditionDataType.COLUMN || condition.getRightSideDataType() == ConditionDataType.STRING)) {
                 if (condition.getRightSideDataType() == ConditionDataType.STRING) {
                     if (condition.getRightSideValue().matches("^[%]+$")) {
-                        query.addTransform(new Transform(query.getCurrentQuery(),
+                        query.addTransform(new Transformation(query.getCurrentQuery(),
                                 (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                                 UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
                                 "runEqualConditionInOperatorLike",
@@ -644,7 +644,7 @@ public class TSqlRunner {
                         return query;
                     }
                 } else if (newMetadata.columnsEqual(condition.getLeftSideColumnItem(), condition.getRightSideColumnItem())) {
-                    query.addTransform(new Transform(query.getCurrentQuery(),
+                    query.addTransform(new Transformation(query.getCurrentQuery(),
                             (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                             UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
                             "runEqualConditionInOperatorLike",
@@ -656,7 +656,7 @@ public class TSqlRunner {
                 }
             }
         }
-        query.addTransform(new Transform(query.getCurrentQuery(),
+        query.addTransform(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
                 "runEqualConditionInOperatorLike",

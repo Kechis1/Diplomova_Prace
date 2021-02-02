@@ -1,19 +1,18 @@
 package DP.Transformations;
 
 import DP.Database.*;
-import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlParseWalker;
 import DP.antlr4.tsql.parser.TSqlParser;
 import DP.antlr4.tsql.parser.TSqlParserBaseListener;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class JoinTableTransformation extends QueryHandler {
+    private final String action = "JoinTableTransformation";
 
     public JoinTableTransformation(QueryHandler handler) {
         super(handler);
@@ -47,10 +46,10 @@ public class JoinTableTransformation extends QueryHandler {
         }, select);
 
         if (isDistinctInSelect.isEmpty()) {
-            query.addTransform(new Transform(query.getCurrentQuery(),
+            query.addTransform(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
-                    "runRedundantJoinTables",
+                    action,
                     false
             ));
             query.setChanged(false);
@@ -67,10 +66,10 @@ public class JoinTableTransformation extends QueryHandler {
                 allColumnsInSelect, true, metadata.setNullableColumns(innerConditions), true, fromTable.get(0));
 
         if (!foundRedundantJoin) {
-            query.addTransform(new Transform(query.getCurrentQuery(),
+            query.addTransform(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
-                    "runRedundantJoinTables",
+                    action,
                     false
             ));
             query.setChanged(false);

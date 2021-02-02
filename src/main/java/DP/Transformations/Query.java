@@ -6,7 +6,7 @@ import java.util.List;
 public class Query {
     String originalQuery;
     String currentQuery;
-    List<Transform> queryTransforms;
+    List<Transformation> queryTransforms;
     boolean changed;
 
     public Query(String originalQuery, String currentQuery) {
@@ -30,11 +30,11 @@ public class Query {
         this.currentQuery = currentQuery;
     }
 
-    public List<Transform> getQueryTransforms() {
+    public List<Transformation> getQueryTransforms() {
         return queryTransforms;
     }
 
-    public void setQueryTransforms(List<Transform> queryTransforms) {
+    public void setQueryTransforms(List<Transformation> queryTransforms) {
         this.queryTransforms = queryTransforms;
     }
 
@@ -46,7 +46,7 @@ public class Query {
         this.changed = changed;
     }
 
-    public void addTransform(Transform transform) {
+    public void addTransform(Transformation transform) {
         if (this.queryTransforms == null) {
             this.queryTransforms = new ArrayList<>();
         }

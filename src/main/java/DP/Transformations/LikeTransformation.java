@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LikeTransformation extends QueryHandler {
+    private final String action = "LikeTransformation";
 
     public LikeTransformation(QueryHandler handler) {
         super(handler);
@@ -57,10 +58,10 @@ public class LikeTransformation extends QueryHandler {
         for (ConditionItem condition : conditions) {
             if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
                 if (SQLLogicalOperators.like(condition.getLeftSideValue(), condition.getRightSideValue())) {
-                    query.addTransform(new Transform(query.getCurrentQuery(),
+                    query.addTransform(new Transformation(query.getCurrentQuery(),
                             (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                             UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
-                            "runEqualConditionInOperatorLike",
+                            action,
                             true
                     ));
                     query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
@@ -71,10 +72,10 @@ public class LikeTransformation extends QueryHandler {
                     (condition.getRightSideDataType() == ConditionDataType.COLUMN || condition.getRightSideDataType() == ConditionDataType.STRING)) {
                 if (condition.getRightSideDataType() == ConditionDataType.STRING) {
                     if (condition.getRightSideValue().matches("^[%]+$")) {
-                        query.addTransform(new Transform(query.getCurrentQuery(),
+                        query.addTransform(new Transformation(query.getCurrentQuery(),
                                 (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                                 UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
-                                "runEqualConditionInOperatorLike",
+                                action,
                                 true
                         ));
                         query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
@@ -82,10 +83,10 @@ public class LikeTransformation extends QueryHandler {
                         return query;
                     }
                 } else if (newMetadata.columnsEqual(condition.getLeftSideColumnItem(), condition.getRightSideColumnItem())) {
-                    query.addTransform(new Transform(query.getCurrentQuery(),
+                    query.addTransform(new Transformation(query.getCurrentQuery(),
                             (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                             UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
-                            "runEqualConditionInOperatorLike",
+                            action,
                             true
                     ));
                     query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
@@ -94,10 +95,10 @@ public class LikeTransformation extends QueryHandler {
                 }
             }
         }
-        query.addTransform(new Transform(query.getCurrentQuery(),
+        query.addTransform(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
-                "runEqualConditionInOperatorLike",
+                action,
                 false
         ));
         query.setChanged(false);

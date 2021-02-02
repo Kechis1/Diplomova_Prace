@@ -14,7 +14,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BetweenTransformation extends QueryHandler {
-
+    private final String action = "BetweenTransformation";
+    
+    
     public BetweenTransformation(QueryHandler handler) {
         super(handler);
     }
@@ -100,10 +102,10 @@ public class BetweenTransformation extends QueryHandler {
                 }
             }
             if (!currentNecessary) {
-                query.addTransform(new Transform(query.getCurrentQuery(),
+                query.addTransform(new Transformation(query.getCurrentQuery(),
                         (query.getCurrentQuery().substring(0, conditions.get(i).getStartAt()) + query.getCurrentQuery().substring(conditions.get(i).getStopAt() + 1)).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION BETWEEN",
-                        "runEqualConditionInOperatorBetween",
+                        action,
                         true
                 ));
                 query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
@@ -112,10 +114,10 @@ public class BetweenTransformation extends QueryHandler {
             }
         }
 
-        query.addTransform(new Transform(query.getCurrentQuery(),
+        query.addTransform(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
-                "runEqualConditionInOperatorBetween",
+                action,
                 false
         ));
         query.setChanged(false);

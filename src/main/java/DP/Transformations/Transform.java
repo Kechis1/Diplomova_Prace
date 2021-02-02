@@ -1,4 +1,4 @@
-package DP.Database.Respond;
+package DP.Transformations;
 
 public class Transform {
     String inputQuery;

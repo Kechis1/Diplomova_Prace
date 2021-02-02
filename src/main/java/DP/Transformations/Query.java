@@ -1,15 +1,15 @@
-package DP.Database.Respond;
+package DP.Transformations;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Respond {
+public class Query {
     String originalQuery;
     String currentQuery;
     List<Transform> queryTransforms;
     boolean changed;
 
-    public Respond(String originalQuery, String currentQuery) {
+    public Query(String originalQuery, String currentQuery) {
         this.originalQuery = originalQuery;
         this.currentQuery = currentQuery;
     }
@@ -55,7 +55,7 @@ public class Respond {
 
     @Override
     public String toString() {
-        return "Respond{" +
+        return "Query{" +
                 "originalQuery='" + originalQuery + '\'' +
                 ", currentQuery='" + currentQuery + '\'' +
                 ", queryTransforms=" + queryTransforms +

@@ -1,8 +1,8 @@
 package tsql;
 
 import DP.Database.DatabaseMetadata;
-import DP.Database.Respond.Respond;
 import DP.Exceptions.UnnecessaryStatementException;
+import DP.Transformations.Query;
 import DP.antlr4.tsql.TSqlRunner;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,37 +29,37 @@ public class GroupByTest {
 
     @ParameterizedTest(name = "doFindUnnecessaryGroupByTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryGroupBySource")
-    void doFindUnnecessaryGroupByTest(String query, String resultQuery) {
-        Respond respond = new Respond(query, query);
-        TSqlRunner.runGroupBy(metadata, respond);
-        assertTrue(respond.isChanged());
-        assertNotEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
-        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY", respond.getQueryTransforms().get(0).getMessage());
-        assertEquals(respond.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+    void doFindUnnecessaryGroupByTest(String requestQuery, String resultQuery) {
+        Query query = new Query(requestQuery, requestQuery);
+        TSqlRunner.runGroupBy(metadata, query);
+        assertTrue(query.isChanged());
+        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY", query.getQueryTransforms().get(0).getMessage());
+        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
     }
 
     @ParameterizedTest(name = "doFindNecessaryGroupByTest {index} query = {0}")
     @MethodSource("doFindNecessaryGroupBySource")
-    void doFindNecessaryGroupByTest(String query) {
-        Respond respond = new Respond(query, query);
-        TSqlRunner.runGroupBy(metadata, respond);
-        assertFalse(respond.isChanged());
-        assertEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
-        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
-        assertEquals("OK", respond.getQueryTransforms().get(0).getMessage());
+    void doFindNecessaryGroupByTest(String requestQuery) {
+        Query query = new Query(requestQuery, requestQuery);
+        TSqlRunner.runGroupBy(metadata, query);
+        assertFalse(query.isChanged());
+        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
+        assertEquals("OK", query.getQueryTransforms().get(0).getMessage());
     }
 
     @ParameterizedTest(name = "doFindRewritableAggregateFunctionsTest {index} query = {0}, resultQuery = {1}, message = {2}")
     @MethodSource("doFindRewritableAggregateFunctionsSource")
-    void doFindRewrittenableAggregateFunctionsTest(String query, String resultQuery, String message) {
-        Respond respond = new Respond(query, query);
-        TSqlRunner.runGroupBy(metadata, respond);
-        assertTrue(respond.isChanged());
-        assertNotEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
-        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
-        assertEquals(respond.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
-        assertEquals(respond.getQueryTransforms().get(0).getMessage(), message);
+    void doFindRewrittenableAggregateFunctionsTest(String requestQuery, String resultQuery, String message) {
+        Query query = new Query(requestQuery, requestQuery);
+        TSqlRunner.runGroupBy(metadata, query);
+        assertTrue(query.isChanged());
+        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
+        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertEquals(query.getQueryTransforms().get(0).getMessage(), message);
     }
 
 

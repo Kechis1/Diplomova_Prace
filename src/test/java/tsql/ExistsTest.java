@@ -3,8 +3,8 @@ package tsql;
 import DP.Database.ColumnItem;
 import DP.Database.DatabaseMetadata;
 import DP.Database.DatabaseTable;
-import DP.Database.Respond.Respond;
 import DP.Exceptions.UnnecessaryStatementException;
+import DP.Transformations.Query;
 import DP.antlr4.tsql.TSqlRunner;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,53 +30,53 @@ public class ExistsTest {
 
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryConditionSource")
-    void doFindUnnecessaryConditionTest(String query, String resultQuery) {
-        Respond respond = new Respond(query, query);
-        TSqlRunner.runEqualConditionInOperatorExists(metadata, respond);
-        assertNotEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
-        assertEquals(respond.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
-        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS", respond.getQueryTransforms().get(0).getMessage());
-        assertTrue(respond.isChanged());
+    void doFindUnnecessaryConditionTest(String requestQuery, String resultQuery) {
+        Query query = new Query(requestQuery, requestQuery);
+        TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
+        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS", query.getQueryTransforms().get(0).getMessage());
+        assertTrue(query.isChanged());
     }
 
     @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionSource")
-    void doFindNecessaryConditionTest(String query) {
-        Respond respond = new Respond(query, query);
-        TSqlRunner.runEqualConditionInOperatorExists(metadata, respond);
-        assertEquals("OK", respond.getQueryTransforms().get(0).getMessage());
-        assertEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
-        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
-        assertFalse(respond.isChanged());
+    void doFindNecessaryConditionTest(String requestQuery) {
+        Query query = new Query(requestQuery, requestQuery);
+        TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
+        assertEquals("OK", query.getQueryTransforms().get(0).getMessage());
+        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
+        assertFalse(query.isChanged());
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryConditionBasedOnRecordsCountTest {index} query = {0}, recordsCount = {1}, resultQuery = {2}")
     @MethodSource("doFindUnnecessaryConditionBasedOnRecordsCountSource")
-    void doFindUnnecessaryConditionBasedOnRecordsCountTest(String query, int recordsCount, String resultQuery) {
+    void doFindUnnecessaryConditionBasedOnRecordsCountTest(String requestQuery, int recordsCount, String resultQuery) {
         DatabaseTable table = metadata.findTable("STUDUJE", "SDT");
-        Respond respond = new Respond(query, query);
+        Query query = new Query(requestQuery, requestQuery);
         table.setRecordsCount(recordsCount);
-        TSqlRunner.runEqualConditionInOperatorExists(metadata, respond);
-        assertNotEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
-        assertEquals(respond.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
-        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS", respond.getQueryTransforms().get(0).getMessage());
-        assertTrue(respond.isChanged());
+        TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
+        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS", query.getQueryTransforms().get(0).getMessage());
+        assertTrue(query.isChanged());
     }
 
     @ParameterizedTest(name = "doFindNecessaryConditionBasedOnNullableForeignKeyTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionBasedOnNullableForeignKeySource")
-    void doFindUnnecessaryConditionBasedOnNullableForeignKeyTest(String query) {
+    void doFindUnnecessaryConditionBasedOnNullableForeignKeyTest(String requestQuery) {
         DatabaseTable table = metadata.findTable("STUDUJE", "SDT");
         ColumnItem column = table.findColumn("PID");
         column.setNullable(true);
-        Respond respond = new Respond(query, query);
-        TSqlRunner.runEqualConditionInOperatorExists(metadata, respond);
-        assertEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
-        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
-        assertEquals("OK", respond.getQueryTransforms().get(0).getMessage());
-        assertFalse(respond.isChanged());
+        Query query = new Query(requestQuery, requestQuery);
+        TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
+        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
+        assertEquals("OK", query.getQueryTransforms().get(0).getMessage());
+        assertFalse(query.isChanged());
     }
 
     public static Stream<Arguments> doFindUnnecessaryConditionBasedOnRecordsCountSource() {

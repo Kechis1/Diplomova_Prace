@@ -1,8 +1,8 @@
 package DP;
 
 import DP.Database.DatabaseMetadata;
-import DP.Database.Respond.Respond;
-import DP.Database.Respond.Transform;
+import DP.Transformations.Query;
+import DP.Transformations.Transform;
 import DP.antlr4.tsql.TSqlRunner;
 
 
@@ -11,16 +11,16 @@ public class Main {
     public static void main(String[] args) {
         // init data
         DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        String query = "SELECT * FROM DBO.PREDMET WHERE EXISTS (SELECT t1.a FROM (SELECT 1 as a) t1)";
-        Respond respond = new Respond(query, query);
+        String requestQuery = "SELECT * FROM DBO.PREDMET WHERE EXISTS (SELECT t1.a FROM (SELECT 1 as a) t1)";
+        Query query = new Query(requestQuery, requestQuery);
 
         // run methods
-        respond = TSqlRunner.runEqualConditionInOperatorExists(metadata, respond);
+        query = TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
 
-        for (Transform r : respond.getQueryTransforms()) {
+        for (Transform r : query.getQueryTransforms()) {
             System.out.println(r.getOutputQuery());
         }
 
-        System.out.println(respond);
+        System.out.println(query);
     }
 }

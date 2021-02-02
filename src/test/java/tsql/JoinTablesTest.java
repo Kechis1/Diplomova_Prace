@@ -3,8 +3,8 @@ package tsql;
 import DP.Database.ColumnItem;
 import DP.Database.DatabaseMetadata;
 import DP.Database.DatabaseTable;
-import DP.Database.Respond.Respond;
 import DP.Exceptions.UnnecessaryStatementException;
+import DP.Transformations.Query;
 import DP.antlr4.tsql.TSqlRunner;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,39 +30,39 @@ public class JoinTablesTest {
 
     @ParameterizedTest(name = "doFindNecessaryConditionWithNullableTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionWithNullableSource")
-    void doFindNecessaryConditionWithNullableTest(String query) {
+    void doFindNecessaryConditionWithNullableTest(String requestQuery) {
         DatabaseTable table = metadata.findTable("STUDENT", null);
         ColumnItem sId = table.findColumn("SID");
         sId.setNullable(true);
-        Respond respond = new Respond(query, query);
-        TSqlRunner.runRedundantJoinTables(metadata, respond);
-        assertEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
-        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
-        assertEquals("OK", respond.getQueryTransforms().get(0).getMessage());
-        assertFalse(respond.isChanged());
+        Query query = new Query(requestQuery, requestQuery);
+        TSqlRunner.runRedundantJoinTables(metadata, query);
+        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
+        assertEquals("OK", query.getQueryTransforms().get(0).getMessage());
+        assertFalse(query.isChanged());
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, resultQuery = {1}, message = {2}")
     @MethodSource("doFindUnnecessaryConditionSource")
-    void doFindUnnecessaryConditionTest(String query, String resultQuery, String message) {
-        Respond respond = new Respond(query, query);
-        TSqlRunner.runRedundantJoinTables(metadata, respond);
-        assertNotEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
-        assertEquals(respond.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
-        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " " + message, respond.getQueryTransforms().get(0).getMessage());
-        assertTrue(respond.isChanged());
+    void doFindUnnecessaryConditionTest(String requestQuery, String resultQuery, String message) {
+        Query query = new Query(requestQuery, requestQuery);
+        TSqlRunner.runRedundantJoinTables(metadata, query);
+        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " " + message, query.getQueryTransforms().get(0).getMessage());
+        assertTrue(query.isChanged());
     }
 
     @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionSource")
-    void doFindNecessaryConditionTest(String query) {
-        Respond respond = new Respond(query, query);
-        TSqlRunner.runRedundantJoinTables(metadata, respond);
-        assertEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
-        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
-        assertEquals("OK", respond.getQueryTransforms().get(0).getMessage());
-        assertFalse(respond.isChanged());
+    void doFindNecessaryConditionTest(String requestQuery) {
+        Query query = new Query(requestQuery, requestQuery);
+        TSqlRunner.runRedundantJoinTables(metadata, query);
+        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
+        assertEquals("OK", query.getQueryTransforms().get(0).getMessage());
+        assertFalse(query.isChanged());
     }
 
     public static Stream<Arguments> doFindNecessaryConditionWithNullableSource() {

@@ -1,7 +1,7 @@
 package DP.Database;
 
-import DP.Database.Respond.Respond;
-import DP.Database.Respond.Transform;
+import DP.Transformations.Query;
+import DP.Transformations.Transform;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlParser;
 
@@ -174,7 +174,7 @@ public class DatabaseTable {
         return newItems;
     }
 
-    public static boolean redundantJoinExists(Respond respond, String typeOfJoin, List<JoinTable> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides, DatabaseTable fromTable) {
+    public static boolean redundantJoinExists(Query query, String typeOfJoin, List<JoinTable> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides, DatabaseTable fromTable) {
         for (JoinTable joinTable : joins) {
             boolean found = false;
             DatabaseTable table = joinTable.getDatabaseTable();
@@ -188,20 +188,20 @@ public class DatabaseTable {
             if ((!checkNullable && !found) || (checkNullable && !found && !ConditionItem.isConditionColumnNullable(newConditions, table, checkBothSides))) {
                 String currentQuery;
                 if (typeOfJoin.equals("RIGHT") || typeOfJoin.equals("INNER")) {
-                    currentQuery = (respond.getCurrentQuery().substring(0, fromTable.getFromTableStartAt()) + joinTable.getDatabaseTable().getQueryName() +
-                            respond.getCurrentQuery().substring(fromTable.getFromTableStopAt() + 1, joinTable.getStartAt()) + respond.getCurrentQuery().substring(joinTable.getStopAt() + 1)).trim();
+                    currentQuery = (query.getCurrentQuery().substring(0, fromTable.getFromTableStartAt()) + joinTable.getDatabaseTable().getQueryName() +
+                            query.getCurrentQuery().substring(fromTable.getFromTableStopAt() + 1, joinTable.getStartAt()) + query.getCurrentQuery().substring(joinTable.getStopAt() + 1)).trim();
                 } else {
-                    currentQuery = (respond.getCurrentQuery().substring(0, joinTable.getStartAt()) + respond.getCurrentQuery().substring(joinTable.getStopAt() + 1)).trim();
+                    currentQuery = (query.getCurrentQuery().substring(0, joinTable.getStartAt()) + query.getCurrentQuery().substring(joinTable.getStopAt() + 1)).trim();
                 }
 
-                respond.addTransform(new Transform(respond.getCurrentQuery(),
+                query.addTransform(new Transform(query.getCurrentQuery(),
                         currentQuery,
                         UnnecessaryStatementException.messageUnnecessaryStatement + " " + typeOfJoin + " JOIN",
                         "runRedundantJoinTables",
                         true
                 ));
-                respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size() - 1).getOutputQuery());
-                respond.setChanged(true);
+                query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size() - 1).getOutputQuery());
+                query.setChanged(true);
                 return true;
             }
         }

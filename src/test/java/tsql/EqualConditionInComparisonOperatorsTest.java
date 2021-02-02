@@ -1,8 +1,8 @@
 package tsql;
 
 import DP.Database.DatabaseMetadata;
-import DP.Database.Respond.Respond;
 import DP.Exceptions.UnnecessaryStatementException;
+import DP.Transformations.Query;
 import DP.antlr4.tsql.TSqlRunner;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,25 +29,25 @@ public class EqualConditionInComparisonOperatorsTest {
 
     @ParameterizedTest(name="doFindUnnecessaryConditionTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryConditionSource")
-    void doFindUnnecessaryConditionTest(String query, String resultQuery) {
-        Respond respond = new Respond(query, query);
-        TSqlRunner.runEqualConditionInComparisonOperators(metadata, respond);
-        assertNotEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
-        assertEquals(respond.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
-        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION", respond.getQueryTransforms().get(0).getMessage());
-        assertTrue(respond.isChanged());
+    void doFindUnnecessaryConditionTest(String requestQuery, String resultQuery) {
+        Query query = new Query(requestQuery, requestQuery);
+        TSqlRunner.runEqualConditionInComparisonOperators(metadata, query);
+        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION", query.getQueryTransforms().get(0).getMessage());
+        assertTrue(query.isChanged());
     }
 
     @ParameterizedTest(name="doFindNecessaryConditionTest {index} query = {0}")
     @MethodSource("doFindNecessaryConditionSource")
-    void doFindNecessaryConditionTest(String query) {
-        Respond respond = new Respond(query, query);
-        TSqlRunner.runEqualConditionInComparisonOperators(metadata, respond);
-        assertEquals(respond.getCurrentQuery().toUpperCase(), respond.getOriginalQuery().toUpperCase());
-        assertTrue(respond.getQueryTransforms() != null && respond.getQueryTransforms().size() == 1);
-        assertEquals("OK", respond.getQueryTransforms().get(0).getMessage());
-        assertFalse(respond.isChanged());
+    void doFindNecessaryConditionTest(String requestQuery) {
+        Query query = new Query(requestQuery, requestQuery);
+        TSqlRunner.runEqualConditionInComparisonOperators(metadata, query);
+        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
+        assertEquals("OK", query.getQueryTransforms().get(0).getMessage());
+        assertFalse(query.isChanged());
     }
 
 /*

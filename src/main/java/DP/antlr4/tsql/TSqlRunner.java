@@ -1,8 +1,8 @@
 package DP.antlr4.tsql;
 
 import DP.Database.*;
-import DP.Database.Respond.Respond;
-import DP.Database.Respond.Transform;
+import DP.Transformations.Query;
+import DP.Transformations.Transform;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlLexer;
 import DP.antlr4.tsql.parser.TSqlParser;
@@ -15,8 +15,8 @@ import org.antlr.v4.runtime.tree.*;
 import java.util.*;
 
 public class TSqlRunner {
-    public static Respond runGroupBy(final DatabaseMetadata metadata, Respond respond) {
-        TSqlParser parser = runFromString(respond.getCurrentQuery());
+    public static Query runGroupBy(final DatabaseMetadata metadata, Query query) {
+        TSqlParser parser = runFromString(query.getCurrentQuery());
         ParseTree select = parser.select_statement();
 
         final ArrayList<AggregateItem> allAggregateFunctions = new ArrayList<>();
@@ -53,63 +53,63 @@ public class TSqlRunner {
 
         if (allAggregateFunctions.isEmpty()) {
             if (columnsInGroupBy.containsAll(newMetadata.getAllPrimaryKeys())) {
-                respond.addTransform(new Transform(respond.getCurrentQuery(),
-                        respond.getCurrentQuery().substring(0, respond.getCurrentQuery().indexOf("GROUP BY")).trim(),
+                query.addTransform(new Transform(query.getCurrentQuery(),
+                        query.getCurrentQuery().substring(0, query.getCurrentQuery().indexOf("GROUP BY")).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY",
                         "runGroupBy",
                         true
                 ));
-                respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
-                respond.setChanged(true);
-                return respond;
+                query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+                query.setChanged(true);
+                return query;
             }
-            respond.addTransform(new Transform(respond.getCurrentQuery(),
-                    respond.getCurrentQuery(),
+            query.addTransform(new Transform(query.getCurrentQuery(),
+                    query.getCurrentQuery(),
                     "OK",
                     "runGroupBy",
                     false
             ));
-            respond.setChanged(false);
-            return respond;
+            query.setChanged(false);
+            return query;
         }
 
         if (columnsInGroupBy.containsAll(newMetadata.getAllPrimaryKeys()) && !aggregateFunctionsInSelect.isEmpty()) {
             for (AggregateItem item : aggregateFunctionsInSelect) {
                 Transform transform;
                 if (item.getFunctionName().equals("COUNT")) {
-                    transform = new Transform(respond.getCurrentQuery(),
-                            (respond.getCurrentQuery().substring(0, item.getStartAt()) + "1" + respond.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
+                    transform = new Transform(query.getCurrentQuery(),
+                            (query.getCurrentQuery().substring(0, item.getStartAt()) + "1" + query.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
                             item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " 1",
                             "runGroupBy",
                             true
                     );
                 } else {
-                    transform = new Transform(respond.getCurrentQuery(),
-                            (respond.getCurrentQuery().substring(0, item.getStartAt()) + item.getFullColumnName() + respond.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
+                    transform = new Transform(query.getCurrentQuery(),
+                            (query.getCurrentQuery().substring(0, item.getStartAt()) + item.getFullColumnName() + query.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
                             item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " " + item.getFullColumnName(),
                             "runGroupBy",
                             true
                     );
                 }
-                respond.addTransform(transform);
+                query.addTransform(transform);
             }
-            respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
-            respond.setChanged(true);
-            return respond;
+            query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+            query.setChanged(true);
+            return query;
         }
 
-        respond.addTransform(new Transform(respond.getCurrentQuery(),
-                respond.getCurrentQuery(),
+        query.addTransform(new Transform(query.getCurrentQuery(),
+                query.getCurrentQuery(),
                 "OK",
                 "runGroupBy",
                 false
         ));
-        respond.setChanged(false);
-        return respond;
+        query.setChanged(false);
+        return query;
     }
 
-    public static Respond runSelectClause(final DatabaseMetadata metadata, Respond respond) {
-        TSqlParser parser = runFromString(respond.getCurrentQuery());
+    public static Query runSelectClause(final DatabaseMetadata metadata, Query query) {
+        TSqlParser parser = runFromString(query.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
         final List<ExistItem> foundExistsNotConstant = new ArrayList<>();
@@ -136,43 +136,43 @@ public class TSqlRunner {
         }, select);
 
         if (!foundExistsNotConstant.isEmpty()) {
-            respond.addTransform(new Transform(respond.getCurrentQuery(),
-                    (respond.getCurrentQuery().substring(0, foundExistsNotConstant.get(0).getSelectListStartAt()) + "1" + respond.getCurrentQuery().substring(foundExistsNotConstant.get(0).getSelectListStopAt() + 1)).trim(),
+            query.addTransform(new Transform(query.getCurrentQuery(),
+                    (query.getCurrentQuery().substring(0, foundExistsNotConstant.get(0).getSelectListStartAt()) + "1" + query.getCurrentQuery().substring(foundExistsNotConstant.get(0).getSelectListStopAt() + 1)).trim(),
                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                     "runSelectClause",
                     true
             ));
-            respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
-            respond.setChanged(true);
-            return respond;
+            query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+            query.setChanged(true);
+            return query;
         }
 
         final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadataWithTables, select);
 
         ColumnItem equals = ColumnItem.duplicatesExists(allColumnsInSelect);
         if (equals != null) {
-            respond.addTransform(new Transform(respond.getCurrentQuery(),
-                    (respond.getCurrentQuery().substring(0, equals.getStartAt()) + respond.getCurrentQuery().substring(equals.getStopAt() + 1)).trim(),
+            query.addTransform(new Transform(query.getCurrentQuery(),
+                    (query.getCurrentQuery().substring(0, equals.getStartAt()) + query.getCurrentQuery().substring(equals.getStopAt() + 1)).trim(),
                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
                     "runSelectClause",
                     true
             ));
-            respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size() - 1).getOutputQuery());
-            respond.setChanged(true);
-            return respond;
+            query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size() - 1).getOutputQuery());
+            query.setChanged(true);
+            return query;
         }
 
         for (ColumnItem item : allColumnsInSelect) {
             if (item.isConstant() && foundUnion.isEmpty()) {
-                respond.addTransform(new Transform(respond.getCurrentQuery(),
-                        (respond.getCurrentQuery().substring(0, item.getStartAt()) + respond.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
+                query.addTransform(new Transform(query.getCurrentQuery(),
+                        (query.getCurrentQuery().substring(0, item.getStartAt()) + query.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
                         UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
                         "runSelectClause",
                         true
                 ));
-                respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
-                respond.setChanged(true);
-                return respond;
+                query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+                query.setChanged(true);
+                return query;
             }
         }
 
@@ -195,15 +195,15 @@ public class TSqlRunner {
                         bothInSelect++;
                     }
                     if (bothInSelect == 1) {
-                        respond.addTransform(new Transform(respond.getCurrentQuery(),
-                                (respond.getCurrentQuery().substring(0, column.getStartAt()) + respond.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
+                        query.addTransform(new Transform(query.getCurrentQuery(),
+                                (query.getCurrentQuery().substring(0, column.getStartAt()) + query.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
                                 UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
                                 "runSelectClause",
                                 true
                         ));
-                        respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
-                        respond.setChanged(true);
-                        return respond;
+                        query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+                        query.setChanged(true);
+                        return query;
                     }
                 }
                 if (bothInSelect == 0) {
@@ -212,15 +212,15 @@ public class TSqlRunner {
                                 ((condition.getLeftSideColumnItem().equals(inSelect.get(0)) && condition.getRightSideDataType() != ConditionDataType.COLUMN) ||
                                         (condition.getRightSideColumnItem().equals(inSelect.get(0)) && condition.getLeftSideDataType() != ConditionDataType.COLUMN))) {
                             String value = condition.getLeftSideDataType() != ConditionDataType.COLUMN ? condition.getLeftSideValue() : condition.getRightSideValue();
-                            respond.addTransform(new Transform(respond.getCurrentQuery(),
-                                    (respond.getCurrentQuery().substring(0, columnInSelect.getStartAt()) + value + " AS " + columnInSelect.getName() + respond.getCurrentQuery().substring(columnInSelect.getStopAt() + 1)).trim(),
+                            query.addTransform(new Transform(query.getCurrentQuery(),
+                                    (query.getCurrentQuery().substring(0, columnInSelect.getStartAt()) + value + " AS " + columnInSelect.getName() + query.getCurrentQuery().substring(columnInSelect.getStopAt() + 1)).trim(),
                                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                                     "runSelectClause",
                                     true
                             ));
-                            respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
-                            respond.setChanged(true);
-                            return respond;
+                            query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+                            query.setChanged(true);
+                            return query;
                         }
                     }
                 }
@@ -233,32 +233,32 @@ public class TSqlRunner {
                     if ((item.getLeftSideDataType() == ConditionDataType.COLUMN && column.equals(item.getLeftSideColumnItem()) && item.getRightSideDataType() != ConditionDataType.COLUMN) ||
                             (item.getRightSideDataType() == ConditionDataType.COLUMN && column.equals(item.getRightSideColumnItem()) && item.getLeftSideDataType() != ConditionDataType.COLUMN)) {
                         String value = item.getLeftSideDataType() != ConditionDataType.COLUMN ? item.getLeftSideValue() : item.getRightSideValue();
-                        respond.addTransform(new Transform(respond.getCurrentQuery(),
-                                (respond.getCurrentQuery().substring(0, column.getStartAt()) + value + " AS " + column.getName() + respond.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
+                        query.addTransform(new Transform(query.getCurrentQuery(),
+                                (query.getCurrentQuery().substring(0, column.getStartAt()) + value + " AS " + column.getName() + query.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
                                 UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                                 "runSelectClause",
                                 true
                         ));
-                        respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
-                        respond.setChanged(true);
-                        return respond;
+                        query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+                        query.setChanged(true);
+                        return query;
                     }
                 }
             }
         }
 
-        respond.addTransform(new Transform(respond.getCurrentQuery(),
-                respond.getCurrentQuery(),
+        query.addTransform(new Transform(query.getCurrentQuery(),
+                query.getCurrentQuery(),
                 "OK",
                 "runSelectClause",
                 false
         ));
-        respond.setChanged(false);
-        return respond;
+        query.setChanged(false);
+        return query;
     }
 
-    public static Respond runEqualConditionInComparisonOperators(final DatabaseMetadata metadata, Respond respond) {
-        TSqlParser parser = runFromString(respond.getCurrentQuery());
+    public static Query runEqualConditionInComparisonOperators(final DatabaseMetadata metadata, Query query) {
+        TSqlParser parser = runFromString(query.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = TSqlParseWalker.findConditions(metadata, select);
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
@@ -283,29 +283,29 @@ public class TSqlRunner {
             }
 
             if (!isConditionNecessary) {
-                respond.addTransform(new Transform(respond.getCurrentQuery(),
-                        (respond.getCurrentQuery().substring(0, condition.getStartAt()) + respond.getCurrentQuery().substring(condition.getStopAt())).trim(),
+                query.addTransform(new Transform(query.getCurrentQuery(),
+                        (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION",
                         "runEqualConditionInComparisonOperators",
                         true
                 ));
-                respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
-                respond.setChanged(true);
-                return respond;
+                query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+                query.setChanged(true);
+                return query;
             }
         }
-        respond.addTransform(new Transform(respond.getCurrentQuery(),
-                respond.getCurrentQuery(),
+        query.addTransform(new Transform(query.getCurrentQuery(),
+                query.getCurrentQuery(),
                 "OK",
                 "runEqualConditionInComparisonOperators",
                 false
         ));
-        respond.setChanged(false);
-        return respond;
+        query.setChanged(false);
+        return query;
     }
 
-    public static Respond runRedundantJoinConditions(final DatabaseMetadata metadata, Respond respond) {
-        TSqlParser parser = runFromString(respond.getCurrentQuery());
+    public static Query runRedundantJoinConditions(final DatabaseMetadata metadata, Query query) {
+        TSqlParser parser = runFromString(query.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<ConditionItem> leftJoinConditions = new ArrayList<>();
         final HashMap<Integer, List<ConditionItem>> rightJoinConditions = new HashMap<>();
@@ -340,25 +340,25 @@ public class TSqlRunner {
         if (!(leftJoinConditions.size() != 0 || rightJoinConditions.size() != 0 || fullOuterJoinConditions.size() != 0)) {
             innerConditions.addAll(whereConditions);
         }
-        boolean foundDuplicateCondition = ConditionItem.duplicatesExists(respond, metadata, innerConditions);
-        foundDuplicateCondition |= ConditionItem.duplicatesExists(respond, metadata, leftJoinConditions);
-        foundDuplicateCondition |= ConditionItem.duplicatesExists(respond, metadata, rightJoinConditions);
-        foundDuplicateCondition |= ConditionItem.duplicatesExists(respond, metadata, fullOuterJoinConditions);
+        boolean foundDuplicateCondition = ConditionItem.duplicatesExists(query, metadata, innerConditions);
+        foundDuplicateCondition |= ConditionItem.duplicatesExists(query, metadata, leftJoinConditions);
+        foundDuplicateCondition |= ConditionItem.duplicatesExists(query, metadata, rightJoinConditions);
+        foundDuplicateCondition |= ConditionItem.duplicatesExists(query, metadata, fullOuterJoinConditions);
 
         if (!foundDuplicateCondition) {
-            respond.addTransform(new Transform(respond.getCurrentQuery(),
-                    respond.getCurrentQuery(),
+            query.addTransform(new Transform(query.getCurrentQuery(),
+                    query.getCurrentQuery(),
                     "OK",
                     "runRedundantJoinConditions",
                     false
             ));
-            respond.setChanged(false);
+            query.setChanged(false);
         }
-        return respond;
+        return query;
     }
 
-    public static Respond runRedundantJoinTables(final DatabaseMetadata metadata, Respond respond) {
-        TSqlParser parser = runFromString(respond.getCurrentQuery());
+    public static Query runRedundantJoinTables(final DatabaseMetadata metadata, Query query) {
+        TSqlParser parser = runFromString(query.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadata, select);
         final List<Boolean> isDistinctInSelect = TSqlParseWalker.findDistinctInSelect(select);
@@ -379,39 +379,39 @@ public class TSqlRunner {
         }, select);
 
         if (isDistinctInSelect.isEmpty()) {
-            respond.addTransform(new Transform(respond.getCurrentQuery(),
-                    respond.getCurrentQuery(),
+            query.addTransform(new Transform(query.getCurrentQuery(),
+                    query.getCurrentQuery(),
                     "OK",
                     "runRedundantJoinTables",
                     false
             ));
-            respond.setChanged(false);
-            return respond;
+            query.setChanged(false);
+            return query;
         }
 
-        boolean foundRedundantJoin = DatabaseTable.redundantJoinExists(respond, "LEFT", joinTables.get("leftJoin"),
+        boolean foundRedundantJoin = DatabaseTable.redundantJoinExists(query, "LEFT", joinTables.get("leftJoin"),
                 fromTable.get(0).getTableAlias(), fromTable.get(0), allColumnsInSelect, false, null, false, null);
-        foundRedundantJoin |= DatabaseTable.redundantJoinExists(respond, "RIGHT", joinTables.get("rightJoin"),
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists(query, "RIGHT", joinTables.get("rightJoin"),
                 null, null, allColumnsInSelect, false, null, false, fromTable.get(0));
-        foundRedundantJoin |= DatabaseTable.redundantJoinExists(respond, "FULL OUTER", joinTables.get("fullOuterJoin"), fromTable.get(0).getTableAlias(),
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists(query, "FULL OUTER", joinTables.get("fullOuterJoin"), fromTable.get(0).getTableAlias(),
                 fromTable.get(0), allColumnsInSelect, true, metadata.setNullableColumns(fullOuterJoinConditions), true, null);
-        foundRedundantJoin |= DatabaseTable.redundantJoinExists(respond, "INNER", joinTables.get("innerJoin"), null, null,
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists(query, "INNER", joinTables.get("innerJoin"), null, null,
                 allColumnsInSelect, true, metadata.setNullableColumns(innerConditions), true, fromTable.get(0));
 
         if (!foundRedundantJoin) {
-            respond.addTransform(new Transform(respond.getCurrentQuery(),
-                    respond.getCurrentQuery(),
+            query.addTransform(new Transform(query.getCurrentQuery(),
+                    query.getCurrentQuery(),
                     "OK",
                     "runRedundantJoinTables",
                     false
             ));
-            respond.setChanged(false);
+            query.setChanged(false);
         }
-        return respond;
+        return query;
     }
 
-    public static Respond runEqualConditionInOperatorBetween(final DatabaseMetadata metadata, Respond respond) {
-        TSqlParser parser = runFromString(respond.getCurrentQuery());
+    public static Query runEqualConditionInOperatorBetween(final DatabaseMetadata metadata, Query query) {
+        TSqlParser parser = runFromString(query.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = new ArrayList<>();
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
@@ -485,30 +485,30 @@ public class TSqlRunner {
                 }
             }
             if (!currentNecessary) {
-                respond.addTransform(new Transform(respond.getCurrentQuery(),
-                        (respond.getCurrentQuery().substring(0, conditions.get(i).getStartAt()) + respond.getCurrentQuery().substring(conditions.get(i).getStopAt() + 1)).trim(),
+                query.addTransform(new Transform(query.getCurrentQuery(),
+                        (query.getCurrentQuery().substring(0, conditions.get(i).getStartAt()) + query.getCurrentQuery().substring(conditions.get(i).getStopAt() + 1)).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION BETWEEN",
                         "runEqualConditionInOperatorBetween",
                         true
                 ));
-                respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
-                respond.setChanged(true);
-                return respond;
+                query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+                query.setChanged(true);
+                return query;
             }
         }
 
-        respond.addTransform(new Transform(respond.getCurrentQuery(),
-                respond.getCurrentQuery(),
+        query.addTransform(new Transform(query.getCurrentQuery(),
+                query.getCurrentQuery(),
                 "OK",
                 "runEqualConditionInOperatorBetween",
                 false
         ));
-        respond.setChanged(false);
-        return respond;
+        query.setChanged(false);
+        return query;
     }
 
-    public static Respond runEqualConditionInOperatorExists(final DatabaseMetadata metadata, Respond respond) {
-        TSqlParser parser = runFromString(respond.getCurrentQuery());
+    public static Query runEqualConditionInOperatorExists(final DatabaseMetadata metadata, Query query) {
+        TSqlParser parser = runFromString(query.getCurrentQuery());
         ParseTree select = parser.select_statement();
         DatabaseTable fromTable = TSqlParseWalker.findFromTable(metadata, select).get(0);
         TSqlParseWalker.findTablesList(metadata, select);
@@ -564,30 +564,30 @@ public class TSqlRunner {
                             (!exist.getTable().isEmpty() &&
                                     (exist.getConditions() == null || exist.getConditions().size() == 0 ||
                                             (exist.getConditions().size() == 1 && ConditionItem.isComparingForeignKey(fromTable, exist.getTable(), exist.getConditions().get(0)))))))) {
-                respond.addTransform(new Transform(respond.getCurrentQuery(),
-                        (respond.getCurrentQuery().substring(0, exist.getPredicateStartAt()) + respond.getCurrentQuery().substring(exist.getPredicateStopAt() + 1)).trim(),
+                query.addTransform(new Transform(query.getCurrentQuery(),
+                        (query.getCurrentQuery().substring(0, exist.getPredicateStartAt()) + query.getCurrentQuery().substring(exist.getPredicateStopAt() + 1)).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS",
                         "runEqualConditionInOperatorExists",
                         true
                 ));
-                respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
-                respond.setChanged(true);
-                return respond;
+                query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+                query.setChanged(true);
+                return query;
             }
         }
-        respond.addTransform(new Transform(respond.getCurrentQuery(),
-                respond.getCurrentQuery(),
+        query.addTransform(new Transform(query.getCurrentQuery(),
+                query.getCurrentQuery(),
                 "OK",
                 "runEqualConditionInOperatorExists",
                 false
         ));
-        respond.setChanged(false);
-        return respond;
+        query.setChanged(false);
+        return query;
     }
 
-    public static Respond runEqualConditionInOperatorLike(final DatabaseMetadata metadata, Respond respond) {
+    public static Query runEqualConditionInOperatorLike(final DatabaseMetadata metadata, Query query) {
         
-        TSqlParser parser = runFromString(respond.getCurrentQuery());
+        TSqlParser parser = runFromString(query.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = new ArrayList<>();
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
@@ -619,51 +619,51 @@ public class TSqlRunner {
         for (ConditionItem condition : conditions) {
             if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
                 if (SQLLogicalOperators.like(condition.getLeftSideValue(), condition.getRightSideValue())) {
-                    respond.addTransform(new Transform(respond.getCurrentQuery(),
-                            (respond.getCurrentQuery().substring(0, condition.getStartAt()) + respond.getCurrentQuery().substring(condition.getStopAt())).trim(),
+                    query.addTransform(new Transform(query.getCurrentQuery(),
+                            (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                             UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
                             "runEqualConditionInOperatorLike",
                             true
                     ));
-                    respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
-                    respond.setChanged(true);
-                    return respond;
+                    query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+                    query.setChanged(true);
+                    return query;
                 }
             } else if (condition.getLeftSideDataType() == ConditionDataType.COLUMN &&
                     (condition.getRightSideDataType() == ConditionDataType.COLUMN || condition.getRightSideDataType() == ConditionDataType.STRING)) {
                 if (condition.getRightSideDataType() == ConditionDataType.STRING) {
                     if (condition.getRightSideValue().matches("^[%]+$")) {
-                        respond.addTransform(new Transform(respond.getCurrentQuery(),
-                                (respond.getCurrentQuery().substring(0, condition.getStartAt()) + respond.getCurrentQuery().substring(condition.getStopAt())).trim(),
+                        query.addTransform(new Transform(query.getCurrentQuery(),
+                                (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                                 UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
                                 "runEqualConditionInOperatorLike",
                                 true
                         ));
-                        respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
-                        respond.setChanged(true);
-                        return respond;
+                        query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+                        query.setChanged(true);
+                        return query;
                     }
                 } else if (newMetadata.columnsEqual(condition.getLeftSideColumnItem(), condition.getRightSideColumnItem())) {
-                    respond.addTransform(new Transform(respond.getCurrentQuery(),
-                            (respond.getCurrentQuery().substring(0, condition.getStartAt()) + respond.getCurrentQuery().substring(condition.getStopAt())).trim(),
+                    query.addTransform(new Transform(query.getCurrentQuery(),
+                            (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                             UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
                             "runEqualConditionInOperatorLike",
                             true
                     ));
-                    respond.setCurrentQuery(respond.getQueryTransforms().get(respond.getQueryTransforms().size()-1).getOutputQuery());
-                    respond.setChanged(true);
-                    return respond;
+                    query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+                    query.setChanged(true);
+                    return query;
                 }
             }
         }
-        respond.addTransform(new Transform(respond.getCurrentQuery(),
-                respond.getCurrentQuery(),
+        query.addTransform(new Transform(query.getCurrentQuery(),
+                query.getCurrentQuery(),
                 "OK",
                 "runEqualConditionInOperatorLike",
                 false
         ));
-        respond.setChanged(false);
-        return respond;
+        query.setChanged(false);
+        return query;
     }
 
     public static TSqlParser runFromString(String query) {

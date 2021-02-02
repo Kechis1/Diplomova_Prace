@@ -17,17 +17,13 @@ import java.util.List;
 public class GroupByTransformation extends QueryHandler {
     private final String action = "GroupByTransformation";
 
-    public GroupByTransformation(QueryHandler handler) {
-        super(handler);
+    public GroupByTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
+        super(handler, databaseMetadata);
     }
 
     @Override
-    public void handleQuery(Query query) {
-    /*    if (RequestType.DEFEND_CASTLE == req.getRequestType()) {
-            req.markHandled();
-        } else {
-            super.handleQuery(query);
-        }*/
+    public boolean shouldTransform(Query query) {
+        return true;
     }
 
     @Override

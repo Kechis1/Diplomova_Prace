@@ -17,13 +17,13 @@ public class BetweenTransformation extends QueryHandler {
     private final String action = "BetweenTransformation";
     
     
-    public BetweenTransformation(QueryHandler handler) {
-        super(handler);
+    public BetweenTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
+        super(handler, databaseMetadata);
     }
 
     @Override
-    public void handleQuery(Query query) {
-        super.handleQuery(query);
+    public boolean shouldTransform(Query query) {
+        return true;
     }
 
     @Override

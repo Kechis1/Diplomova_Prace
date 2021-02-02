@@ -14,13 +14,13 @@ import java.util.List;
 public class ExistsTransformation extends QueryHandler {
     private final String action = "ExistsTransformation";
 
-    public ExistsTransformation(QueryHandler handler) {
-        super(handler);
+    public ExistsTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
+        super(handler, databaseMetadata);
     }
 
     @Override
-    public void handleQuery(Query query) {
-        super.handleQuery(query);
+    public boolean shouldTransform(Query query) {
+        return true;
     }
 
     @Override

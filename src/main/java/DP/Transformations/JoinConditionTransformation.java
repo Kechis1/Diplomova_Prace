@@ -15,13 +15,13 @@ import java.util.List;
 public class JoinConditionTransformation extends QueryHandler {
     private final String action = "JoinConditionTransformation";
 
-    public JoinConditionTransformation(QueryHandler handler) {
-        super(handler);
+    public JoinConditionTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
+        super(handler, databaseMetadata);
     }
 
     @Override
-    public void handleQuery(Query query) {
-        super.handleQuery(query);
+    public boolean shouldTransform(Query query) {
+        return true;
     }
 
     @Override

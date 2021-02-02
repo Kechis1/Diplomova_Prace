@@ -3,6 +3,6 @@ package DP.Transformations;
 import DP.Database.DatabaseMetadata;
 
 public interface ITransformation {
-
-    public Query transformQuery(final DatabaseMetadata metadata, Query query);
+    Query transformQuery(final DatabaseMetadata metadata, Query query);
+    boolean shouldTransform(Query query);
 }

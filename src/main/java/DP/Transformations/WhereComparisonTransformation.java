@@ -12,13 +12,13 @@ import java.util.List;
 public class WhereComparisonTransformation extends QueryHandler {
     private final String action = "WhereComparisonTransformation";
 
-    public WhereComparisonTransformation(QueryHandler handler) {
-        super(handler);
+    public WhereComparisonTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
+        super(handler, databaseMetadata);
     }
 
     @Override
-    public void handleQuery(Query query) {
-        super.handleQuery(query);
+    public boolean shouldTransform(Query query) {
+        return true;
     }
 
     @Override

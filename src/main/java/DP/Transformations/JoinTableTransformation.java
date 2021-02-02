@@ -14,13 +14,13 @@ import java.util.Map;
 public class JoinTableTransformation extends QueryHandler {
     private final String action = "JoinTableTransformation";
 
-    public JoinTableTransformation(QueryHandler handler) {
-        super(handler);
+    public JoinTableTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
+        super(handler, databaseMetadata);
     }
 
     @Override
-    public void handleQuery(Query query) {
-        super.handleQuery(query);
+    public boolean shouldTransform(Query query) {
+        return true;
     }
 
     @Override

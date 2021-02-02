@@ -14,13 +14,13 @@ import java.util.List;
 public class SelectClauseTransformation extends QueryHandler {
     private final String action = "SelectClauseTransformation";
 
-    public SelectClauseTransformation(QueryHandler handler) {
-        super(handler);
+    public SelectClauseTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
+        super(handler, databaseMetadata);
     }
 
     @Override
-    public void handleQuery(Query query) {
-        super.handleQuery(query);
+    public boolean shouldTransform(Query query) {
+        return true;
     }
 
     @Override

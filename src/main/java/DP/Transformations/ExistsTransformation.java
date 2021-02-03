@@ -87,7 +87,7 @@ public class ExistsTransformation extends QueryHandler {
                         action,
                         true
                 ));
-                query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+                query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().size()-1).getOutputQuery());
                 query.setChanged(true);
                 return query;
             }

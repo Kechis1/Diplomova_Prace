@@ -4,7 +4,6 @@ import DP.Database.DatabaseMetadata;
 import DP.Transformations.Query;
 import DP.Transformations.Transformation;
 import DP.Transformations.TransformationBuilder;
-import DP.antlr4.tsql.TSqlRunner;
 
 
 
@@ -18,22 +17,14 @@ public class Main {
         runChain(metadata, query);
     }
 
-    private static void runRunnerVersion(DatabaseMetadata metadata, Query query) {
-        query = TSqlRunner.runEqualConditionInOperatorExists(metadata, query);
-
-        for (Transformation r : query.getQueryTransforms()) {
-            System.out.println(r.getOutputQuery());
-        }
-
-        System.out.println(query);
-    }
-
     private static void runChain(DatabaseMetadata metadata, Query query) {
         TransformationBuilder builder = new TransformationBuilder(metadata);
         builder.makeQuery(query);
 
-        for (Transformation r : query.getQueryTransforms()) {
-            System.out.println(r.getOutputQuery());
+        for (int i = 0; i < query.getCurrentRunNumber(); i++) {
+            for (Transformation r : query.getQueryTransforms().get(i)) {
+                System.out.println(r);
+            }
         }
 
         System.out.println(query);

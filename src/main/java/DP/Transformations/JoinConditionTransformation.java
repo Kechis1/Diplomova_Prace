@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class JoinConditionTransformation extends QueryHandler {
-    private final String action = "JoinConditionTransformation";
+    public static final String action = "JoinConditionTransformation";
 
     public JoinConditionTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
         super(handler, databaseMetadata);

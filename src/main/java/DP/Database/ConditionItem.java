@@ -1,5 +1,6 @@
 package DP.Database;
 
+import DP.Transformations.JoinConditionTransformation;
 import DP.Transformations.Query;
 import DP.Transformations.Transformation;
 import DP.Exceptions.UnnecessaryStatementException;
@@ -55,10 +56,10 @@ public class ConditionItem {
                         query.addTransform(new Transformation(query.getCurrentQuery(),
                                 (query.getCurrentQuery().substring(0, conditions.get(x).get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(x).get(j).getStopAt())).trim(),
                                 UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION",
-                                "runRedundantJoinConditions",
+                                JoinConditionTransformation.action,
                                 true
                         ));
-                        query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+                        query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().size()-1).getOutputQuery());
                         query.setChanged(true);
                         return true;
                     }
@@ -75,10 +76,10 @@ public class ConditionItem {
                     query.addTransform(new Transformation(query.getCurrentQuery(),
                             (query.getCurrentQuery().substring(0, conditions.get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(j).getStopAt())).trim(),
                             UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION",
-                            "runRedundantJoinConditions",
+                            JoinConditionTransformation.action,
                             true
                     ));
-                    query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size()-1).getOutputQuery());
+                    query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().size()-1).getOutputQuery());
                     query.setChanged(true);
                     return true;
                 }

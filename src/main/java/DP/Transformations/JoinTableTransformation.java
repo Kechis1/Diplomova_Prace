@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 public class JoinTableTransformation extends QueryHandler {
-    private final String action = "JoinTableTransformation";
+    public static final String action = "JoinTableTransformation";
 
     public JoinTableTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
         super(handler, databaseMetadata);

@@ -1,5 +1,6 @@
 package DP.Database;
 
+import DP.Transformations.JoinTableTransformation;
 import DP.Transformations.Query;
 import DP.Transformations.Transformation;
 import DP.Exceptions.UnnecessaryStatementException;
@@ -197,10 +198,10 @@ public class DatabaseTable {
                 query.addTransform(new Transformation(query.getCurrentQuery(),
                         currentQuery,
                         UnnecessaryStatementException.messageUnnecessaryStatement + " " + typeOfJoin + " JOIN",
-                        "runRedundantJoinTables",
+                        JoinTableTransformation.action,
                         true
                 ));
-                query.setCurrentQuery(query.getQueryTransforms().get(query.getQueryTransforms().size() - 1).getOutputQuery());
+                query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().size() - 1).getOutputQuery());
                 query.setChanged(true);
                 return true;
             }

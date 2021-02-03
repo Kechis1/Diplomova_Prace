@@ -10,13 +10,16 @@ public class TransformationBuilder {
     }
 
     private void buildChain(final DatabaseMetadata databaseMetadata) {
-        chain = new WhereComparisonTransformation(
-                new SelectClauseTransformation(
-                        new LikeTransformation(
-                                new ExistsTransformation(
-                                        new GroupByTransformation(
-                                                new JoinTableTransformation(
-                                                        new JoinConditionTransformation(null, databaseMetadata),
+        chain = new ExistsTransformation(
+                new GroupByTransformation(
+                        new JoinTableTransformation(
+                                new JoinConditionTransformation(
+                                        new WhereComparisonTransformation(
+                                                new SelectClauseTransformation(
+                                                        new BetweenTransformation(
+                                                                new LikeTransformation(null,
+                                                                        databaseMetadata),
+                                                                databaseMetadata),
                                                         databaseMetadata),
                                                 databaseMetadata),
                                         databaseMetadata),

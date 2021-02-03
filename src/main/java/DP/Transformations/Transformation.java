@@ -57,4 +57,15 @@ public class Transformation {
     public void setAction(String action) {
         this.action = action;
     }
+
+    @Override
+    public String toString() {
+        return "Transformation{" +
+                "inputQuery='" + inputQuery + '\'' +
+                ", outputQuery='" + outputQuery + '\'' +
+                ", message='" + message + '\'' +
+                ", action='" + action + '\'' +
+                ", changed=" + changed +
+                '}';
+    }
 }

@@ -21,7 +21,7 @@ public class LikeTransformation extends QueryHandler {
 
     @Override
     public boolean shouldTransform(Query query) {
-        return true;
+        return query.getCurrentQuery().contains("LIKE");
     }
 
     @Override

@@ -20,7 +20,7 @@ public class JoinTableTransformation extends QueryHandler {
 
     @Override
     public boolean shouldTransform(Query query) {
-        return true;
+        return query.getCurrentQuery().contains("JOIN");
     }
 
     @Override

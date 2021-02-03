@@ -23,7 +23,7 @@ public class BetweenTransformation extends QueryHandler {
 
     @Override
     public boolean shouldTransform(Query query) {
-        return true;
+        return query.getCurrentQuery().contains("BETWEEN");
     }
 
     @Override

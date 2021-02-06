@@ -8,7 +8,7 @@ public class Query {
     HashMap<Integer, List<Transformation>> queryTransforms;
     HashMap<Integer, Boolean> runs;
     int currentRunNumber;
-    boolean changed;
+    boolean changed = false;
 
     public Query(String originalQuery, String currentQuery) {
         this.originalQuery = originalQuery;
@@ -90,6 +90,9 @@ public class Query {
 
     public Boolean isQueryChangedByRun(int numberOfRuns) {
         List<Transformation> transformationsByRun = this.getQueryTransforms().get(numberOfRuns);
+        if (transformationsByRun == null) {
+            return false;
+        }
         for (Transformation t: transformationsByRun) {
             if (t.isChanged()) {
                 return true;

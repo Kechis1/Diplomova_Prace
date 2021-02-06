@@ -64,7 +64,7 @@ public class LikeTransformation extends QueryHandler {
                             action,
                             true
                     ));
-                    query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().size()-1).getOutputQuery());
+                    query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size()-1).getOutputQuery());
                     query.setChanged(true);
                     return query;
                 }
@@ -78,7 +78,7 @@ public class LikeTransformation extends QueryHandler {
                                 action,
                                 true
                         ));
-                        query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().size()-1).getOutputQuery());
+                        query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size()-1).getOutputQuery());
                         query.setChanged(true);
                         return query;
                     }
@@ -89,7 +89,7 @@ public class LikeTransformation extends QueryHandler {
                             action,
                             true
                     ));
-                    query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().size()-1).getOutputQuery());
+                    query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size()-1).getOutputQuery());
                     query.setChanged(true);
                     return query;
                 }
@@ -101,7 +101,6 @@ public class LikeTransformation extends QueryHandler {
                 action,
                 false
         ));
-        query.setChanged(false);
         return query;
     }
 }

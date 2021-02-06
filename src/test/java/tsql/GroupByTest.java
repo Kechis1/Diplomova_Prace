@@ -2,8 +2,9 @@ package tsql;
 
 import DP.Database.DatabaseMetadata;
 import DP.Exceptions.UnnecessaryStatementException;
+import DP.Transformations.GroupByTransformation;
 import DP.Transformations.Query;
-import DP.antlr4.tsql.TSqlRunner;
+import DP.Transformations.TransformationBuilder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -21,21 +22,26 @@ import static org.junit.Assert.*;
 public class GroupByTest {
     @Mock
     private DatabaseMetadata metadata;
+    @Mock
+    GroupByTransformation transformation;
 
     @BeforeEach
     void init() {
         metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
+        transformation = new GroupByTransformation(null, metadata);
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryGroupByTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryGroupBySource")
     void doFindUnnecessaryGroupByTest(String requestQuery, String resultQuery) {
         Query query = new Query(requestQuery, requestQuery);
-        TSqlRunner.runGroupBy(metadata, query);
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
         assertTrue(query.isChanged());
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY", query.getQueryTransforms().get(0).getMessage());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY", query.getQueryTransforms().get(1).get(0).getMessage());
         assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
     }
 
@@ -43,23 +49,27 @@ public class GroupByTest {
     @MethodSource("doFindNecessaryGroupBySource")
     void doFindNecessaryGroupByTest(String requestQuery) {
         Query query = new Query(requestQuery, requestQuery);
-        TSqlRunner.runGroupBy(metadata, query);
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
         assertFalse(query.isChanged());
         assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
-        assertEquals("OK", query.getQueryTransforms().get(0).getMessage());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
+        assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
     }
 
     @ParameterizedTest(name = "doFindRewritableAggregateFunctionsTest {index} query = {0}, resultQuery = {1}, message = {2}")
     @MethodSource("doFindRewritableAggregateFunctionsSource")
     void doFindRewrittenableAggregateFunctionsTest(String requestQuery, String resultQuery, String message) {
         Query query = new Query(requestQuery, requestQuery);
-        TSqlRunner.runGroupBy(metadata, query);
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
         assertTrue(query.isChanged());
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
-        assertEquals(query.getQueryTransforms().get(0).getMessage(), message);
+        assertEquals(query.getQueryTransforms().get(1).get(0).getMessage(), message);
     }
 
 

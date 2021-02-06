@@ -73,7 +73,6 @@ public class JoinConditionTransformation extends QueryHandler {
                     action,
                     false
             ));
-            query.setChanged(false);
         }
         return query;
     }

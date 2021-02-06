@@ -21,7 +21,7 @@ public abstract class QueryHandler implements ITransformation {
             do {
                 query = transformQuery(getDatabaseMetadata(), query);
                 normalizeQuery(query);
-            } while (query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().size() - 1).changed);
+            } while (query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).changed);
         }
         if (next != null) {
             next.handleQuery(query);
@@ -40,7 +40,7 @@ public abstract class QueryHandler implements ITransformation {
             }
         } while (index >= 0);
         query.setCurrentQuery(parsedQuery);
-        query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().size() - 1).setOutputQuery(parsedQuery);
+        query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).setOutputQuery(parsedQuery);
     }
 
     public DatabaseMetadata getDatabaseMetadata() {

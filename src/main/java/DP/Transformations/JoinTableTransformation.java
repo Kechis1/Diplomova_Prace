@@ -52,7 +52,6 @@ public class JoinTableTransformation extends QueryHandler {
                     action,
                     false
             ));
-            query.setChanged(false);
             return query;
         }
 
@@ -72,7 +71,6 @@ public class JoinTableTransformation extends QueryHandler {
                     action,
                     false
             ));
-            query.setChanged(false);
         }
         return query;
     }

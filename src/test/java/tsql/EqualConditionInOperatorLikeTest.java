@@ -2,8 +2,10 @@ package tsql;
 
 import DP.Database.DatabaseMetadata;
 import DP.Exceptions.UnnecessaryStatementException;
+import DP.Transformations.LikeTransformation;
 import DP.Transformations.Query;
-import DP.antlr4.tsql.TSqlRunner;
+import DP.Transformations.TransformationBuilder;
+import DP.Transformations.WhereComparisonTransformation;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,22 +22,26 @@ import static org.junit.Assert.*;
 public class EqualConditionInOperatorLikeTest {
     @Mock
     private DatabaseMetadata metadata;
+    @Mock
+    private LikeTransformation transformation;
 
     @BeforeEach
     void init() {
         metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
+        transformation = new LikeTransformation(null, metadata);
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String requestQuery, String resultQuery) {
         Query query = new Query(requestQuery, requestQuery);
-        TSqlRunner.runEqualConditionInOperatorLike(metadata, query);
-
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE", query.getQueryTransforms().get(0).getMessage());
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
     }
 
@@ -43,11 +49,12 @@ public class EqualConditionInOperatorLikeTest {
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String requestQuery) {
         Query query = new Query(requestQuery, requestQuery);
-        TSqlRunner.runEqualConditionInOperatorLike(metadata, query);
-
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
         assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
-        assertEquals("OK", query.getQueryTransforms().get(0).getMessage());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
+        assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
         assertFalse(query.isChanged());
     }
 

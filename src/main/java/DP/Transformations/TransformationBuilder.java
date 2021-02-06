@@ -9,8 +9,12 @@ public class TransformationBuilder {
         buildChain(databaseMetadata);
     }
 
+    public TransformationBuilder(final DatabaseMetadata databaseMetadata, QueryHandler chain) {
+        this.chain = chain;
+    }
+
     private void buildChain(final DatabaseMetadata databaseMetadata) {
-        chain = new ExistsTransformation(
+        this.chain = new ExistsTransformation(
                 new GroupByTransformation(
                         new JoinTableTransformation(
                                 new JoinConditionTransformation(

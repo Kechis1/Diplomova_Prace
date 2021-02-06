@@ -4,8 +4,9 @@ import DP.Database.ColumnItem;
 import DP.Database.DatabaseMetadata;
 import DP.Database.DatabaseTable;
 import DP.Exceptions.UnnecessaryStatementException;
+import DP.Transformations.JoinTableTransformation;
 import DP.Transformations.Query;
-import DP.antlr4.tsql.TSqlRunner;
+import DP.Transformations.TransformationBuilder;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,10 +23,13 @@ import static org.junit.Assert.*;
 public class JoinTablesTest {
     @Mock
     private DatabaseMetadata metadata;
+    @Mock
+    private JoinTableTransformation transformation;
 
     @BeforeEach
     void init() {
         metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
+        transformation = new JoinTableTransformation(null, metadata);
     }
 
     @ParameterizedTest(name = "doFindNecessaryConditionWithNullableTest {index} query = {0}")
@@ -35,10 +39,12 @@ public class JoinTablesTest {
         ColumnItem sId = table.findColumn("SID");
         sId.setNullable(true);
         Query query = new Query(requestQuery, requestQuery);
-        TSqlRunner.runRedundantJoinTables(metadata, query);
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
         assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
-        assertEquals("OK", query.getQueryTransforms().get(0).getMessage());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
+        assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
         assertFalse(query.isChanged());
     }
 
@@ -46,11 +52,13 @@ public class JoinTablesTest {
     @MethodSource("doFindUnnecessaryConditionSource")
     void doFindUnnecessaryConditionTest(String requestQuery, String resultQuery, String message) {
         Query query = new Query(requestQuery, requestQuery);
-        TSqlRunner.runRedundantJoinTables(metadata, query);
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
         assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
-        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " " + message, query.getQueryTransforms().get(0).getMessage());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " " + message, query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
     }
 
@@ -58,10 +66,12 @@ public class JoinTablesTest {
     @MethodSource("doFindNecessaryConditionSource")
     void doFindNecessaryConditionTest(String requestQuery) {
         Query query = new Query(requestQuery, requestQuery);
-        TSqlRunner.runRedundantJoinTables(metadata, query);
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
         assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().size() == 1);
-        assertEquals("OK", query.getQueryTransforms().get(0).getMessage());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
+        assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
         assertFalse(query.isChanged());
     }
 

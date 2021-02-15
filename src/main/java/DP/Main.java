@@ -8,7 +8,7 @@ public class Main {
     public static void main(String[] args) {
         // init data
         DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        String requestQuery = "SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID";
+        String requestQuery = "SELECT * FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE stt.sID LIKE stt.sID";
         Query query = new Query(requestQuery, requestQuery);
 
         runChain(metadata, query);

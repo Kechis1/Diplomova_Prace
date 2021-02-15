@@ -61,17 +61,17 @@ public class GroupByTest {
         assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
     }
 
-    @ParameterizedTest(name = "doFindUnnecessaryGroupByFullRunTest {index} query = {0}, resultQuery = {2}")
+    @ParameterizedTest(name = "doFindUnnecessaryGroupByFullRunTest {index} query = {0}, resultQuery = {2}, transformationsInFirstRun = {3}, transformationsSecondInRun = {4}")
     @MethodSource("doFindUnnecessaryGroupBySource")
-    void doFindUnnecessaryGroupByFullRunTest(String requestQuery, String oneRunResultQuery, String fullRunResultQuery) {
+    void doFindUnnecessaryGroupByFullRunTest(String requestQuery, String oneRunResultQuery, String fullRunResultQuery, int transformationsInFirstRun, int transformationsInSecondRun) {
         Query query = new Query(requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
         assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
         assertEquals(query.getCurrentRunNumber(), 2);
         assertNotNull(query.getQueryTransforms());
-        assertEquals(query.getQueryTransforms().get(1).size(), 5);
-        assertEquals(query.getQueryTransforms().get(2).size(), 3);
+        assertEquals(query.getQueryTransforms().get(1).size(), transformationsInFirstRun);
+        assertEquals(query.getQueryTransforms().get(2).size(), transformationsInSecondRun);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
     }
@@ -94,10 +94,14 @@ public class GroupByTest {
     public static Stream<Arguments> doFindUnnecessaryGroupBySource() {
         return Stream.of(Arguments.arguments("SELECT PID, JMENO FROM DBO.PREDMET GROUP BY PID, JMENO",
                 "SELECT PID, JMENO FROM DBO.PREDMET",
-                "SELECT PID, JMENO FROM DBO.PREDMET"),
+                "SELECT PID, JMENO FROM DBO.PREDMET",
+                3,
+                1),
                 Arguments.arguments("SELECT pr.pId, stt.sID, ste.sID, ste.pID FROM dbo.student stt JOIN dbo.studuje ste ON stt.sID = ste.sID JOIN dbo.predmet pr ON ste.pID = pr.pID GROUP BY pr.pID, stt.sID, ste.pID, ste.sID, ste.rok",
                         "SELECT PR.PID, STT.SID, STE.SID, STE.PID FROM DBO.STUDENT STT JOIN DBO.STUDUJE STE ON STT.SID = STE.SID JOIN DBO.PREDMET PR ON STE.PID = PR.PID",
-                        "SELECT PR.PID, STT.SID, STE.SID, STE.PID FROM DBO.STUDENT STT JOIN DBO.STUDUJE STE ON STT.SID = STE.SID JOIN DBO.PREDMET PR ON STE.PID = PR.PID")
+                        "SELECT PR.PID,STT.SID FROM DBO.STUDENT STT JOIN DBO.STUDUJE STE ON STT.SID = STE.SID JOIN DBO.PREDMET PR ON STE.PID = PR.PID",
+                        7,
+                        3)
         );
     }
 

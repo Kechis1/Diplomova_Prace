@@ -24,11 +24,14 @@ public class LikeTest {
     private DatabaseMetadata metadata;
     @Mock
     private LikeTransformation transformation;
+    @Mock
+    private TransformationBuilder transformationBuilder;
 
     @BeforeEach
     void init() {
         metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
         transformation = new LikeTransformation(null, metadata);
+        transformationBuilder = new TransformationBuilder(metadata);
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, resultQuery = {1}")

@@ -23,11 +23,14 @@ public class SelectClauseTest {
     private DatabaseMetadata metadata;
     @Mock
     private SelectClauseTransformation transformation;
+    @Mock
+    private TransformationBuilder transformationBuilder;
 
     @BeforeEach
     void init() {
         metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
         transformation = new SelectClauseTransformation(null, metadata);
+        transformationBuilder = new TransformationBuilder(metadata);
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, resultQuery = {1}")

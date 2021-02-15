@@ -25,16 +25,19 @@ public class JoinTableTest {
     private DatabaseMetadata metadata;
     @Mock
     private JoinTableTransformation transformation;
+    @Mock
+    private TransformationBuilder transformationBuilder;
 
     @BeforeEach
     void init() {
         metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
         transformation = new JoinTableTransformation(null, metadata);
+        transformationBuilder = new TransformationBuilder(metadata);
     }
 
-    @ParameterizedTest(name = "doFindNecessaryConditionWithNullableTest {index} query = {0}")
-    @MethodSource("doFindNecessaryConditionWithNullableSource")
-    void doFindNecessaryConditionWithNullableTest(String requestQuery) {
+    @ParameterizedTest(name = "doFindNecessaryJoinTableWithNullableTest {index} query = {0}")
+    @MethodSource("doFindNecessaryJoinTableWithNullableSource")
+    void doFindNecessaryJoinTableWithNullableTest(String requestQuery) {
         DatabaseTable table = metadata.findTable("STUDENT", null);
         ColumnItem sId = table.findColumn("SID");
         sId.setNullable(true);
@@ -48,9 +51,22 @@ public class JoinTableTest {
         assertFalse(query.isChanged());
     }
 
-    @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, resultQuery = {1}, message = {2}")
-    @MethodSource("doFindUnnecessaryConditionSource")
-    void doFindUnnecessaryConditionTest(String requestQuery, String resultQuery, String message) {
+    @ParameterizedTest(name = "doFindNecessaryJoinTableOneRunTest {index} query = {0}")
+    @MethodSource("doFindNecessaryJoinTableSource")
+    void doFindNecessaryJoinTableOneRunTest(String requestQuery) {
+        Query query = new Query(requestQuery, requestQuery);
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
+        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
+        assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
+        assertFalse(query.isChanged());
+    }
+
+    @ParameterizedTest(name = "doFindUnnecessaryJoinTableOneRunTest {index} query = {0}, resultQuery = {1}, message = {2}")
+    @MethodSource("doFindUnnecessaryJoinTableSource")
+    void doFindUnnecessaryJoinTableOneRunTest(String requestQuery, String resultQuery, String message) {
         Query query = new Query(requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
@@ -62,20 +78,22 @@ public class JoinTableTest {
         assertTrue(query.isChanged());
     }
 
-    @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
-    @MethodSource("doFindNecessaryConditionSource")
-    void doFindNecessaryConditionTest(String requestQuery) {
+    @ParameterizedTest(name = "doFindUnnecessaryJoinTableFullRunTest {index} query = {0}, resultQuery = {3}, message = {2}")
+    @MethodSource("doFindUnnecessaryJoinTableSource")
+    void doFindUnnecessaryJoinTableFullRunTest(String requestQuery, String oneRunResultQuery, String message, String fullRunResultQuery) {
         Query query = new Query(requestQuery, requestQuery);
-        query.addRun(1, false);
-        query.setCurrentRunNumber(1);
-        transformation.transformQuery(metadata, query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
-        assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
-        assertFalse(query.isChanged());
+        transformationBuilder.makeQuery(query);
+        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
+        assertEquals(query.getCurrentRunNumber(), 2);
+        assertNotNull(query.getQueryTransforms());
+        assertEquals(query.getQueryTransforms().get(1).size(), 3);
+        assertEquals(query.getQueryTransforms().get(2).size(), 1);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " " + message, query.getQueryTransforms().get(1).get(0).getMessage());
+        assertTrue(query.isChanged());
     }
 
-    public static Stream<Arguments> doFindNecessaryConditionWithNullableSource() {
+    public static Stream<Arguments> doFindNecessaryJoinTableWithNullableSource() {
         return Stream.of(
                 Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +
                         "FROM DBO.STUDENT SDT " +
@@ -92,36 +110,44 @@ public class JoinTableTest {
         );
     }
 
-    public static Stream<Arguments> doFindUnnecessaryConditionSource() {
+    public static Stream<Arguments> doFindUnnecessaryJoinTableSource() {
         return Stream.of(
                 Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO FROM DBO.STUDENT SDT LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID",
                         "SELECT distinct SDT.SID, SDT.JMENO FROM DBO.STUDENT SDT",
-                        "LEFT JOIN"),
+                        "LEFT JOIN",
+                        "SELECT distinct SDT.SID, SDT.JMENO FROM DBO.STUDENT SDT"),
                 Arguments.arguments("SELECT distinct SDT.* FROM DBO.STUDENT SDT LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID",
                         "SELECT distinct SDT.* FROM DBO.STUDENT SDT",
-                        "LEFT JOIN"),
+                        "LEFT JOIN",
+                        "SELECT distinct SDT.* FROM DBO.STUDENT SDT"),
                 Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO FROM DBO.STUDENT SDT FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID",
                         "SELECT distinct SDT.SID, SDT.JMENO FROM DBO.STUDENT SDT",
-                        "FULL OUTER JOIN"),
+                        "FULL OUTER JOIN",
+                        "SELECT distinct SDT.SID, SDT.JMENO FROM DBO.STUDENT SDT"),
                 Arguments.arguments("SELECT distinct SDT.* FROM DBO.STUDENT SDT FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID",
                         "SELECT distinct SDT.* FROM DBO.STUDENT SDT",
-                        "FULL OUTER JOIN"),
+                        "FULL OUTER JOIN",
+                        "SELECT distinct SDT.* FROM DBO.STUDENT SDT"),
                 Arguments.arguments("SELECT distinct SDE.SID, SDE.body FROM dbo.student SDT RIGHT JOIN dbo.STUDUJE SDE ON SDT.SID = SDE.SID",
                         "SELECT distinct SDE.SID, SDE.body FROM dbo.STUDUJE SDE",
-                        "RIGHT JOIN"),
+                        "RIGHT JOIN",
+                        "SELECT distinct SDE.SID, SDE.body FROM dbo.STUDUJE SDE"),
                 Arguments.arguments("SELECT distinct SDE.* FROM dbo.student SDT RIGHT JOIN dbo.STUDUJE SDE ON SDT.SID = SDE.SID",
                         "SELECT distinct SDE.* FROM dbo.STUDUJE SDE",
-                        "RIGHT JOIN"),
+                        "RIGHT JOIN",
+                        "SELECT distinct SDE.* FROM dbo.STUDUJE SDE"),
                 Arguments.arguments("SELECT distinct SDE.SID, SDE.body FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID",
                         "SELECT distinct SDE.SID, SDE.body FROM DBO.STUDUJE SDE",
-                        "INNER JOIN"),
+                        "INNER JOIN",
+                        "SELECT distinct SDE.SID, SDE.body FROM DBO.STUDUJE SDE"),
                 Arguments.arguments("SELECT distinct SDE.* FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID",
                         "SELECT distinct SDE.* FROM DBO.STUDUJE SDE",
-                        "INNER JOIN")
+                        "INNER JOIN",
+                        "SELECT distinct SDE.* FROM DBO.STUDUJE SDE")
         );
     }
 
-    public static Stream<Arguments> doFindNecessaryConditionSource() {
+    public static Stream<Arguments> doFindNecessaryJoinTableSource() {
         return Stream.of(
                 Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +
                         "FROM DBO.STUDENT SDT " +

@@ -36,7 +36,7 @@ public class GroupByTest {
 
     @ParameterizedTest(name = "doFindNecessaryGroupByOneRunTest {index} query = {0}")
     @MethodSource("doFindNecessaryGroupBySource")
-    void doFindNecessaryGroupByTest(String requestQuery) {
+    void doFindNecessaryGroupByOneRunTest(String requestQuery) {
         Query query = new Query(requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);

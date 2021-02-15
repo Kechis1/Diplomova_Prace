@@ -8,7 +8,7 @@ public class Main {
     public static void main(String[] args) {
         // init data
         DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        String requestQuery = "SELECT * FROM DBO.STUDENT WHERE 'b' BETWEEN 'a' AND 'c'";
+        String requestQuery = "SELECT * FROM DBO.STUDUJE SDT WHERE EXISTS (SELECT * FROM DBO.PREDMET PDT WHERE SDT.PID = PDT.PID)";
         Query query = new Query(requestQuery, requestQuery);
 
         runChain(metadata, query);

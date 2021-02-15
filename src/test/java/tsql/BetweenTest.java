@@ -33,8 +33,21 @@ public class BetweenTest {
         transformationBuilder = new TransformationBuilder(metadata);
     }
 
+    @ParameterizedTest(name = "doFindNecessaryBetweenOneRunTest {index} query = {0}")
+    @MethodSource("doFindNecessaryBetweenSource")
+    void doFindNecessaryBetweenOneRunTest(String requestQuery) {
+        Query query = new Query(requestQuery, requestQuery);
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
+        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
+        assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
+        assertFalse(query.isChanged());
+    }
+
     @ParameterizedTest(name = "doFindUnnecessaryBetweenOneRunTest {index} query = {0}, resultQuery = {1}")
-    @MethodSource("doFindUnnecessaryBetweenOneRunSource")
+    @MethodSource("doFindUnnecessaryBetweenSource")
     void doFindUnnecessaryBetweenOneRunTest(String requestQuery, String resultQuery) {
         Query query = new Query(requestQuery, requestQuery);
         query.addRun(1, false);
@@ -47,26 +60,13 @@ public class BetweenTest {
         assertTrue(query.isChanged());
     }
 
-    @ParameterizedTest(name = "doFindNecessaryBetweenOneRunTest {index} query = {0}")
-    @MethodSource("doFindNecessaryBetweenOneRunSource")
-    void doFindNecessaryBetweenOneRunTest(String requestQuery) {
-        Query query = new Query(requestQuery, requestQuery);
-        query.addRun(1, false);
-        query.setCurrentRunNumber(1);
-        transformation.transformQuery(metadata, query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
-        assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
-        assertFalse(query.isChanged());
-    }
-
-    @ParameterizedTest(name = "doFindUnnecessaryBetweenFullRunTest {index} query = {0}, resultQuery = {1}")
-    @MethodSource("doFindUnnecessaryBetweenFullRunSource")
-    void doFindUnnecessaryBetweenFullRunTest(String requestQuery, String resultQuery) {
+    @ParameterizedTest(name = "doFindUnnecessaryBetweenFullRunTest {index} query = {0}, resultQuery = {2}")
+    @MethodSource("doFindUnnecessaryBetweenSource")
+    void doFindUnnecessaryBetweenFullRunTest(String requestQuery, String oneRunResultQuery, String fullRunResultQuery) {
         Query query = new Query(requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
         assertEquals(query.getCurrentRunNumber(), 2);
         assertNotNull(query.getQueryTransforms());
         assertEquals(query.getQueryTransforms().get(1).size(), 3);
@@ -76,37 +76,27 @@ public class BetweenTest {
     }
 
 
-    public static Stream<Arguments> doFindUnnecessaryBetweenOneRunSource() {
+    public static Stream<Arguments> doFindUnnecessaryBetweenSource() {
         return Stream.of(
                 Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 'b' BETWEEN 'a' AND 'c'",
-                        "SELECT * FROM DBO.STUDENT WHERE"),
-                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 'abc' BETWEEN 'aaa' AND 'abc'",
-                        "SELECT * FROM DBO.STUDENT WHERE"),
-                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 1 BETWEEN 0 AND 2",
-                        "SELECT * FROM DBO.STUDENT WHERE"),
-                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 1.5 BETWEEN 1.2 AND 1.7",
-                        "SELECT * FROM DBO.STUDENT WHERE"),
-                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE jmeno BETWEEN jmeno AND jmeno",
-                        "SELECT * FROM DBO.STUDENT WHERE")
-        );
-    }
-
-    public static Stream<Arguments> doFindUnnecessaryBetweenFullRunSource() {
-        return Stream.of(
-                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 'b' BETWEEN 'a' AND 'c'",
+                        "SELECT * FROM DBO.STUDENT WHERE",
                         "SELECT * FROM DBO.STUDENT"),
                 Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 'abc' BETWEEN 'aaa' AND 'abc'",
+                        "SELECT * FROM DBO.STUDENT WHERE",
                         "SELECT * FROM DBO.STUDENT"),
                 Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 1 BETWEEN 0 AND 2",
+                        "SELECT * FROM DBO.STUDENT WHERE",
                         "SELECT * FROM DBO.STUDENT"),
                 Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 1.5 BETWEEN 1.2 AND 1.7",
+                        "SELECT * FROM DBO.STUDENT WHERE",
                         "SELECT * FROM DBO.STUDENT"),
                 Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE jmeno BETWEEN jmeno AND jmeno",
+                        "SELECT * FROM DBO.STUDENT WHERE",
                         "SELECT * FROM DBO.STUDENT")
         );
     }
 
-    public static Stream<Arguments> doFindNecessaryBetweenOneRunSource() {
+    public static Stream<Arguments> doFindNecessaryBetweenSource() {
         return Stream.of(
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT " +

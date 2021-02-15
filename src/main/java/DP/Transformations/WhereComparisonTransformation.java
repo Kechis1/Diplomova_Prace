@@ -25,7 +25,7 @@ public class WhereComparisonTransformation extends QueryHandler {
     public Query transformQuery(final DatabaseMetadata metadata, Query query) {
         TSqlParser parser = parseQuery(query.getCurrentQuery());
         ParseTree select = parser.select_statement();
-        final List<ConditionItem> conditions = TSqlParseWalker.findConditions(metadata, select);
+        final List<ConditionItem> conditions = TSqlParseWalker.findWhereConditions(metadata, select);
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
 
         boolean isConditionNecessary = true;
@@ -49,12 +49,13 @@ public class WhereComparisonTransformation extends QueryHandler {
 
             if (!isConditionNecessary) {
                 query.addTransform(new Transformation(query.getCurrentQuery(),
-                        (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
+                        conditions.size() == 1 ? query.getCurrentQuery().substring(0, (query.getCurrentQuery().substring(0, condition.getStartAt()).lastIndexOf("WHERE"))) + query.getCurrentQuery().substring(condition.getStopAt()).trim() :
+                                (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION",
                         action,
                         true
                 ));
-                query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size()-1).getOutputQuery());
+                query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).getOutputQuery());
                 query.setChanged(true);
                 return query;
             }

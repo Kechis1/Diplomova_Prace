@@ -97,6 +97,21 @@ public class TSqlParseWalker {
         return conditions;
     }
 
+    public static List<ConditionItem> findWhereConditions(final DatabaseMetadata metadata, ParseTree select) {
+        List<ConditionItem> conditions = new ArrayList<>();
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            @Override
+            public void enterQuery_specification(TSqlParser.Query_specificationContext ctx) {
+                if (ctx.WHERE() != null) {
+                    for (TSqlParser.Search_conditionContext t: ctx.search_condition()) {
+                        conditions.addAll(findConditionsFromSearchCtx(metadata, t));
+                    }
+                }
+            }
+        }, select);
+        return conditions;
+    }
+
     public static Collection<? extends ConditionItem> findConditionsFromSearchCtx(final DatabaseMetadata metadata, TSqlParser.Search_conditionContext ctx) {
         List<ConditionItem> conditions = new ArrayList<>();
         for (TSqlParser.Search_condition_andContext ctxAnd : ctx.search_condition_and()) {

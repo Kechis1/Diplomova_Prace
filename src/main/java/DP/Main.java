@@ -7,7 +7,7 @@ public class Main {
     public static void main(String[] args) {
         // init data
         DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        String requestQuery = "SELECT PID, JMENO, JMENO FROM DBO.PREDMET";
+        String requestQuery = "SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID WHERE SDT.SID = SDT.SID ORDER BY SDT.SID";
         Query query = new Query(requestQuery, requestQuery);
 
         runChain(metadata, query);

@@ -60,18 +60,18 @@ public class SelectClauseTest {
         assertTrue(query.isChanged());
     }
 
-    @ParameterizedTest(name = "doFindUnnecessarySelectClauseFullRunTest {index} query = {0}, resultQuery = {2}")
+    @ParameterizedTest(name = "doFindUnnecessarySelectClauseFullRunTest {index} query = {0}, resultQuery = {2}, transformationsInFirstRun = {3}, transformationsSecondInRun = {4}")
     @MethodSource("doFindUnnecessarySelectClauseSource")
-    void doFindUnnecessarySelectClauseFullRunTest(String requestQuery, String oneRunResultQuery, String fullRunResultQuery) {
+    void doFindUnnecessarySelectClauseFullRunTest(String requestQuery, String oneRunResultQuery, String fullRunResultQuery, int transformationsInFirstRun, int transformationsInSecondRun) {
         Query query = new Query(requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
         assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
         assertEquals(query.getCurrentRunNumber(), 2);
         assertNotNull(query.getQueryTransforms());
-        assertEquals(query.getQueryTransforms().get(1).size(), 5);
-        assertEquals(query.getQueryTransforms().get(2).size(), 3);
-        assertEquals(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE", query.getQueryTransforms().get(1).get(0).getMessage());
+        assertEquals(query.getQueryTransforms().get(1).size(), transformationsInFirstRun);
+        assertEquals(query.getQueryTransforms().get(2).size(), transformationsInSecondRun);
+        assertEquals(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE", query.getQueryTransforms().get(1).get(transformationsInFirstRun-2).getMessage());
         assertTrue(query.isChanged());
     }
 
@@ -94,13 +94,19 @@ public class SelectClauseTest {
         return Stream.of(
                 Arguments.arguments("SELECT PID, JMENO, JMENO FROM DBO.PREDMET",
                         "SELECT PID, JMENO,  FROM DBO.PREDMET",
-                        "SELECT PID, JMENO, FROM DBO.PREDMET"),
+                        "SELECT PID,JMENO  FROM DBO.PREDMET",
+                        2,
+                        1),
                 Arguments.arguments("SELECT PDT.PID, STE.PID, PDT.JMENO FROM PREDMET PDT INNER JOIN STUDUJE STE ON PDT.PID = STE.PID WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS'",
                         "SELECT PDT.PID, , PDT.JMENO FROM PREDMET PDT INNER JOIN STUDUJE STE ON PDT.PID = STE.PID WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS'",
-                        "SELECT PDT.PID, PDT.JMENO FROM PREDMET PDT INNER JOIN STUDUJE STE ON PDT.PID = STE.PID WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS'"),
+                        "SELECT PDT.PID, PDT.JMENO FROM PREDMET PDT INNER JOIN STUDUJE STE ON PDT.PID = STE.PID WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS'",
+                        1,
+                        1),
                 Arguments.arguments("SELECT PID, JMENO, 2 FROM DBO.PREDMET WHERE ROCNIK = 2",
                         "SELECT PID, JMENO,  FROM DBO.PREDMET WHERE ROCNIK = 2",
-                        "SELECT PID, JMENO FROM DBO.PREDMET WHERE ROCNIK = 2")
+                        "SELECT PID,JMENO  FROM DBO.PREDMET WHERE ROCNIK = 2",
+                        3,
+                        2)
         );
     }
 

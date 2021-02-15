@@ -3,16 +3,14 @@ package DP;
 import DP.Database.DatabaseMetadata;
 import DP.Transformations.*;
 
-
 public class Main {
     public static void main(String[] args) {
         // init data
         DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        String requestQuery = "SELECT * FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE stt.sID LIKE stt.sID";
+        String requestQuery = "SELECT PID, JMENO, JMENO FROM DBO.PREDMET";
         Query query = new Query(requestQuery, requestQuery);
 
         runChain(metadata, query);
-      //   printRuns(query);
     }
 
     private static void runChain(DatabaseMetadata metadata, Query query) {

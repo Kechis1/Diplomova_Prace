@@ -125,8 +125,8 @@ public class SelectClauseTransformation extends QueryHandler {
                 if (bothInSelect == 0) {
                     for (ConditionItem condition : conditions) {
                         if (item.getOperator().equals("=") &&
-                                ((condition.getLeftSideColumnItem().equals(inSelect.get(0)) && condition.getRightSideDataType() != ConditionDataType.COLUMN) ||
-                                        (condition.getRightSideColumnItem().equals(inSelect.get(0)) && condition.getLeftSideDataType() != ConditionDataType.COLUMN))) {
+                                ((condition.getLeftSideColumnItem() != null && condition.getLeftSideColumnItem().equals(inSelect.get(0)) && condition.getRightSideDataType() != ConditionDataType.COLUMN) ||
+                                        (condition.getRightSideColumnItem() != null && condition.getRightSideColumnItem().equals(inSelect.get(0)) && condition.getLeftSideDataType() != ConditionDataType.COLUMN))) {
                             String value = condition.getLeftSideDataType() != ConditionDataType.COLUMN ? condition.getLeftSideValue() : condition.getRightSideValue();
                             query.addTransform(new Transformation(query.getCurrentQuery(),
                                     (query.getCurrentQuery().substring(0, columnInSelect.getStartAt()) + value + " AS " + columnInSelect.getName() + query.getCurrentQuery().substring(columnInSelect.getStopAt() + 1)).trim(),

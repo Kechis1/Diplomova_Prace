@@ -34,23 +34,9 @@ public class WhereComparisonTest {
         transformationBuilder = new TransformationBuilder(metadata);
     }
 
-    @ParameterizedTest(name="doFindUnnecessaryConditionTest {index} query = {0}, resultQuery = {1}")
-    @MethodSource("doFindUnnecessaryConditionSource")
-    void doFindUnnecessaryConditionTest(String requestQuery, String resultQuery) {
-        Query query = new Query(requestQuery, requestQuery);
-        query.addRun(1, false);
-        query.setCurrentRunNumber(1);
-        transformation.transformQuery(metadata, query);
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
-        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION", query.getQueryTransforms().get(1).get(0).getMessage());
-        assertTrue(query.isChanged());
-    }
-
-    @ParameterizedTest(name="doFindNecessaryConditionTest {index} query = {0}")
-    @MethodSource("doFindNecessaryConditionSource")
-    void doFindNecessaryConditionTest(String requestQuery) {
+    @ParameterizedTest(name="doFindNecessaryWhereComparisonTest {index} query = {0}")
+    @MethodSource("doFindNecessaryWhereComparisonSource")
+    void doFindNecessaryWhereComparisonTest(String requestQuery) {
         Query query = new Query(requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
@@ -61,41 +47,71 @@ public class WhereComparisonTest {
         assertFalse(query.isChanged());
     }
 
-    public static Stream<Arguments> doFindUnnecessaryConditionSource() {
+    @ParameterizedTest(name="doFindUnnecessaryWhereComparisonTest {index} query = {0}, resultQuery = {2}")
+    @MethodSource("doFindUnnecessaryWhereComparisonSource")
+    void doFindUnnecessaryWhereComparisonTest(String requestQuery, String oneRunResultQuery, String fullRunResultQuery) {
+        Query query = new Query(requestQuery, requestQuery);
+        transformationBuilder.makeQuery(query);
+        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
+        assertEquals(query.getCurrentRunNumber(), 2);
+        assertNotNull(query.getQueryTransforms());
+        assertEquals(query.getQueryTransforms().get(1).size(), 3);
+        assertEquals(query.getQueryTransforms().get(2).size(), 1);
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION", query.getQueryTransforms().get(1).get(0).getMessage());
+        assertTrue(query.isChanged());
+    }
+
+    public static Stream<Arguments> doFindUnnecessaryWhereComparisonSource() {
         return Stream.of(Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 = 1",
-                "SELECT * FROM DBO.PREDMET WHERE"),
+                "SELECT * FROM DBO.PREDMET WHERE",
+                "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 0 >= 0",
-                        "SELECT * FROM DBO.PREDMET WHERE"),
+                        "SELECT * FROM DBO.PREDMET WHERE",
+                        "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 > 0",
-                        "SELECT * FROM DBO.PREDMET WHERE"),
+                        "SELECT * FROM DBO.PREDMET WHERE",
+                        "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 0 <= 1",
-                        "SELECT * FROM DBO.PREDMET WHERE"),
+                        "SELECT * FROM DBO.PREDMET WHERE",
+                        "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 0 < 1",
-                        "SELECT * FROM DBO.PREDMET WHERE"),
+                        "SELECT * FROM DBO.PREDMET WHERE",
+                        "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 <> 0",
-                        "SELECT * FROM DBO.PREDMET WHERE"),
+                        "SELECT * FROM DBO.PREDMET WHERE",
+                        "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 = '1'",
-                        "SELECT * FROM DBO.PREDMET WHERE"),
+                        "SELECT * FROM DBO.PREDMET WHERE",
+                        "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE '1' = 1",
-                        "SELECT * FROM DBO.PREDMET WHERE"),
+                        "SELECT * FROM DBO.PREDMET WHERE",
+                        "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'a' = 'A'",
-                        "SELECT * FROM DBO.PREDMET WHERE"),
+                        "SELECT * FROM DBO.PREDMET WHERE",
+                        "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'ba' >= 'aa'",
-                        "SELECT * FROM DBO.PREDMET WHERE"),
+                        "SELECT * FROM DBO.PREDMET WHERE",
+                        "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'ba' > 'aa'",
-                        "SELECT * FROM DBO.PREDMET WHERE"),
+                        "SELECT * FROM DBO.PREDMET WHERE",
+                        "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'ab' <= 'ac'",
-                        "SELECT * FROM DBO.PREDMET WHERE"),
+                        "SELECT * FROM DBO.PREDMET WHERE",
+                        "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'aa' < 'ab'",
-                        "SELECT * FROM DBO.PREDMET WHERE"),
+                        "SELECT * FROM DBO.PREDMET WHERE",
+                        "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'aa' <> 'ab'",
-                        "SELECT * FROM DBO.PREDMET WHERE"),
+                        "SELECT * FROM DBO.PREDMET WHERE",
+                        "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID WHERE SDT.SID = SDT.SID ORDER BY SDT.SID",
-                        "SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID WHERE  ORDER BY SDT.SID")
+                        "SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID WHERE  ORDER BY SDT.SID",
+                        "SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID WHERE ORDER BY SDT.SID")
         );
     }
 
-    public static Stream<Arguments> doFindNecessaryConditionSource() {
+    public static Stream<Arguments> doFindNecessaryWhereComparisonSource() {
         return Stream.of(Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 1 = 2"),

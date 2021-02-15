@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 import static org.junit.Assert.*;
 
 @ExtendWith(MockitoExtension.class)
-public class JoinTablesTest {
+public class JoinTableTest {
     @Mock
     private DatabaseMetadata metadata;
     @Mock

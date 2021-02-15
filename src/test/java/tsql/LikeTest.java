@@ -2,9 +2,10 @@ package tsql;
 
 import DP.Database.DatabaseMetadata;
 import DP.Exceptions.UnnecessaryStatementException;
-import DP.Transformations.BetweenTransformation;
+import DP.Transformations.LikeTransformation;
 import DP.Transformations.Query;
 import DP.Transformations.TransformationBuilder;
+import DP.Transformations.WhereComparisonTransformation;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,16 +19,16 @@ import java.util.stream.Stream;
 import static org.junit.Assert.*;
 
 @ExtendWith(MockitoExtension.class)
-public class EqualConditionInOperatorBetweenTest {
+public class LikeTest {
     @Mock
     private DatabaseMetadata metadata;
     @Mock
-    private BetweenTransformation transformation;
+    private LikeTransformation transformation;
 
     @BeforeEach
     void init() {
         metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        transformation = new BetweenTransformation(null, metadata);
+        transformation = new LikeTransformation(null, metadata);
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, resultQuery = {1}")
@@ -38,9 +39,9 @@ public class EqualConditionInOperatorBetweenTest {
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION BETWEEN", query.getQueryTransforms().get(1).get(0).getMessage());
+        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
     }
 
@@ -59,44 +60,28 @@ public class EqualConditionInOperatorBetweenTest {
 
 
     public static Stream<Arguments> doFindUnnecessaryConditionSource() {
-        return Stream.of(
-                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 'b' BETWEEN 'a' AND 'c'",
-                        "SELECT * FROM DBO.STUDENT WHERE"),
-                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 'abc' BETWEEN 'aaa' AND 'abc'",
-                        "SELECT * FROM DBO.STUDENT WHERE"),
-                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 1 BETWEEN 0 AND 2",
-                        "SELECT * FROM DBO.STUDENT WHERE"),
-                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 1.5 BETWEEN 1.2 AND 1.7",
-                        "SELECT * FROM DBO.STUDENT WHERE"),
-                Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE jmeno BETWEEN jmeno AND jmeno",
-                        "SELECT * FROM DBO.STUDENT WHERE")
+        return Stream.of(Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE 1", "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '1'", "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '%1'", "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '%1%'", "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '1%'", "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE '1' LIKE '1'", "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'string' LIKE 'str%'", "SELECT * FROM DBO.PREDMET WHERE"),
+                Arguments.arguments("SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE stt.sID LIKE stt.sID", "SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE")
         );
     }
 
     public static Stream<Arguments> doFindNecessaryConditionSource() {
-        return Stream.of(
+        return Stream.of(Arguments.arguments("SELECT * " +
+                        "FROM student stt " +
+                        "JOIN studuje sde ON stt.sID = stt.sID " +
+                        "WHERE sde.sID LIKE stt.sID"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.STUDENT " +
-                        "WHERE 'b' BETWEEN 'c' AND 'd'"),
+                        "FROM student stt " +
+                        "WHERE stt.prijmeni LIKE stt.jmeno"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.STUDENT " +
-                        "WHERE 'abc' BETWEEN 'abc' AND 'aaa'"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.STUDENT " +
-                        "WHERE 1 BETWEEN 2 AND 5"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.STUDENT " +
-                        "WHERE 1.5 BETWEEN -1.7 AND -1.5"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.STUDENT STT " +
-                        "INNER JOIN DBO.STUDUJE SDE ON STT.SID = SDE.SID " +
-                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID " +
-                        "WHERE SDE.SID BETWEEN 5 AND 10"),
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.STUDENT STT " +
-                        "INNER JOIN DBO.STUDUJE SDE ON STT.SID = SDE.SID " +
-                        "INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID " +
-                        "WHERE SDE.SID BETWEEN STT.SID AND PDT.SID")
+                        "FROM student stt " +
+                        "WHERE stt.prijmeni LIKE '%ová'")
         );
     }
 }

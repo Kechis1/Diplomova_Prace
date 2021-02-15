@@ -8,11 +8,11 @@ public class Main {
     public static void main(String[] args) {
         // init data
         DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        String requestQuery = "SELECT pr.pId, stt.sID, ste.sID, ste.pID FROM dbo.student stt JOIN dbo.studuje ste ON stt.sID = ste.sID JOIN dbo.predmet pr ON ste.pID = pr.pID GROUP BY pr.pID, stt.sID, ste.pID, ste.sID, ste.rok";
+        String requestQuery = "SELECT * FROM DBO.STUDENT WHERE 'b' BETWEEN 'a' AND 'c'";
         Query query = new Query(requestQuery, requestQuery);
 
         runChain(metadata, query);
-        printRuns(query);
+      //   printRuns(query);
     }
 
     private static void runChain(DatabaseMetadata metadata, Query query) {
@@ -21,15 +21,17 @@ public class Main {
 
         printRuns(query);
 
+        System.out.println("---");
         System.out.println(query);
     }
 
-    private static void runChain(DatabaseMetadata metadata, Query query, QueryHandler chain) {
-        TransformationBuilder builder = new TransformationBuilder(metadata, chain);
+    private static void runChain(Query query, QueryHandler chain) {
+        TransformationBuilder builder = new TransformationBuilder(chain);
         builder.makeQuery(query);
 
         printRuns(query);
 
+       System.out.println("---");
         System.out.println(query);
     }
 

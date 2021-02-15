@@ -9,7 +9,7 @@ public class TransformationBuilder {
         buildChain(databaseMetadata);
     }
 
-    public TransformationBuilder(final DatabaseMetadata databaseMetadata, QueryHandler chain) {
+    public TransformationBuilder(QueryHandler chain) {
         this.chain = chain;
     }
 
@@ -18,12 +18,12 @@ public class TransformationBuilder {
                 new GroupByTransformation(
                         new JoinTableTransformation(
                                 new JoinConditionTransformation(
-                                        new WhereComparisonTransformation(
-                                                new SelectClauseTransformation(
-                                                        new BetweenTransformation(
-                                                                new LikeTransformation(null,
-                                                                        databaseMetadata),
+                                        new BetweenTransformation(
+                                                new LikeTransformation(new WhereComparisonTransformation(
+                                                        new SelectClauseTransformation(
+                                                                null,
                                                                 databaseMetadata),
+                                                        databaseMetadata),
                                                         databaseMetadata),
                                                 databaseMetadata),
                                         databaseMetadata),

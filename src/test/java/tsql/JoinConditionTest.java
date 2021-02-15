@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 import static org.junit.Assert.*;
 
 @ExtendWith(MockitoExtension.class)
-public class JoinConditionsTest {
+public class JoinConditionTest {
     @Mock
     private DatabaseMetadata metadata;
     @Mock

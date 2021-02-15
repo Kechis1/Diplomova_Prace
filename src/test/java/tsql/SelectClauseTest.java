@@ -33,9 +33,22 @@ public class SelectClauseTest {
         transformationBuilder = new TransformationBuilder(metadata);
     }
 
-    @ParameterizedTest(name = "doFindUnnecessaryConditionTest {index} query = {0}, resultQuery = {1}")
-    @MethodSource("doFindUnnecessaryConditionSource")
-    void doFindUnnecessaryConditionTest(String requestQuery, String resultQuery) {
+    @ParameterizedTest(name = "doFindNecessarySelectClauseTest {index} query = {0}")
+    @MethodSource("doFindNecessarySelectClauseSource")
+    void doFindNecessarySelectClauseTest(String requestQuery) {
+        Query query = new Query(requestQuery, requestQuery);
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
+        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
+        assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
+        assertFalse(query.isChanged());
+    }
+
+    @ParameterizedTest(name = "doFindUnnecessarySelectClauseOneRunTest {index} query = {0}, resultQuery = {1}")
+    @MethodSource("doFindUnnecessarySelectClauseSource")
+    void doFindUnnecessarySelectClauseOneRunTest(String requestQuery, String resultQuery) {
         Query query = new Query(requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
@@ -43,6 +56,21 @@ public class SelectClauseTest {
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertEquals(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE", query.getQueryTransforms().get(1).get(0).getMessage());
+        assertTrue(query.isChanged());
+    }
+
+    @ParameterizedTest(name = "doFindUnnecessarySelectClauseFullRunTest {index} query = {0}, resultQuery = {2}")
+    @MethodSource("doFindUnnecessarySelectClauseSource")
+    void doFindUnnecessarySelectClauseFullRunTest(String requestQuery, String oneRunResultQuery, String fullRunResultQuery) {
+        Query query = new Query(requestQuery, requestQuery);
+        transformationBuilder.makeQuery(query);
+        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
+        assertEquals(query.getCurrentRunNumber(), 2);
+        assertNotNull(query.getQueryTransforms());
+        assertEquals(query.getQueryTransforms().get(1).size(), 5);
+        assertEquals(query.getQueryTransforms().get(2).size(), 3);
         assertEquals(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
     }
@@ -62,27 +90,17 @@ public class SelectClauseTest {
         assertTrue(query.isChanged());
     }
 
-    @ParameterizedTest(name = "doFindNecessaryConditionTest {index} query = {0}")
-    @MethodSource("doFindNecessaryConditionSource")
-    void doFindNecessaryConditionTest(String requestQuery) {
-        Query query = new Query(requestQuery, requestQuery);
-        query.addRun(1, false);
-        query.setCurrentRunNumber(1);
-        transformation.transformQuery(metadata, query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
-        assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
-        assertFalse(query.isChanged());
-    }
-
-    public static Stream<Arguments> doFindUnnecessaryConditionSource() {
+    public static Stream<Arguments> doFindUnnecessarySelectClauseSource() {
         return Stream.of(
                 Arguments.arguments("SELECT PID, JMENO, JMENO FROM DBO.PREDMET",
-                        "SELECT PID, JMENO,  FROM DBO.PREDMET"),
+                        "SELECT PID, JMENO,  FROM DBO.PREDMET",
+                        "SELECT PID, JMENO, FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT PDT.PID, STE.PID, PDT.JMENO FROM PREDMET PDT INNER JOIN STUDUJE STE ON PDT.PID = STE.PID WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS'",
-                        "SELECT PDT.PID, , PDT.JMENO FROM PREDMET PDT INNER JOIN STUDUJE STE ON PDT.PID = STE.PID WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS'"),
+                        "SELECT PDT.PID, , PDT.JMENO FROM PREDMET PDT INNER JOIN STUDUJE STE ON PDT.PID = STE.PID WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS'",
+                        "SELECT PDT.PID, PDT.JMENO FROM PREDMET PDT INNER JOIN STUDUJE STE ON PDT.PID = STE.PID WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS'"),
                 Arguments.arguments("SELECT PID, JMENO, 2 FROM DBO.PREDMET WHERE ROCNIK = 2",
-                        "SELECT PID, JMENO,  FROM DBO.PREDMET WHERE ROCNIK = 2")
+                        "SELECT PID, JMENO,  FROM DBO.PREDMET WHERE ROCNIK = 2",
+                        "SELECT PID, JMENO FROM DBO.PREDMET WHERE ROCNIK = 2")
         );
     }
 
@@ -97,7 +115,7 @@ public class SelectClauseTest {
         );
     }
 
-    public static Stream<Arguments> doFindNecessaryConditionSource() {
+    public static Stream<Arguments> doFindNecessarySelectClauseSource() {
         return Stream.of(
                 Arguments.arguments("SELECT PDT.PID, PDT.JMENO, STD.JMENO " +
                         "FROM DBO.PREDMET PDT " +

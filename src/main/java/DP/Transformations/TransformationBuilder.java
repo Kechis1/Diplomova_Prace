@@ -19,11 +19,12 @@ public class TransformationBuilder {
                         new JoinTableTransformation(
                                 new JoinConditionTransformation(
                                         new BetweenTransformation(
-                                                new LikeTransformation(new WhereComparisonTransformation(
-                                                        new SelectClauseTransformation(
-                                                                null,
+                                                new LikeTransformation(
+                                                        new WhereComparisonTransformation(
+                                                                new SelectClauseTransformation(
+                                                                        null,
+                                                                        databaseMetadata),
                                                                 databaseMetadata),
-                                                        databaseMetadata),
                                                         databaseMetadata),
                                                 databaseMetadata),
                                         databaseMetadata),

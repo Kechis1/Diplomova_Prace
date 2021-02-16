@@ -115,21 +115,35 @@ public class TSqlParseWalker {
     public static Collection<? extends ConditionItem> findConditionsFromSearchCtx(final DatabaseMetadata metadata, TSqlParser.Search_conditionContext ctx) {
         List<ConditionItem> conditions = new ArrayList<>();
         for (TSqlParser.Search_condition_andContext ctxAnd : ctx.search_condition_and()) {
-            for (TSqlParser.Search_condition_notContext ctxNot : ctxAnd.search_condition_not()) {
-                if (ctxNot.predicate().EXISTS() == null) {
-                    ConditionItem item = new ConditionItem(ctxNot.predicate().getStart().getStartIndex(),
-                            ctxNot.predicate().getStop().getStopIndex() + 1,
-                            ConditionItem.findDataType(ctxNot.predicate().expression().get(0)),
-                            ConditionItem.findSideValue(ctxNot.predicate().expression().get(0)),
-                            ConditionItem.findDataType(ctxNot.predicate().expression().get(1)),
-                            ConditionItem.findSideValue(ctxNot.predicate().expression().get(1)),
-                            ctxNot.predicate().getChild(1).getText()
+            for (int i = 0; i < ctxAnd.search_condition_not().size(); i++) {
+                if (ctxAnd.search_condition_not().get(i).predicate().EXISTS() == null) {
+                    ConditionItem item = new ConditionItem(ctxAnd.search_condition_not().get(i).predicate().getStart().getStartIndex(),
+                            ctxAnd.search_condition_not().get(i).predicate().getStop().getStopIndex() + 1,
+                            ConditionItem.findDataType(ctxAnd.search_condition_not().get(i).predicate().expression().get(0)),
+                            ConditionItem.findSideValue(ctxAnd.search_condition_not().get(i).predicate().expression().get(0)),
+                            ConditionItem.findDataType(ctxAnd.search_condition_not().get(i).predicate().expression().get(1)),
+                            ConditionItem.findSideValue(ctxAnd.search_condition_not().get(i).predicate().expression().get(1)),
+                            ctxAnd.search_condition_not().get(i).predicate().getChild(1).getText()
                     );
                     if (item.getLeftSideDataType() == ConditionDataType.COLUMN) {
-                        item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctxNot, 0));
+                        item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 0));
                     }
                     if (item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                        item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctxNot, 1));
+                        item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 1));
+                    }
+                    if (ctxAnd.AND() != null && !ctxAnd.AND().isEmpty()) {
+                        if (i == 0) {
+                            item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStartIndex());
+                            item.setRightLogicalOperatorStopAt(ctxAnd.AND(i).getSymbol().getStopIndex());
+                        } else if (i == ctxAnd.search_condition_not().size() - 1) {
+                            item.setLeftLogicalOperatorStartAt(ctxAnd.AND(ctxAnd.AND().size() - 1).getSymbol().getStartIndex());
+                            item.setLeftLogicalOperatorStopAt(ctxAnd.AND(ctxAnd.AND().size() - 1).getSymbol().getStopIndex());
+                        } else {
+                            item.setLeftLogicalOperatorStartAt(ctxAnd.AND(i - 1).getSymbol().getStartIndex());
+                            item.setLeftLogicalOperatorStopAt(ctxAnd.AND(i - 1).getSymbol().getStopIndex());
+                            item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStartIndex());
+                            item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStopIndex());
+                        }
                     }
                     conditions.add(item);
                 }

@@ -23,6 +23,10 @@ public class ConditionItem {
     private double rightSideNumberValue;
     private int startAt;
     private int stopAt;
+    private int leftLogicalOperatorStartAt = -1;
+    private int leftLogicalOperatorStopAt = -1;
+    private int rightLogicalOperatorStartAt = -1;
+    private int rightLogicalOperatorStopAt = -1;
 
 
     public ConditionItem(int startAt, int stopAt, ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator) {
@@ -53,8 +57,18 @@ public class ConditionItem {
             for (int i = 0; i < conditions.get(x).size() - 1; i++) {
                 for (int j = i + 1; j < conditions.get(x).size(); j++) {
                     if (!conditions.get(x).get(i).compareToCondition(metadata, conditions.get(x).get(j))) {
+                        String newQueryString;
+
+                        if (conditions.get(x).get(j).getLeftLogicalOperatorStartAt() != -1) {
+                            newQueryString = (query.getCurrentQuery().substring(0, conditions.get(x).get(j).getLeftLogicalOperatorStartAt()) + query.getCurrentQuery().substring(conditions.get(x).get(j).getStopAt())).trim();
+                        } else if (conditions.get(x).get(j).getRightLogicalOperatorStartAt() != -1) {
+                            newQueryString = (query.getCurrentQuery().substring(0, conditions.get(x).get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(x).get(j).getRightLogicalOperatorStopAt() + 1)).trim();
+                        } else {
+                            newQueryString = (query.getCurrentQuery().substring(0, conditions.get(x).get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(x).get(j).getStopAt())).trim();
+                        }
+
                         query.addTransform(new Transformation(query.getCurrentQuery(),
-                                (query.getCurrentQuery().substring(0, conditions.get(x).get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(x).get(j).getStopAt())).trim(),
+                                newQueryString,
                                 UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION",
                                 JoinConditionTransformation.action,
                                 true
@@ -73,8 +87,17 @@ public class ConditionItem {
         for (int i = 0; i < conditions.size() - 1; i++) {
             for (int j = i + 1; j < conditions.size(); j++) {
                 if (!conditions.get(i).compareToCondition(metadata, conditions.get(j))) {
+                    String newQueryString;
+
+                    if (conditions.get(j).getLeftLogicalOperatorStartAt() != -1) {
+                        newQueryString = (query.getCurrentQuery().substring(0, conditions.get(j).getLeftLogicalOperatorStartAt()) + query.getCurrentQuery().substring(conditions.get(j).getStopAt())).trim();
+                    } else if (conditions.get(j).getRightLogicalOperatorStartAt() != -1) {
+                        newQueryString = (query.getCurrentQuery().substring(0, conditions.get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(j).getRightLogicalOperatorStopAt() + 1)).trim();
+                    } else {
+                        newQueryString = (query.getCurrentQuery().substring(0, conditions.get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(j).getStopAt())).trim();
+                    }
                     query.addTransform(new Transformation(query.getCurrentQuery(),
-                            (query.getCurrentQuery().substring(0, conditions.get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(j).getStopAt())).trim(),
+                            newQueryString,
                             UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION",
                             JoinConditionTransformation.action,
                             true
@@ -342,6 +365,38 @@ public class ConditionItem {
 
     public void setRightSideColumnItem(ColumnItem rightSideColumnItem) {
         this.rightSideColumnItem = rightSideColumnItem;
+    }
+
+    public int getLeftLogicalOperatorStartAt() {
+        return leftLogicalOperatorStartAt;
+    }
+
+    public void setLeftLogicalOperatorStartAt(int leftLogicalOperatorStartAt) {
+        this.leftLogicalOperatorStartAt = leftLogicalOperatorStartAt;
+    }
+
+    public int getLeftLogicalOperatorStopAt() {
+        return leftLogicalOperatorStopAt;
+    }
+
+    public void setLeftLogicalOperatorStopAt(int leftLogicalOperatorStopAt) {
+        this.leftLogicalOperatorStopAt = leftLogicalOperatorStopAt;
+    }
+
+    public int getRightLogicalOperatorStartAt() {
+        return rightLogicalOperatorStartAt;
+    }
+
+    public void setRightLogicalOperatorStartAt(int rightLogicalOperatorStartAt) {
+        this.rightLogicalOperatorStartAt = rightLogicalOperatorStartAt;
+    }
+
+    public int getRightLogicalOperatorStopAt() {
+        return rightLogicalOperatorStopAt;
+    }
+
+    public void setRightLogicalOperatorStopAt(int rightLogicalOperatorStopAt) {
+        this.rightLogicalOperatorStopAt = rightLogicalOperatorStopAt;
     }
 
     @Override

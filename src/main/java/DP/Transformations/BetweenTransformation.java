@@ -119,7 +119,7 @@ public class BetweenTransformation extends QueryHandler {
             } else if (currentColumn) {
                 query.addTransform(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery(),
-                        conditions.get(i).getFullCondition() + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
+                        QueryHandler.restoreSpaces(query.getCurrentQuery().substring(conditions.get(i).getStartAt()) + query.getCurrentQuery().substring(conditions.get(i).getStopAt()), conditions.get(i).getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
                         action,
                         false
                 ));

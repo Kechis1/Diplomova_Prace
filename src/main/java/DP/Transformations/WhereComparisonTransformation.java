@@ -61,7 +61,7 @@ public class WhereComparisonTransformation extends QueryHandler {
             } else if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
                 query.addTransform(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery(),
-                        condition.getFullCondition() + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
+                        QueryHandler.restoreSpaces(query.getCurrentQuery().substring(condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt()), condition.getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
                         action,
                         false
                 ));

@@ -38,15 +38,20 @@ public abstract class QueryHandler implements ITransformation {
         TSqlParser parser = parseQuery(validatedQuery);
         ParseTree select = parser.select_statement();
         String parsedQuery = select.getText();
-        int index = -1;
-        do {
-            index = validatedQuery.indexOf(' ', index + 1);
-            if (index != -1) {
-                parsedQuery = (parsedQuery.substring(0, index) + " " + parsedQuery.substring(index)).trim();
-            }
-        } while (index >= 0);
+        parsedQuery = restoreSpaces(validatedQuery, parsedQuery);
         query.setCurrentQuery(parsedQuery);
         query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).setOutputQuery(parsedQuery);
+    }
+
+    public static String restoreSpaces(String withSpaces, String withoutSpaces) {
+        int index = -1;
+        do {
+            index = withSpaces.indexOf(' ', index + 1);
+            if (index != -1) {
+                withoutSpaces = (withoutSpaces.substring(0, index) + " " + withoutSpaces.substring(index)).trim();
+            }
+        } while (index >= 0);
+        return withoutSpaces;
     }
 
     private String getRidOfInvalidCommas(String query) {

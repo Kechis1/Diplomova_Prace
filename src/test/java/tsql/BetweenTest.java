@@ -46,6 +46,19 @@ public class BetweenTest {
         assertFalse(query.isChanged());
     }
 
+    @ParameterizedTest(name = "doBetweenWhereResultIsEmptySetTest {index} query = {0}, condition = {1}")
+    @MethodSource("doBetweenWhereResultIsEmptySetSource")
+    void doBetweenWhereResultIsEmptySetTest(String requestQuery, String condition) {
+        Query query = new Query(requestQuery, requestQuery);
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
+        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
+        assertEquals(condition + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet, query.getQueryTransforms().get(1).get(0).getMessage());
+        assertFalse(query.isChanged());
+    }
+
     @ParameterizedTest(name = "doFindUnnecessaryBetweenOneRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryBetweenSource")
     void doFindUnnecessaryBetweenOneRunTest(String requestQuery, String resultQuery) {
@@ -96,20 +109,29 @@ public class BetweenTest {
         );
     }
 
-    public static Stream<Arguments> doFindNecessaryBetweenSource() {
+    public static Stream<Arguments> doBetweenWhereResultIsEmptySetSource() {
         return Stream.of(
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT " +
-                        "WHERE 'b' BETWEEN 'c' AND 'd'"),
+                        "WHERE 'b' BETWEEN 'c' AND 'd'",
+                        "'B' BETWEEN 'C' AND 'D'"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT " +
-                        "WHERE 'abc' BETWEEN 'abc' AND 'aaa'"),
+                        "WHERE 'abc' BETWEEN 'abc' AND 'aaa'",
+                        "'ABC' BETWEEN 'ABC' AND 'AAA'"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT " +
-                        "WHERE 1 BETWEEN 2 AND 5"),
+                        "WHERE 1 BETWEEN 2 AND 5",
+                        "1 BETWEEN 2 AND 5"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT " +
-                        "WHERE 1.5 BETWEEN -1.7 AND -1.5"),
+                        "WHERE 1.5 BETWEEN -1.7 AND -1.5",
+                        "1.5 BETWEEN -1.7 AND -1.5")
+        );
+    }
+
+    public static Stream<Arguments> doFindNecessaryBetweenSource() {
+        return Stream.of(
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT STT " +
                         "INNER JOIN DBO.STUDUJE SDE ON STT.SID = SDE.SID " +

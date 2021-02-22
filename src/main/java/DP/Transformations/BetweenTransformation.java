@@ -81,9 +81,12 @@ public class BetweenTransformation extends QueryHandler {
         }, select);
 
         boolean currentNecessary;
+        boolean currentColumn;
         for (int i = 0; i < conditions.size(); i += 2) {
             currentNecessary = false;
+            currentColumn = false;
             for (int j = i; j <= i + 1; j++) {
+                currentColumn |= conditions.get(j).getLeftSideDataType() != ConditionDataType.COLUMN && conditions.get(j).getRightSideDataType() != ConditionDataType.COLUMN;
                 if ((conditions.get(j).getLeftSideDataType() == ConditionDataType.BINARY && Arrays.asList(ConditionDataType.BINARY, ConditionDataType.DECIMAL).contains(conditions.get(j).getRightSideDataType())) ||
                         (conditions.get(j).getLeftSideDataType() == ConditionDataType.DECIMAL && (conditions.get(j).getRightSideDataType().isNumeric || conditions.get(j).getRightSideDataType() == ConditionDataType.STRING_DECIMAL)) ||
                         (conditions.get(j).getLeftSideDataType() == ConditionDataType.FLOAT && ((conditions.get(j).getRightSideDataType().isNumeric && conditions.get(j).getRightSideDataType() != ConditionDataType.BINARY) || (Arrays.asList(ConditionDataType.STRING_DECIMAL, ConditionDataType.STRING_FLOAT).contains(conditions.get(j).getRightSideDataType())))) ||
@@ -112,6 +115,16 @@ public class BetweenTransformation extends QueryHandler {
                 ));
                 query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size()-1).getOutputQuery());
                 query.setChanged(true);
+                return query;
+            } else if (currentColumn) {
+                query.addTransform(new Transformation(query.getCurrentQuery(),
+                        query.getCurrentQuery(),
+                        conditions.get(i).getFullCondition() + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
+                        action,
+                        false
+                ));
+                query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size()-1).getOutputQuery());
+                query.setChanged(false);
                 return query;
             }
         }

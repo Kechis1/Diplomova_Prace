@@ -159,59 +159,59 @@ public class WhereComparisonTest {
         return Stream.of(Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 1 = 2",
-                "1=2"),
+                "1 = 2"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 0 >= 1",
-                        "0>=1"),
+                        "0 >= 1"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 1 > 2",
-                        "1>2"),
+                        "1 > 2"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 2 <= 1",
-                        "2<=1"),
+                        "2 <= 1"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 2 < 1",
-                        "2<1"),
+                        "2 < 1"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 1 <> 1",
-                        "1<>1"),
+                        "1 <> 1"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 1 = '2'",
-                        "1='2'"),
+                        "1 = '2'"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE '1' = 2",
-                        "'1'=2"),
+                        "'1' = 2"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 'a' = 'B'",
-                        "'A'='B'"),
+                        "'A' = 'B'"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 'ba' >= 'ca'",
-                        "'BA'>='CA'"),
+                        "'BA' >= 'CA'"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 'ba' > 'ca'",
-                        "'BA'>'CA'"),
+                        "'BA' > 'CA'"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 'ab' <= 'aa'",
-                        "'AB'<='AA'"),
+                        "'AB' <= 'AA'"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 'ac' < 'ab'",
-                        "'AC'<'AB'"),
+                        "'AC' < 'AB'"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.PREDMET " +
                         "WHERE 'aa' <> 'aa'",
-                        "'AA'<>'AA'")
+                        "'AA' <> 'AA'")
         );
     }
 

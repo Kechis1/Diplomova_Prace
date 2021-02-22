@@ -123,7 +123,8 @@ public class TSqlParseWalker {
                             ConditionItem.findSideValue(ctxAnd.search_condition_not().get(i).predicate().expression().get(0)),
                             ConditionItem.findDataType(ctxAnd.search_condition_not().get(i).predicate().expression().get(1)),
                             ConditionItem.findSideValue(ctxAnd.search_condition_not().get(i).predicate().expression().get(1)),
-                            ctxAnd.search_condition_not().get(i).predicate().getChild(1).getText()
+                            ctxAnd.search_condition_not().get(i).predicate().getChild(1).getText(),
+                            ctxAnd.search_condition_not().get(i).predicate().getText()
                     );
                     if (item.getLeftSideDataType() == ConditionDataType.COLUMN) {
                         item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 0));

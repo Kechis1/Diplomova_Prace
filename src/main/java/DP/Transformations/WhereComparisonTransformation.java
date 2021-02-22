@@ -58,6 +58,16 @@ public class WhereComparisonTransformation extends QueryHandler {
                 query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).getOutputQuery());
                 query.setChanged(true);
                 return query;
+            } else if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
+                query.addTransform(new Transformation(query.getCurrentQuery(),
+                        query.getCurrentQuery(),
+                        condition.getFullCondition() + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
+                        action,
+                        false
+                ));
+                query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).getOutputQuery());
+                query.setChanged(false);
+                return query;
             }
         }
         query.addTransform(new Transformation(query.getCurrentQuery(),

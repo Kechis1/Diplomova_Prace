@@ -19,6 +19,7 @@ public class ConditionItem {
     private ConditionDataType rightSideDataType;
     private String rightSideValue;
     private String operator;
+    private String fullCondition;
     private double leftSideNumberValue;
     private double rightSideNumberValue;
     private int startAt;
@@ -29,7 +30,7 @@ public class ConditionItem {
     private int rightLogicalOperatorStopAt = -1;
 
 
-    public ConditionItem(int startAt, int stopAt, ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator) {
+    public ConditionItem(int startAt, int stopAt, ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator, String fullCondition) {
         this.startAt = startAt;
         this.stopAt = stopAt;
         this.leftSideDataType = leftSideDataType;
@@ -37,6 +38,7 @@ public class ConditionItem {
         this.rightSideDataType = rightSideDataType;
         this.rightSideValue = rightSideValue;
         this.operator = operator;
+        this.fullCondition = fullCondition;
         initNumberValues();
     }
 
@@ -397,6 +399,14 @@ public class ConditionItem {
 
     public void setRightLogicalOperatorStopAt(int rightLogicalOperatorStopAt) {
         this.rightLogicalOperatorStopAt = rightLogicalOperatorStopAt;
+    }
+
+    public String getFullCondition() {
+        return fullCondition;
+    }
+
+    public void setFullCondition(String fullCondition) {
+        this.fullCondition = fullCondition;
     }
 
     @Override

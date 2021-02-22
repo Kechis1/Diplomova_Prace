@@ -58,7 +58,8 @@ public class ExistsTransformation extends QueryHandler {
                                         ConditionItem.findSideValue(scnContext.predicate().expression().get(1)),
                                         scnContext.predicate().comparison_operator() != null
                                                 ? scnContext.predicate().comparison_operator().getText()
-                                                : null
+                                                : null,
+                                        scnContext.predicate().getText()
                                 );
                                 if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
                                     item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, scnContext, 0));

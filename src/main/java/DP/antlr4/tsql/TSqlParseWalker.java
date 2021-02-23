@@ -88,10 +88,21 @@ public class TSqlParseWalker {
 
     public static List<ConditionItem> findConditions(final DatabaseMetadata metadata, ParseTree select) {
         List<ConditionItem> conditions = new ArrayList<>();
+        final int[] havingGroupStartsAt = {-1, -1};
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
-            public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
-                conditions.addAll(findConditionsFromSearchCtx(metadata, ctx));
+            public void exitSearch_condition(TSqlParser.Search_conditionContext ctx) {
+                conditions.addAll(findConditions(metadata, ctx, havingGroupStartsAt[0], havingGroupStartsAt[1]));
+            }
+
+            @Override
+            public void enterQuery_specification(TSqlParser.Query_specificationContext ctx) {
+                if (ctx.HAVING() != null) {
+                    havingGroupStartsAt[0] = ctx.HAVING().getSymbol().getStartIndex();
+                }
+                if (ctx.GROUP() != null) {
+                    havingGroupStartsAt[1] = ctx.GROUP().getSymbol().getStartIndex();
+                }
             }
         }, select);
         return conditions;
@@ -103,12 +114,21 @@ public class TSqlParseWalker {
             @Override
             public void enterQuery_specification(TSqlParser.Query_specificationContext ctx) {
                 if (ctx.WHERE() != null) {
-                    for (TSqlParser.Search_conditionContext t: ctx.search_condition()) {
-                        conditions.addAll(findConditionsFromSearchCtx(metadata, t));
+                    for (TSqlParser.Search_conditionContext t : ctx.search_condition()) {
+                        conditions.addAll(findConditions(metadata, t, ctx.HAVING() == null ? -1 : ctx.HAVING().getSymbol().getStartIndex(), ctx.GROUP() == null ? -1 : ctx.GROUP().getSymbol().getStartIndex()));
                     }
                 }
             }
         }, select);
+        return conditions;
+    }
+
+    private static List<ConditionItem> findConditions(final DatabaseMetadata metadata, TSqlParser.Search_conditionContext t, int havingStartsAt, int groupByStartsAt) {
+        List<ConditionItem> conditions = new ArrayList<>();
+        if (!((havingStartsAt != -1 && t.getStart().getStartIndex() > havingStartsAt)
+                || (groupByStartsAt != -1 && t.getStart().getStartIndex() > groupByStartsAt))) {
+            conditions.addAll(findConditionsFromSearchCtx(metadata, t));
+        }
         return conditions;
     }
 
@@ -193,7 +213,7 @@ public class TSqlParseWalker {
 
             @Override
             public void enterSelect_statement(TSqlParser.Select_statementContext mCtx) {
-                if(foundSelect.isEmpty()) {
+                if (foundSelect.isEmpty()) {
                     foundSelect.add(true);
                     for (TSqlParser.Select_list_elemContext ctx : mCtx.query_expression().query_specification().select_list().select_list_elem()) {
                         if (ctx.asterisk() != null) {

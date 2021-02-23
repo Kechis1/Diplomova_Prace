@@ -92,8 +92,8 @@ public class WhereComparisonTest {
     public static Stream<Arguments> doFindUnnecessaryWhereComparisonSource() {
         return Stream.of(Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 = 1 GROUP BY PID HAVING SUM(PID) > 3 ORDER BY PID",
                 "SELECT * FROM DBO.PREDMET GROUP BY PID HAVING SUM(PID) > 3 ORDER BY PID",
-                3,
-                1),
+                4,
+                2),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 0 >= 0 ORDER BY PID",
                         "SELECT * FROM DBO.PREDMET ORDER BY PID",
                         3,

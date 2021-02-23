@@ -67,7 +67,7 @@ public class JoinConditionTransformation extends QueryHandler {
         foundDuplicateCondition |= ConditionItem.duplicatesExists(query, metadata, fullOuterJoinConditions);
 
         if (!foundDuplicateCondition) {
-            query.addTransform(new Transformation(query.getCurrentQuery(),
+            query.addTransformation(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
                     action,

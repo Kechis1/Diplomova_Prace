@@ -5,7 +5,7 @@ import java.util.*;
 public class Query {
     String originalQuery;
     String currentQuery;
-    HashMap<Integer, List<Transformation>> queryTransforms;
+    HashMap<Integer, List<Transformation>> queryTransformations;
     HashMap<Integer, Boolean> runs;
     int currentRunNumber;
     boolean changed = false;
@@ -55,11 +55,11 @@ public class Query {
     }
 
     public HashMap<Integer, List<Transformation>> getQueryTransforms() {
-        return queryTransforms;
+        return queryTransformations;
     }
 
     public void setQueryTransforms(HashMap<Integer, List<Transformation>> queryTransforms) {
-        this.queryTransforms = queryTransforms;
+        this.queryTransformations = queryTransforms;
     }
 
     public boolean isChanged() {
@@ -70,22 +70,22 @@ public class Query {
         this.changed = changed;
     }
 
-    public void addTransform(Transformation transform) {
-        addTransformAutomatically(getCurrentRunNumber(), transform);
-    }
-
-    private void addTransformAutomatically(Integer numberOfRuns, Transformation transform) {
-        if (this.queryTransforms == null) {
-            this.queryTransforms = new HashMap<>();
+    public void addTransformation(Transformation transformation) {
+        if (this.queryTransformations == null) {
+            this.queryTransformations = new HashMap<>();
         }
         List<Transformation> transformations;
-        if (this.queryTransforms.containsKey(numberOfRuns)) {
-            transformations = this.queryTransforms.get(numberOfRuns);
+        if (this.queryTransformations.containsKey(getCurrentRunNumber())) {
+            transformations = this.queryTransformations.get(getCurrentRunNumber());
         } else {
             transformations = new ArrayList<>();
         }
-        transformations.add(transform);
-        this.queryTransforms.put(numberOfRuns, transformations);
+        transformations.add(transformation);
+        this.queryTransformations.put(getCurrentRunNumber(), transformations);
+        setCurrentQuery(getQueryTransforms().get(getCurrentRunNumber()).get(getQueryTransforms().get(getCurrentRunNumber()).size() - 1).getOutputQuery());
+        if (transformation.isChanged()) {
+            setChanged(true);
+        }
     }
 
     public Boolean isQueryChangedByRun(int numberOfRuns) {

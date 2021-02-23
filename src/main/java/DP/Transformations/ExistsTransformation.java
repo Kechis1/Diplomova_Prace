@@ -82,18 +82,16 @@ public class ExistsTransformation extends QueryHandler {
                             (!exist.getTable().isEmpty() &&
                                     (exist.getConditions() == null || exist.getConditions().size() == 0 ||
                                             (exist.getConditions().size() == 1 && ConditionItem.isComparingForeignKey(fromTable, exist.getTable(), exist.getConditions().get(0)))))))) {
-                query.addTransform(new Transformation(query.getCurrentQuery(),
+                query.addTransformation(new Transformation(query.getCurrentQuery(),
                         (query.getCurrentQuery().substring(0, exist.getPredicateStartAt()) + query.getCurrentQuery().substring(exist.getPredicateStopAt() + 1)).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS",
                         action,
                         true
                 ));
-                query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size()-1).getOutputQuery());
-                query.setChanged(true);
                 return query;
             }
         }
-        query.addTransform(new Transformation(query.getCurrentQuery(),
+        query.addTransformation(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
                 action,

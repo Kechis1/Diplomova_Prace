@@ -69,14 +69,12 @@ public class ConditionItem {
                             newQueryString = (query.getCurrentQuery().substring(0, conditions.get(x).get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(x).get(j).getStopAt())).trim();
                         }
 
-                        query.addTransform(new Transformation(query.getCurrentQuery(),
+                        query.addTransformation(new Transformation(query.getCurrentQuery(),
                                 newQueryString,
                                 UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION",
                                 JoinConditionTransformation.action,
                                 true
                         ));
-                        query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size()-1).getOutputQuery());
-                        query.setChanged(true);
                         return true;
                     }
                 }
@@ -98,14 +96,12 @@ public class ConditionItem {
                     } else {
                         newQueryString = (query.getCurrentQuery().substring(0, conditions.get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(j).getStopAt())).trim();
                     }
-                    query.addTransform(new Transformation(query.getCurrentQuery(),
+                    query.addTransformation(new Transformation(query.getCurrentQuery(),
                             newQueryString,
                             UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION",
                             JoinConditionTransformation.action,
                             true
                     ));
-                    query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size()-1).getOutputQuery());
-                    query.setChanged(true);
                     return true;
                 }
             }

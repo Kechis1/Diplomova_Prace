@@ -65,17 +65,15 @@ public class GroupByTransformation extends QueryHandler {
 
         if (allAggregateFunctions.isEmpty()) {
             if (columnsInGroupBy.containsAll(newMetadata.getAllPrimaryKeys())) {
-                query.addTransform(new Transformation(query.getCurrentQuery(),
+                query.addTransformation(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery().substring(0, query.getCurrentQuery().indexOf("GROUP BY")).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY",
                         action,
                         true
                 ));
-                query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).getOutputQuery());
-                query.setChanged(true);
                 return query;
             }
-            query.addTransform(new Transformation(query.getCurrentQuery(),
+            query.addTransformation(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
                     action,
@@ -102,14 +100,14 @@ public class GroupByTransformation extends QueryHandler {
                             true
                     );
                 }
-                query.addTransform(transform);
+                query.addTransformation(transform);
             }
             query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).getOutputQuery());
             query.setChanged(true);
             return query;
         }
 
-        query.addTransform(new Transformation(query.getCurrentQuery(),
+        query.addTransformation(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
                 action,

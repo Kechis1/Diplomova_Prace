@@ -46,7 +46,7 @@ public class JoinTableTransformation extends QueryHandler {
         }, select);
 
         if (isDistinctInSelect.isEmpty()) {
-            query.addTransform(new Transformation(query.getCurrentQuery(),
+            query.addTransformation(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
                     action,
@@ -65,7 +65,7 @@ public class JoinTableTransformation extends QueryHandler {
                 allColumnsInSelect, true, metadata.setNullableColumns(innerConditions), true, fromTable.get(0));
 
         if (!foundRedundantJoin) {
-            query.addTransform(new Transformation(query.getCurrentQuery(),
+            query.addTransformation(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
                     action,

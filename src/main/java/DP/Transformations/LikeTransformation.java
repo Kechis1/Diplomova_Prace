@@ -57,56 +57,28 @@ public class LikeTransformation extends QueryHandler {
         DatabaseMetadata newMetadata = metadata.withTables(allTables);
 
         for (ConditionItem condition : conditions) {
-            if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
-                if (SQLLogicalOperators.like(condition.getLeftSideValue(), condition.getRightSideValue())) {
-                    query.addTransform(new Transformation(query.getCurrentQuery(),
-                            (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
-                            UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
-                            action,
-                            true
-                    ));
-                    query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size()-1).getOutputQuery());
-                    query.setChanged(true);
-                    return query;
-                } else {
-                    query.addTransform(new Transformation(query.getCurrentQuery(),
-                            query.getCurrentQuery(),
-                            QueryHandler.restoreSpaces(query.getCurrentQuery().substring(condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt()), condition.getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
-                            action,
-                            false
-                    ));
-                    query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).getOutputQuery());
-                    query.setChanged(false);
-                    return query;
-                }
-            } else if (condition.getLeftSideDataType() == ConditionDataType.COLUMN &&
-                    (condition.getRightSideDataType() == ConditionDataType.COLUMN || condition.getRightSideDataType() == ConditionDataType.STRING)) {
-                if (condition.getRightSideDataType() == ConditionDataType.STRING) {
-                    if (condition.getRightSideValue().matches("^[%]+$")) {
-                        query.addTransform(new Transformation(query.getCurrentQuery(),
-                                (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
-                                UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
-                                action,
-                                true
-                        ));
-                        query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size()-1).getOutputQuery());
-                        query.setChanged(true);
-                        return query;
-                    }
-                } else if (newMetadata.columnsEqual(condition.getLeftSideColumnItem(), condition.getRightSideColumnItem())) {
-                    query.addTransform(new Transformation(query.getCurrentQuery(),
-                            (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
-                            UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
-                            action,
-                            true
-                    ));
-                    query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size()-1).getOutputQuery());
-                    query.setChanged(true);
-                    return query;
-                }
+            if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN && !SQLLogicalOperators.like(condition.getLeftSideValue(), condition.getRightSideValue())) {
+                query.addTransformation(new Transformation(query.getCurrentQuery(),
+                        query.getCurrentQuery(),
+                        restoreSpaces(query.getCurrentQuery().substring(condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt()), condition.getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
+                        action,
+                        false
+                ));
+                return query;
+            } else if ((condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN && SQLLogicalOperators.like(condition.getLeftSideValue(), condition.getRightSideValue()))
+                    || (condition.getLeftSideDataType() == ConditionDataType.COLUMN &&
+                    (condition.getRightSideDataType() == ConditionDataType.COLUMN || condition.getRightSideDataType() == ConditionDataType.STRING))
+                    && ((condition.getRightSideDataType() == ConditionDataType.STRING && condition.getRightSideValue().matches("^[%]+$")) || (newMetadata.columnsEqual(condition.getLeftSideColumnItem(), condition.getRightSideColumnItem())))) {
+                query.addTransformation(new Transformation(query.getCurrentQuery(),
+                        (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
+                        UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
+                        action,
+                        true
+                ));
+                return query;
             }
         }
-        query.addTransform(new Transformation(query.getCurrentQuery(),
+        query.addTransformation(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
                 action,

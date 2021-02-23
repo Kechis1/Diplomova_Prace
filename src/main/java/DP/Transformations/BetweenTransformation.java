@@ -107,29 +107,25 @@ public class BetweenTransformation extends QueryHandler {
                 }
             }
             if (!currentNecessary) {
-                query.addTransform(new Transformation(query.getCurrentQuery(),
+                query.addTransformation(new Transformation(query.getCurrentQuery(),
                         (query.getCurrentQuery().substring(0, conditions.get(i).getStartAt()) + query.getCurrentQuery().substring(conditions.get(i).getStopAt() + 1)).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION BETWEEN",
                         action,
                         true
                 ));
-                query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size()-1).getOutputQuery());
-                query.setChanged(true);
                 return query;
             } else if (currentColumn) {
-                query.addTransform(new Transformation(query.getCurrentQuery(),
+                query.addTransformation(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery(),
                         QueryHandler.restoreSpaces(query.getCurrentQuery().substring(conditions.get(i).getStartAt()) + query.getCurrentQuery().substring(conditions.get(i).getStopAt()), conditions.get(i).getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
                         action,
                         false
                 ));
-                query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size()-1).getOutputQuery());
-                query.setChanged(false);
                 return query;
             }
         }
 
-        query.addTransform(new Transformation(query.getCurrentQuery(),
+        query.addTransformation(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
                 action,

@@ -52,14 +52,12 @@ public class SelectClauseTransformation extends QueryHandler {
         }, select);
 
         if (!foundExistsNotConstant.isEmpty()) {
-            query.addTransform(new Transformation(query.getCurrentQuery(),
+            query.addTransformation(new Transformation(query.getCurrentQuery(),
                     (query.getCurrentQuery().substring(0, foundExistsNotConstant.get(0).getSelectListStartAt()) + "1" + query.getCurrentQuery().substring(foundExistsNotConstant.get(0).getSelectListStopAt() + 1)).trim(),
                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                     action,
                     true
             ));
-            query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).getOutputQuery());
-            query.setChanged(true);
             return query;
         }
 
@@ -67,27 +65,23 @@ public class SelectClauseTransformation extends QueryHandler {
 
         ColumnItem equals = ColumnItem.duplicatesExists(allColumnsInSelect);
         if (equals != null) {
-            query.addTransform(new Transformation(query.getCurrentQuery(),
+            query.addTransformation(new Transformation(query.getCurrentQuery(),
                     (query.getCurrentQuery().substring(0, equals.getStartAt()) + query.getCurrentQuery().substring(equals.getStopAt() + 1)).trim(),
                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
                     action,
                     true
             ));
-            query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).getOutputQuery());
-            query.setChanged(true);
             return query;
         }
 
         for (ColumnItem item : allColumnsInSelect) {
             if (item.isConstant() && foundUnion.isEmpty()) {
-                query.addTransform(new Transformation(query.getCurrentQuery(),
+                query.addTransformation(new Transformation(query.getCurrentQuery(),
                         (query.getCurrentQuery().substring(0, item.getStartAt()) + query.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
                         UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
                         action,
                         true
                 ));
-                query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).getOutputQuery());
-                query.setChanged(true);
                 return query;
             }
         }
@@ -111,14 +105,12 @@ public class SelectClauseTransformation extends QueryHandler {
                         bothInSelect++;
                     }
                     if (bothInSelect == 1) {
-                        query.addTransform(new Transformation(query.getCurrentQuery(),
+                        query.addTransformation(new Transformation(query.getCurrentQuery(),
                                 (query.getCurrentQuery().substring(0, column.getStartAt()) + query.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
                                 UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
                                 action,
                                 true
                         ));
-                        query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).getOutputQuery());
-                        query.setChanged(true);
                         return query;
                     }
                 }
@@ -128,14 +120,12 @@ public class SelectClauseTransformation extends QueryHandler {
                                 ((condition.getLeftSideColumnItem() != null && condition.getLeftSideColumnItem().equals(inSelect.get(0)) && condition.getRightSideDataType() != ConditionDataType.COLUMN) ||
                                         (condition.getRightSideColumnItem() != null && condition.getRightSideColumnItem().equals(inSelect.get(0)) && condition.getLeftSideDataType() != ConditionDataType.COLUMN))) {
                             String value = condition.getLeftSideDataType() != ConditionDataType.COLUMN ? condition.getLeftSideValue() : condition.getRightSideValue();
-                            query.addTransform(new Transformation(query.getCurrentQuery(),
+                            query.addTransformation(new Transformation(query.getCurrentQuery(),
                                     (query.getCurrentQuery().substring(0, columnInSelect.getStartAt()) + value + " AS " + columnInSelect.getName() + query.getCurrentQuery().substring(columnInSelect.getStopAt() + 1)).trim(),
                                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                                     action,
                                     true
                             ));
-                            query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).getOutputQuery());
-                            query.setChanged(true);
                             return query;
                         }
                     }
@@ -149,21 +139,19 @@ public class SelectClauseTransformation extends QueryHandler {
                     if ((item.getLeftSideDataType() == ConditionDataType.COLUMN && column.equals(item.getLeftSideColumnItem()) && item.getRightSideDataType() != ConditionDataType.COLUMN) ||
                             (item.getRightSideDataType() == ConditionDataType.COLUMN && column.equals(item.getRightSideColumnItem()) && item.getLeftSideDataType() != ConditionDataType.COLUMN)) {
                         String value = item.getLeftSideDataType() != ConditionDataType.COLUMN ? item.getLeftSideValue() : item.getRightSideValue();
-                        query.addTransform(new Transformation(query.getCurrentQuery(),
+                        query.addTransformation(new Transformation(query.getCurrentQuery(),
                                 (query.getCurrentQuery().substring(0, column.getStartAt()) + value + " AS " + column.getName() + query.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
                                 UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                                 action,
                                 true
                         ));
-                        query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).getOutputQuery());
-                        query.setChanged(true);
                         return query;
                     }
                 }
             }
         }
 
-        query.addTransform(new Transformation(query.getCurrentQuery(),
+        query.addTransformation(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
                 action,

@@ -195,14 +195,12 @@ public class DatabaseTable {
                     currentQuery = (query.getCurrentQuery().substring(0, joinTable.getStartAt()) + query.getCurrentQuery().substring(joinTable.getStopAt() + 1)).trim();
                 }
 
-                query.addTransform(new Transformation(query.getCurrentQuery(),
+                query.addTransformation(new Transformation(query.getCurrentQuery(),
                         currentQuery,
                         UnnecessaryStatementException.messageUnnecessaryStatement + " " + typeOfJoin + " JOIN",
                         JoinTableTransformation.action,
                         true
                 ));
-                query.setCurrentQuery(query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).getOutputQuery());
-                query.setChanged(true);
                 return true;
             }
         }

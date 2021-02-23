@@ -33,7 +33,7 @@ public abstract class QueryHandler implements ITransformation {
         }
     }
 
-    public void normalizeQuery(Query query) {
+    private void normalizeQuery(Query query) {
         String validatedQuery = getRidOfInvalidCommas(query.getCurrentQuery());
         TSqlParser parser = parseQuery(validatedQuery);
         ParseTree select = parser.select_statement();

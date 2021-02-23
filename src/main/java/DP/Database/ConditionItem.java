@@ -84,12 +84,22 @@ public class ConditionItem {
     }
 
     public static boolean duplicatesExists(Query query, DatabaseMetadata metadata, List<ConditionItem> conditions) {
+        int whereStartsAt = query.getCurrentQuery().indexOf("WHERE");
         for (int i = 0; i < conditions.size() - 1; i++) {
             for (int j = i + 1; j < conditions.size(); j++) {
                 if (!conditions.get(i).compareToCondition(metadata, conditions.get(j))) {
                     String newQueryString;
 
-                    if (conditions.get(j).getLeftLogicalOperatorStartAt() != -1) {
+                    if (whereStartsAt != -1 && conditions.get(j).getStartAt() > whereStartsAt) {
+                        int whereConditionSize = 0;
+                        for (ConditionItem condition: conditions) {
+                            if (condition.getStartAt() > whereStartsAt) {
+                                whereConditionSize++;
+                            }
+                        }
+                        newQueryString = whereConditionSize == 1 ? (query.getCurrentQuery().substring(0, whereStartsAt) + query.getCurrentQuery().substring(conditions.get(j).getStopAt()).trim()).trim() :
+                                (query.getCurrentQuery().substring(0, conditions.get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(j).getStopAt())).trim();
+                    } else if (conditions.get(j).getLeftLogicalOperatorStartAt() != -1) {
                         newQueryString = (query.getCurrentQuery().substring(0, conditions.get(j).getLeftLogicalOperatorStartAt()) + query.getCurrentQuery().substring(conditions.get(j).getStopAt())).trim();
                     } else if (conditions.get(j).getRightLogicalOperatorStartAt() != -1) {
                         newQueryString = (query.getCurrentQuery().substring(0, conditions.get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(j).getRightLogicalOperatorStopAt() + 1)).trim();

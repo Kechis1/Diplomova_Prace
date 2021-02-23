@@ -49,7 +49,7 @@ public class WhereComparisonTransformation extends QueryHandler {
 
             if (!isConditionNecessary) {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
-                        conditions.size() == 1 ? query.getCurrentQuery().substring(0, (query.getCurrentQuery().substring(0, condition.getStartAt()).lastIndexOf("WHERE"))) + query.getCurrentQuery().substring(condition.getStopAt()).trim() :
+                        conditions.size() == 1 ? (query.getCurrentQuery().substring(0, (query.getCurrentQuery().substring(0, condition.getStartAt()).lastIndexOf("WHERE"))) + query.getCurrentQuery().substring(condition.getStopAt()).trim()).trim() :
                                 (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION",
                         action,

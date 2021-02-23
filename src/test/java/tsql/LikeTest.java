@@ -73,13 +73,13 @@ public class LikeTest {
         assertTrue(query.isChanged());
     }
 
-    @ParameterizedTest(name = "doFindUnnecessaryLikeFullRunTest {index} query = {0}, resultQuery = {2}, transformationsInFirstRun = {3}, transformationsSecondInRun = {4}")
+    @ParameterizedTest(name = "doFindUnnecessaryLikeFullRunTest {index} query = {0}, resultQuery = {1}, transformationsInFirstRun = {2}, transformationsSecondInRun = {3}")
     @MethodSource("doFindUnnecessaryLikeSource")
-    void doFindUnnecessaryLikeFullRunTest(String requestQuery, String oneRunResultQuery, String fullRunResultQuery, int transformationsInFirstRun, int transformationsInSecondRun) {
+    void doFindUnnecessaryLikeFullRunTest(String requestQuery, String resultQuery, int transformationsInFirstRun, int transformationsInSecondRun) {
         Query query = new Query(requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
+        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
         assertEquals(query.getCurrentRunNumber(), 2);
         assertNotNull(query.getQueryTransforms());
         assertEquals(query.getQueryTransforms().get(1).size(), transformationsInFirstRun);
@@ -91,42 +91,34 @@ public class LikeTest {
 
     public static Stream<Arguments> doFindUnnecessaryLikeSource() {
         return Stream.of(Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE 1",
-                "SELECT * FROM DBO.PREDMET WHERE",
                 "SELECT * FROM DBO.PREDMET",
                 3,
                 1),
-                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '1'",
-                        "SELECT * FROM DBO.PREDMET WHERE",
-                        "SELECT * FROM DBO.PREDMET",
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '1' ORDER BY PID",
+                        "SELECT * FROM DBO.PREDMET ORDER BY PID",
                         3,
                         1),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '%1'",
-                        "SELECT * FROM DBO.PREDMET WHERE",
                         "SELECT * FROM DBO.PREDMET",
                         3,
                         1),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '%1%'",
-                        "SELECT * FROM DBO.PREDMET WHERE",
                         "SELECT * FROM DBO.PREDMET",
                         3,
                         1),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE '1%'",
-                        "SELECT * FROM DBO.PREDMET WHERE",
                         "SELECT * FROM DBO.PREDMET",
                         3,
                         1),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE '1' LIKE '1'",
-                        "SELECT * FROM DBO.PREDMET WHERE",
                         "SELECT * FROM DBO.PREDMET",
                         3,
                         1),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 'string' LIKE 'str%'",
-                        "SELECT * FROM DBO.PREDMET WHERE",
                         "SELECT * FROM DBO.PREDMET",
                         3,
                         1),
                 Arguments.arguments("SELECT * FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE stt.sID LIKE stt.sID",
-                        "SELECT * FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE",
                         "SELECT * FROM student stt JOIN studuje sde ON stt.sID = sde.sID",
                         5,
                         3)

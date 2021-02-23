@@ -101,6 +101,9 @@ public class JoinConditionTest {
                         "FROM DBO.STUDENT SDT " +
                         "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
                         "WHERE SDT.SID = SDE.SID"),
+                Arguments.arguments("SELECT * FROM DBO.student SDT" +
+                        "LEFT JOIN DBO.studuje SDE ON SDT.sID = SDE.sID or jmeno = 'Petr'" +
+                        "LEFT JOIN DBO.predmet PDT ON SDE.pID= PDT.pID and SDT.sID = SDE.sID"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT SDT " +
                         "RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +

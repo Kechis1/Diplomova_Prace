@@ -46,6 +46,19 @@ public class LikeTest {
         assertFalse(query.isChanged());
     }
 
+    @ParameterizedTest(name = "doLikeWhereResultIsEmptySetTest {index} query = {0}, condition = {1}")
+    @MethodSource("doLikeWhereResultIsEmptySetSource")
+    void doExistsWhereResultIsEmptySetTest(String requestQuery, String condition) {
+        Query query = new Query(requestQuery, requestQuery);
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
+        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
+        assertEquals(condition + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet, query.getQueryTransforms().get(1).get(0).getMessage());
+        assertFalse(query.isChanged());
+    }
+
     @ParameterizedTest(name = "doFindUnnecessaryLikeOneRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryLikeSource")
     void doFindUnnecessaryLikeOneRunTest(String requestQuery, String resultQuery) {
@@ -131,6 +144,23 @@ public class LikeTest {
                 Arguments.arguments("SELECT * " +
                         "FROM student stt " +
                         "WHERE stt.prijmeni LIKE '%ová'")
+        );
+    }
+
+    public static Stream<Arguments> doLikeWhereResultIsEmptySetSource() {
+        return Stream.of(
+                Arguments.arguments("SELECT * " +
+                        "FROM student stt " +
+                        "WHERE 'a' LIKE 'b'",
+                        "'A' LIKE 'B'"),
+                Arguments.arguments("SELECT * " +
+                        "FROM student stt " +
+                        "WHERE 'a' LIKE 2",
+                        "'A' LIKE 2"),
+                Arguments.arguments("SELECT * " +
+                        "FROM student stt " +
+                        "WHERE 'a' LIKE 'b%'",
+                        "'A' LIKE 'B%'")
         );
     }
 }

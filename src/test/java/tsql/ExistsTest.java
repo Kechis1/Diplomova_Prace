@@ -109,6 +109,19 @@ public class ExistsTest {
         assertFalse(query.isChanged());
     }
 
+    @ParameterizedTest(name = "doExistsWhereResultIsEmptySetTest {index} query = {0}, condition = {1}")
+    @MethodSource("doExistsWhereResultIsEmptySetSource")
+    void doExistsWhereResultIsEmptySetTest(String requestQuery, String condition) {
+        Query query = new Query(requestQuery, requestQuery);
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
+        assertEquals(condition + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet, query.getQueryTransforms().get(1).get(0).getMessage());
+        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
+        assertFalse(query.isChanged());
+    }
+
     public static Stream<Arguments> doFindUnnecessaryExistsBasedOnRecordsCountSource() {
         return Stream.of(Arguments.arguments("SELECT * FROM DBO.PREDMET PDT WHERE NOT EXISTS (SELECT * FROM STUDUJE SDT WHERE PDT.PID = SDT.PID)",
                 0,
@@ -156,14 +169,20 @@ public class ExistsTest {
                         "WHERE PDT.PID = SDT.PID " +
                         ")"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE NOT EXISTS (SELECT 1)"),
-                Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDUJE SDT " +
                         "WHERE EXISTS (SELECT * " +
                         "FROM DBO.PREDMET PDT " +
                         "WHERE SDT.PID = PDT.PID AND PDT.JMENO = 'DAIS' " +
                         ")")
+        );
+    }
+
+    public static Stream<Arguments> doExistsWhereResultIsEmptySetSource() {
+        return Stream.of(
+                Arguments.arguments("SELECT * " +
+                        "FROM DBO.PREDMET " +
+                        "WHERE NOT EXISTS (SELECT 1)",
+                        "NOT EXISTS (SELECT 1)")
         );
     }
 }

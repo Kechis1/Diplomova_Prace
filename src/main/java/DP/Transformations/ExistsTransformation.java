@@ -37,6 +37,7 @@ public class ExistsTransformation extends QueryHandler {
                 for (int i = 0; i < ctx.search_condition_not().size(); i++) {
                     if (ctx.search_condition_not(i).predicate() != null && ctx.search_condition_not(i).predicate().EXISTS() != null) {
                         ExistItem eItem = new ExistItem();
+                        eItem.setFullPredicate(ctx.search_condition_not(i).getText());
                         eItem.setNot(ctx.search_condition_not(i).NOT() != null);
                         eItem.setPredicateStartAt(ctx.search_condition_not(i).getStart().getStartIndex());
                         eItem.setPredicateStopAt(ctx.search_condition_not(i).getStop().getStopIndex());
@@ -89,6 +90,13 @@ public class ExistsTransformation extends QueryHandler {
                         true
                 ));
                 return query;
+            } else if (exist.isNot() && exist.getTable() == null) {
+                query.addTransformation(new Transformation(query.getCurrentQuery(),
+                        query.getCurrentQuery(),
+                        QueryHandler.restoreSpaces(query.getCurrentQuery().substring(exist.getPredicateStartAt()) + query.getCurrentQuery().substring(exist.getPredicateStopAt()), exist.getFullPredicate()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
+                        action,
+                        false
+                ));
             }
         }
         query.addTransformation(new Transformation(query.getCurrentQuery(),

@@ -10,14 +10,16 @@ public class ExistItem {
     int selectListStopAt;
     int predicateStartAt;
     int predicateStopAt;
+    String fullPredicate;
 
-    public ExistItem(DatabaseTable table, List<ConditionItem> conditions, boolean not) {
+    public ExistItem(DatabaseTable table, List<ConditionItem> conditions, boolean not, String fullPredicate) {
         this.table = table;
         this.conditions = conditions;
         this.not = not;
+        this.fullPredicate = fullPredicate;
     }
 
-    public ExistItem(int selectListStartAt, int selectListStopAt) {
+    public ExistItem(int selectListStartAt, int selectListStopAt, String fullPredicate) {
         this.selectListStartAt = selectListStartAt;
         this.selectListStopAt = selectListStopAt;
     }
@@ -88,5 +90,13 @@ public class ExistItem {
                 ", not=" + not +
                 ", conditions=" + conditions +
                 '}';
+    }
+
+    public String getFullPredicate() {
+        return fullPredicate;
+    }
+
+    public void setFullPredicate(String fullPredicate) {
+        this.fullPredicate = fullPredicate;
     }
 }

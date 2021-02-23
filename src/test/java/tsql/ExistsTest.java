@@ -118,7 +118,7 @@ public class ExistsTest {
         transformation.transformQuery(metadata, query);
         assertEquals(condition + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet, query.getQueryTransforms().get(1).get(0).getMessage());
         assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 2);
         assertFalse(query.isChanged());
     }
 

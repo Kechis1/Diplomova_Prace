@@ -190,9 +190,9 @@ public class DatabaseTable {
                 String currentQuery;
                 if (typeOfJoin.equals("RIGHT") || typeOfJoin.equals("INNER")) {
                     currentQuery = (query.getCurrentQuery().substring(0, fromTable.getFromTableStartAt()) + joinTable.getDatabaseTable().getQueryName() +
-                            query.getCurrentQuery().substring(fromTable.getFromTableStopAt() + 1, joinTable.getStartAt()) + query.getCurrentQuery().substring(joinTable.getStopAt() + 1)).trim();
+                            query.getCurrentQuery().substring(fromTable.getFromTableStopAt() + 1, joinTable.getStartAt()).trim() + query.getCurrentQuery().substring(joinTable.getStopAt() + 1).trim()).trim();
                 } else {
-                    currentQuery = (query.getCurrentQuery().substring(0, joinTable.getStartAt()) + query.getCurrentQuery().substring(joinTable.getStopAt() + 1)).trim();
+                    currentQuery = (query.getCurrentQuery().substring(0, joinTable.getStartAt()) + query.getCurrentQuery().substring(joinTable.getStopAt() + 1).trim()).trim();
                 }
 
                 query.addTransformation(new Transformation(query.getCurrentQuery(),

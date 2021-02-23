@@ -35,9 +35,9 @@ public class ExistsTest {
         transformationBuilder = new TransformationBuilder(metadata);
     }
 
-    @ParameterizedTest(name = "doFindNecessaryExistsOneRunTest {index} query = {0}")
+    @ParameterizedTest(name = "doFindNecessaryExistsTest {index} query = {0}")
     @MethodSource("doFindNecessaryExistsSource")
-    void doFindNecessaryExistsOneRunTest(String requestQuery) {
+    void doFindNecessaryExistsTest(String requestQuery) {
         Query query = new Query(requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
@@ -50,7 +50,7 @@ public class ExistsTest {
 
     @ParameterizedTest(name = "doFindUnnecessaryExistsOneRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryExistsSource")
-    void doFindUnnecessaryExistsTest(String requestQuery, String resultQuery) {
+    void doFindUnnecessaryExistsOneRunTest(String requestQuery, String resultQuery) {
         Query query = new Query(requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
@@ -62,13 +62,13 @@ public class ExistsTest {
         assertTrue(query.isChanged());
     }
 
-    @ParameterizedTest(name = "doFindUnnecessaryExistsFullRunTest {index} query = {0}, resultQuery = {2}")
+    @ParameterizedTest(name = "doFindUnnecessaryExistsFullRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryExistsSource")
-    void doFindUnnecessaryExistsTest(String requestQuery, String oneRunResultQuery, String fullRunResultQuery) {
+    void doFindUnnecessaryExistsFullRunTest(String requestQuery, String resultQuery) {
         Query query = new Query(requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
+        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
         assertEquals(query.getCurrentRunNumber(), 2);
         assertNotNull(query.getQueryTransforms());
         assertEquals(query.getQueryTransforms().get(1).size(), 3);
@@ -125,28 +125,23 @@ public class ExistsTest {
     public static Stream<Arguments> doFindUnnecessaryExistsBasedOnRecordsCountSource() {
         return Stream.of(Arguments.arguments("SELECT * FROM DBO.PREDMET PDT WHERE NOT EXISTS (SELECT * FROM STUDUJE SDT WHERE PDT.PID = SDT.PID)",
                 0,
-                "SELECT * FROM DBO.PREDMET PDT WHERE"),
+                "SELECT * FROM DBO.PREDMET PDT"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE EXISTS (SELECT * FROM STUDUJE)",
                         46,
-                        "SELECT * FROM DBO.PREDMET WHERE")
+                        "SELECT * FROM DBO.PREDMET")
         );
     }
 
     public static Stream<Arguments> doFindUnnecessaryExistsSource() {
         return Stream.of(Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE EXISTS (SELECT 1)",
-                "SELECT * FROM DBO.PREDMET WHERE",
                 "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE EXISTS (SELECT 0)",
-                        "SELECT * FROM DBO.PREDMET WHERE",
                         "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE EXISTS (SELECT null)",
-                        "SELECT * FROM DBO.PREDMET WHERE",
                         "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE EXISTS (SELECT t1.a FROM (SELECT 1 as a) t1)",
-                        "SELECT * FROM DBO.PREDMET WHERE",
                         "SELECT * FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT * FROM DBO.STUDUJE SDT WHERE EXISTS (SELECT * FROM DBO.PREDMET PDT WHERE SDT.PID = PDT.PID)",
-                        "SELECT * FROM DBO.STUDUJE SDT WHERE",
                         "SELECT * FROM DBO.STUDUJE SDT")
         );
     }

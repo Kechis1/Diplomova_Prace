@@ -83,6 +83,14 @@ public class ExistItem {
         this.not = not;
     }
 
+    public String getFullPredicate() {
+        return fullPredicate;
+    }
+
+    public void setFullPredicate(String fullPredicate) {
+        this.fullPredicate = fullPredicate;
+    }
+
     @Override
     public String toString() {
         return "ExistItem{" +
@@ -90,13 +98,5 @@ public class ExistItem {
                 ", not=" + not +
                 ", conditions=" + conditions +
                 '}';
-    }
-
-    public String getFullPredicate() {
-        return fullPredicate;
-    }
-
-    public void setFullPredicate(String fullPredicate) {
-        this.fullPredicate = fullPredicate;
     }
 }

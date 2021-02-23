@@ -41,6 +41,7 @@ public class ExistsTransformation extends QueryHandler {
                         eItem.setNot(ctx.search_condition_not(i).NOT() != null);
                         eItem.setPredicateStartAt(ctx.search_condition_not(i).getStart().getStartIndex());
                         eItem.setPredicateStopAt(ctx.search_condition_not(i).getStop().getStopIndex());
+
                         TSqlParser.Query_specificationContext qSpecContext = ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification();
                         if (qSpecContext.FROM() != null && qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().table_name_with_hint() != null) {
                             eItem.setTable(metadata.findTable(qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText(),
@@ -84,7 +85,8 @@ public class ExistsTransformation extends QueryHandler {
                                     (exist.getConditions() == null || exist.getConditions().size() == 0 ||
                                             (exist.getConditions().size() == 1 && ConditionItem.isComparingForeignKey(fromTable, exist.getTable(), exist.getConditions().get(0)))))))) {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
-                        (query.getCurrentQuery().substring(0, exist.getPredicateStartAt()) + query.getCurrentQuery().substring(exist.getPredicateStopAt() + 1)).trim(),
+                        exist.getConditions() == null || exist.getConditions().size() == 1 ? (query.getCurrentQuery().substring(0, query.getCurrentQuery().substring(0, exist.getPredicateStartAt()).lastIndexOf("WHERE")) + query.getCurrentQuery().substring(exist.getPredicateStopAt() + 1).trim()).trim() :
+                                (query.getCurrentQuery().substring(0, exist.getPredicateStartAt()) + query.getCurrentQuery().substring(exist.getPredicateStopAt() + 1).trim()).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS",
                         action,
                         true

@@ -60,13 +60,13 @@ public class JoinConditionTest {
         assertTrue(query.isChanged());
     }
 
-    @ParameterizedTest(name = "doFindUnnecessaryJoinConditionFullRunTest {index} query = {0}, resultQuery = {2}")
+    @ParameterizedTest(name = "doFindUnnecessaryJoinConditionFullRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryJoinConditionSource")
-    void doFindUnnecessaryJoinConditionFullRunTest(String requestQuery, String oneRunResultQuery, String fullRunResultQuery) {
+    void doFindUnnecessaryJoinConditionFullRunTest(String requestQuery, String resultQuery) {
         Query query = new Query(requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
+        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
         assertEquals(query.getCurrentRunNumber(), 2);
         assertNotNull(query.getQueryTransforms());
         assertEquals(query.getQueryTransforms().get(1).size(), 4);
@@ -79,19 +79,14 @@ public class JoinConditionTest {
     public static Stream<Arguments> doFindUnnecessaryJoinConditionSource() {
         return Stream.of(
                 Arguments.arguments("SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID WHERE SDT.SID = SDE.SID",
-                        "SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID WHERE",
                         "SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID"),
                 Arguments.arguments("SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON SDT.SID = SDE.SID AND SDE.PID = PDT.PID",
-                        "SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON  SDE.PID = PDT.PID",
                         "SELECT * FROM DBO.STUDENT SDT INNER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID INNER JOIN DBO.PREDMET PDT ON  SDE.PID = PDT.PID"),
                 Arguments.arguments("SELECT * FROM DBO.STUDENT SDT LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID LEFT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDT.SID = SDE.SID",
-                        "SELECT * FROM DBO.STUDENT SDT LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID LEFT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID",
                         "SELECT * FROM DBO.STUDENT SDT LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID LEFT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID"),
                 Arguments.arguments("SELECT * FROM DBO.STUDENT SDT RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID RIGHT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDE.PID = PDT.PID",
-                        "SELECT * FROM DBO.STUDENT SDT RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID RIGHT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID",
                         "SELECT * FROM DBO.STUDENT SDT RIGHT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID RIGHT JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID"),
                 Arguments.arguments("SELECT * FROM DBO.STUDENT SDT FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID FULL OUTER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID AND SDE.PID = PDT.PID",
-                        "SELECT * FROM DBO.STUDENT SDT FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID FULL OUTER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID",
                         "SELECT * FROM DBO.STUDENT SDT FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID FULL OUTER JOIN DBO.PREDMET PDT ON SDE.PID = PDT.PID")
         );
     }
@@ -101,8 +96,8 @@ public class JoinConditionTest {
                         "FROM DBO.STUDENT SDT " +
                         "LEFT JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID " +
                         "WHERE SDT.SID = SDE.SID"),
-                Arguments.arguments("SELECT * FROM DBO.student SDT" +
-                        "LEFT JOIN DBO.studuje SDE ON SDT.sID = SDE.sID or jmeno = 'Petr'" +
+                Arguments.arguments("SELECT * FROM DBO.student SDT " +
+                        "LEFT JOIN DBO.studuje SDE ON SDT.sID = SDE.sID or jmeno = 'Petr' " +
                         "LEFT JOIN DBO.predmet PDT ON SDE.pID= PDT.pID and SDT.sID = SDE.sID"),
                 Arguments.arguments("SELECT * " +
                         "FROM DBO.STUDENT SDT " +

@@ -134,6 +134,10 @@ public class TSqlParseWalker {
 
     public static Collection<? extends ConditionItem> findConditionsFromSearchCtx(final DatabaseMetadata metadata, TSqlParser.Search_conditionContext ctx) {
         List<ConditionItem> conditions = new ArrayList<>();
+        List<Integer> ors = new ArrayList<>();
+        for (int i = 0; i < ctx.OR().size(); i++) {
+            ors.add(i);
+        }
         for (TSqlParser.Search_condition_andContext ctxAnd : ctx.search_condition_and()) {
             for (int i = 0; i < ctxAnd.search_condition_not().size(); i++) {
                 if (ctxAnd.search_condition_not().get(i).predicate().EXISTS() == null) {
@@ -157,13 +161,23 @@ public class TSqlParseWalker {
                             item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStartIndex());
                             item.setRightLogicalOperatorStopAt(ctxAnd.AND(i).getSymbol().getStopIndex());
                         } else if (i == ctxAnd.search_condition_not().size() - 1) {
+                            item.setLeftLogicalOperator("AND");
                             item.setLeftLogicalOperatorStartAt(ctxAnd.AND(ctxAnd.AND().size() - 1).getSymbol().getStartIndex());
                             item.setLeftLogicalOperatorStopAt(ctxAnd.AND(ctxAnd.AND().size() - 1).getSymbol().getStopIndex());
                         } else {
+                            item.setLeftLogicalOperator("AND");
                             item.setLeftLogicalOperatorStartAt(ctxAnd.AND(i - 1).getSymbol().getStartIndex());
                             item.setLeftLogicalOperatorStopAt(ctxAnd.AND(i - 1).getSymbol().getStopIndex());
                             item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStartIndex());
                             item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStopIndex());
+                        }
+                    } else if (ctx.OR() != null) {
+                        for (int h = 0; h < ors.size(); h++) {
+                            if (ctx.OR().get(ors.get(h)).getSymbol().getStartIndex() < ctxAnd.getStart().getStartIndex()) {
+                                item.setLeftLogicalOperator("OR");
+                                ors.remove(h);
+                                break;
+                            }
                         }
                     }
                     conditions.add(item);

@@ -61,10 +61,36 @@ public class JoinConditionTransformation extends QueryHandler {
         if (!(leftJoinConditions.size() != 0 || rightJoinConditions.size() != 0 || fullOuterJoinConditions.size() != 0)) {
             innerConditions.addAll(whereConditions);
         }
-        boolean foundDuplicateCondition = ConditionItem.duplicatesExists(query, metadata, innerConditions);
-        foundDuplicateCondition |= ConditionItem.duplicatesExists(query, metadata, leftJoinConditions);
-        foundDuplicateCondition |= ConditionItem.duplicatesExists(query, metadata, rightJoinConditions);
-        foundDuplicateCondition |= ConditionItem.duplicatesExists(query, metadata, fullOuterJoinConditions);
+        boolean foundOrInQueryCondition = false;
+        boolean foundDuplicateCondition = false;
+        List<ConditionItem> allConditions = new ArrayList<>();
+        if (!leftJoinConditions.isEmpty()) {
+            allConditions.addAll(leftJoinConditions);
+        }
+        if (!fullOuterJoinConditions.isEmpty()) {
+            for (int i = 0; i < fullOuterJoinConditions.size(); i++) {
+                allConditions.addAll(fullOuterJoinConditions.get(i));
+            }
+        }
+        if (!rightJoinConditions.isEmpty()) {
+            for (int i = 0; i < rightJoinConditions.size(); i++) {
+                allConditions.addAll(rightJoinConditions.get(i));
+            }
+        }
+
+        for (ConditionItem condition: allConditions) {
+            if (condition.getLeftLogicalOperator() != null && condition.getLeftLogicalOperator().equals("OR")) {
+                foundOrInQueryCondition = true;
+                break;
+            }
+        }
+
+        if (!foundOrInQueryCondition) {
+            foundDuplicateCondition = ConditionItem.duplicatesExists(query, metadata, innerConditions);
+            foundDuplicateCondition |= ConditionItem.duplicatesExists(query, metadata, leftJoinConditions);
+            foundDuplicateCondition |= ConditionItem.duplicatesExists(query, metadata, rightJoinConditions);
+            foundDuplicateCondition |= ConditionItem.duplicatesExists(query, metadata, fullOuterJoinConditions);
+        }
 
         if (!foundDuplicateCondition) {
             query.addTransformation(new Transformation(query.getCurrentQuery(),

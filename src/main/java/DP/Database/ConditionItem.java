@@ -28,6 +28,7 @@ public class ConditionItem {
     private int leftLogicalOperatorStopAt = -1;
     private int rightLogicalOperatorStartAt = -1;
     private int rightLogicalOperatorStopAt = -1;
+    private String leftLogicalOperator;
 
 
     public ConditionItem(int startAt, int stopAt, ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator, String fullCondition) {
@@ -180,6 +181,14 @@ public class ConditionItem {
             }
         }
         return newConditions;
+    }
+
+    public String getLeftLogicalOperator() {
+        return leftLogicalOperator;
+    }
+
+    public void setLeftLogicalOperator(String leftLogicalOperator) {
+        this.leftLogicalOperator = leftLogicalOperator;
     }
 
     public int getStartAt() {
@@ -427,6 +436,8 @@ public class ConditionItem {
                 "\n\toperator='" + operator + '\'' +
                 "\n\tleftSideNumberValue=" + leftSideNumberValue +
                 "\n\trightSideNumberValue=" + rightSideNumberValue +
+                "\n\tleftLogicalOperator=" + leftLogicalOperator +
+                "\n\tfullCondition=" + fullCondition +
                 "\n}";
     }
 }

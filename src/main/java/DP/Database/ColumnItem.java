@@ -2,7 +2,6 @@ package DP.Database;
 
 import DP.antlr4.tsql.parser.TSqlParser;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ColumnItem {
@@ -86,14 +85,14 @@ public class ColumnItem {
             int tableIndex = DatabaseTable.exists(metadata,
                     null,
                     ctx.predicate().expression().get(index).full_column_name().table_name().table != null
-                    ? ctx.predicate().expression().get(index).full_column_name().table_name().table.getText()
-                    : null);
+                            ? ctx.predicate().expression().get(index).full_column_name().table_name().table.getText()
+                            : null);
             DatabaseTable table;
             if (tableIndex == -1) {
                 table = new DatabaseTable();
                 table.setTableAlias(ctx.predicate().expression().get(index).full_column_name().table_name().table != null
-                                ? ctx.predicate().expression().get(index).full_column_name().table_name().table.getText()
-                                : null);
+                        ? ctx.predicate().expression().get(index).full_column_name().table_name().table.getText()
+                        : null);
             } else {
                 table = metadata.getTables().get(tableIndex);
             }
@@ -126,14 +125,14 @@ public class ColumnItem {
             int tableIndex = DatabaseTable.exists(metadata,
                     null,
                     ctx.column_elem().table_name().table != null
-                    ? ctx.column_elem().table_name().table.getText()
-                    : null);
+                            ? ctx.column_elem().table_name().table.getText()
+                            : null);
             DatabaseTable table;
             if (tableIndex == -1) {
                 table = new DatabaseTable();
                 table.setTableAlias(ctx.column_elem().table_name().table != null
-                                ? ctx.column_elem().table_name().table.getText()
-                                : null);
+                        ? ctx.column_elem().table_name().table.getText()
+                        : null);
             } else {
                 table = metadata.getTables().get(tableIndex);
             }
@@ -196,22 +195,6 @@ public class ColumnItem {
         return null;
     }
 
-    public String getDatabase() {
-        return database;
-    }
-
-    public void setDatabase(String database) {
-        this.database = database;
-    }
-
-    public String getSchema() {
-        return schema;
-    }
-
-    public void setSchema(String schema) {
-        this.schema = schema;
-    }
-
     public DatabaseTable getTable() {
         return table;
     }
@@ -222,10 +205,6 @@ public class ColumnItem {
 
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public boolean isNullable() {
@@ -240,56 +219,12 @@ public class ColumnItem {
         return isForeignKey;
     }
 
-    public void setForeignKey(boolean foreignKey) {
-        isForeignKey = foreignKey;
-    }
-
-    public String getReferencesTableName() {
-        return referencesTableName;
-    }
-
-    public void setReferencesTableName(String referencesTableName) {
-        this.referencesTableName = referencesTableName;
-    }
-
     public String getReferencesColumnName() {
         return referencesColumnName;
     }
 
-    public void setReferencesColumnName(String referencesColumnName) {
-        this.referencesColumnName = referencesColumnName;
-    }
-
-    public DatabaseTable getReferencesTable() {
-        return referencesTable;
-    }
-
-    public void setReferencesTable(DatabaseTable referencesTable) {
-        this.referencesTable = referencesTable;
-    }
-
-    public ColumnItem getReferencesColumn() {
-        return referencesColumn;
-    }
-
-    public void setReferencesColumn(ColumnItem referencesColumn) {
-        this.referencesColumn = referencesColumn;
-    }
-
     public boolean isConstant() {
         return isConstant;
-    }
-
-    public void setConstant(boolean constant) {
-        isConstant = constant;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
     }
 
     @Override

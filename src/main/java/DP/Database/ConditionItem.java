@@ -43,23 +43,11 @@ public class ConditionItem {
         initNumberValues();
     }
 
-    public static List<ConditionItem> filterByMetadata(DatabaseMetadata metadata, List<ConditionItem> conditions) {
-        List<ConditionItem> items = new ArrayList<>();
-
-        for (ConditionItem condition : conditions) {
-            if (metadata.columnExists(condition.getLeftSideColumnItem()) && metadata.columnExists(condition.getRightSideColumnItem())) {
-                items.add(condition);
-            }
-        }
-
-        return items;
-    }
-
     public static boolean duplicatesExists(Query query, DatabaseMetadata metadata, HashMap<Integer, List<ConditionItem>> conditions) {
         for (int x = 0; x < conditions.size(); x++) {
             for (int i = 0; i < conditions.get(x).size() - 1; i++) {
                 for (int j = i + 1; j < conditions.get(x).size(); j++) {
-                    if (!conditions.get(x).get(i).compareToCondition(metadata, conditions.get(x).get(j))) {
+                    if (conditions.get(x).get(i).compareToCondition(metadata, conditions.get(x).get(j))) {
                         String newQueryString;
 
                         if (conditions.get(x).get(j).getLeftLogicalOperatorStartAt() != -1) {
@@ -88,7 +76,7 @@ public class ConditionItem {
         int whereStartsAt = query.getCurrentQuery().indexOf("WHERE");
         for (int i = 0; i < conditions.size() - 1; i++) {
             for (int j = i + 1; j < conditions.size(); j++) {
-                if (!conditions.get(i).compareToCondition(metadata, conditions.get(j))) {
+                if (conditions.get(i).compareToCondition(metadata, conditions.get(j))) {
                     String newQueryString;
 
                     if (whereStartsAt != -1 && conditions.get(j).getStartAt() > whereStartsAt) {
@@ -211,98 +199,59 @@ public class ConditionItem {
         return leftSideDataType;
     }
 
-    public void setLeftSideDataType(ConditionDataType leftSideDataType) {
-        this.leftSideDataType = leftSideDataType;
-    }
-
     public String getLeftSideValue() {
         return leftSideValue;
-    }
-
-    public void setLeftSideValue(String leftSideValue) {
-        this.leftSideValue = leftSideValue;
     }
 
     public ConditionDataType getRightSideDataType() {
         return rightSideDataType;
     }
 
-    public void setRightSideDataType(ConditionDataType rightSideDataType) {
-        this.rightSideDataType = rightSideDataType;
-    }
-
     public String getRightSideValue() {
         return rightSideValue;
-    }
-
-    public void setRightSideValue(String rightSideValue) {
-        this.rightSideValue = rightSideValue;
     }
 
     public String getOperator() {
         return operator;
     }
 
-    public void setOperator(String operator) {
-        this.operator = operator;
-    }
-
     public double getLeftSideNumberValue() {
         return leftSideNumberValue;
-    }
-
-    public void setLeftSideNumberValue(double leftSideNumberValue) {
-        this.leftSideNumberValue = leftSideNumberValue;
     }
 
     public double getRightSideNumberValue() {
         return rightSideNumberValue;
     }
 
-    public void setRightSideNumberValue(double rightSideNumberValue) {
-        this.rightSideNumberValue = rightSideNumberValue;
-    }
-
     public boolean compareStringAgainstString() {
-        if ((getOperator().equals("=") && getLeftSideValue().equalsIgnoreCase(getRightSideValue())) ||
-                (getOperator().equals("<>") && !getLeftSideValue().equalsIgnoreCase(getRightSideValue())) ||
-                (getOperator().equals(">=") && getLeftSideValue().compareToIgnoreCase(getRightSideValue()) >= 0) ||
-                (getOperator().equals(">") && getLeftSideValue().compareToIgnoreCase(getRightSideValue()) > 0) ||
-                (getOperator().equals("<=") && getLeftSideValue().compareToIgnoreCase(getRightSideValue()) <= 0) ||
-                (getOperator().equals("<") && getLeftSideValue().compareToIgnoreCase(getRightSideValue()) < 0)) {
-            return false;
-        }
-        return true;
+        return (!getOperator().equals("=") || !getLeftSideValue().equalsIgnoreCase(getRightSideValue())) &&
+                (!getOperator().equals("<>") || getLeftSideValue().equalsIgnoreCase(getRightSideValue())) &&
+                (!getOperator().equals(">=") || getLeftSideValue().compareToIgnoreCase(getRightSideValue()) < 0) &&
+                (!getOperator().equals(">") || getLeftSideValue().compareToIgnoreCase(getRightSideValue()) <= 0) &&
+                (!getOperator().equals("<=") || getLeftSideValue().compareToIgnoreCase(getRightSideValue()) > 0) &&
+                (!getOperator().equals("<") || getLeftSideValue().compareToIgnoreCase(getRightSideValue()) >= 0);
     }
 
     public boolean compareNumberAgainstNumber() {
-        if ((getOperator().equals("=") && getLeftSideNumberValue() == getRightSideNumberValue()) ||
-                (getOperator().equals("<>") && getLeftSideNumberValue() != getRightSideNumberValue()) ||
-                (getOperator().equals(">=") && getLeftSideNumberValue() >= getRightSideNumberValue()) ||
-                (getOperator().equals(">") && getLeftSideNumberValue() > getRightSideNumberValue()) ||
-                (getOperator().equals("<=") && getLeftSideNumberValue() <= getRightSideNumberValue()) ||
-                (getOperator().equals("<") && getLeftSideNumberValue() < getRightSideNumberValue())) {
-            return false;
-        }
-        return true;
+        return (!getOperator().equals("=") || getLeftSideNumberValue() != getRightSideNumberValue()) &&
+                (!getOperator().equals("<>") || getLeftSideNumberValue() == getRightSideNumberValue()) &&
+                (!getOperator().equals(">=") || !(getLeftSideNumberValue() >= getRightSideNumberValue())) &&
+                (!getOperator().equals(">") || !(getLeftSideNumberValue() > getRightSideNumberValue())) &&
+                (!getOperator().equals("<=") || !(getLeftSideNumberValue() <= getRightSideNumberValue())) &&
+                (!getOperator().equals("<") || !(getLeftSideNumberValue() < getRightSideNumberValue()));
     }
 
     public boolean compareColumnAgainstColumn(DatabaseMetadata metadata) {
-        if (metadata.columnsEqual(getLeftSideColumnItem(), getRightSideColumnItem())) {
-            return false;
-        }
-        return true;
+        return !metadata.columnsEqual(getLeftSideColumnItem(), getRightSideColumnItem());
     }
 
     public boolean compareToCondition(DatabaseMetadata metadata, ConditionItem conditionItem) {
         if (getLeftSideDataType() == ConditionDataType.COLUMN && getLeftSideDataType() == ConditionDataType.COLUMN &&
                 conditionItem.getLeftSideDataType() == ConditionDataType.COLUMN && conditionItem.getLeftSideDataType() == ConditionDataType.COLUMN) {
-            if (metadata.columnsEqual(getLeftSideColumnItem(), conditionItem.getLeftSideColumnItem()) &&
-                    metadata.columnsEqual(getRightSideColumnItem(), conditionItem.getRightSideColumnItem())) {
-                return false;
-            }
+            return metadata.columnsEqual(getLeftSideColumnItem(), conditionItem.getLeftSideColumnItem()) &&
+                    metadata.columnsEqual(getRightSideColumnItem(), conditionItem.getRightSideColumnItem());
         }
-        return true;
+        return false;
     }
 
     private void initNumberValues() {
@@ -392,10 +341,6 @@ public class ConditionItem {
         this.leftLogicalOperatorStartAt = leftLogicalOperatorStartAt;
     }
 
-    public int getLeftLogicalOperatorStopAt() {
-        return leftLogicalOperatorStopAt;
-    }
-
     public void setLeftLogicalOperatorStopAt(int leftLogicalOperatorStopAt) {
         this.leftLogicalOperatorStopAt = leftLogicalOperatorStopAt;
     }
@@ -418,10 +363,6 @@ public class ConditionItem {
 
     public String getFullCondition() {
         return fullCondition;
-    }
-
-    public void setFullCondition(String fullCondition) {
-        this.fullCondition = fullCondition;
     }
 
     @Override

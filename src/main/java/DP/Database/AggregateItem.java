@@ -20,40 +20,20 @@ public class AggregateItem {
         return startAt;
     }
 
-    public void setStartAt(int startAt) {
-        this.startAt = startAt;
-    }
-
     public int getStopAt() {
         return stopAt;
-    }
-
-    public void setStopAt(int stopAt) {
-        this.stopAt = stopAt;
     }
 
     public String getFullColumnName() {
         return fullColumnName;
     }
 
-    public void setFullColumnName(String fullColumnName) {
-        this.fullColumnName = fullColumnName;
-    }
-
-    public String getColumnName() {
-        return columnName;
-    }
-
-    public void setColumnName(String columnName) {
-        this.columnName = columnName;
-    }
-
     public String getFunctionName() {
         return functionName;
     }
 
-    public void setFunctionName(String functionName) {
-        this.functionName = functionName;
+    public String getFullFunctionName() {
+        return this.functionName + "(" + this.fullColumnName + ")";
     }
 
     @Override
@@ -63,9 +43,5 @@ public class AggregateItem {
                 ", columnName='" + columnName + '\'' +
                 ", functionName='" + functionName + '\'' +
                 '}';
-    }
-
-    public String getFullFunctionName() {
-        return this.functionName + "(" + this.fullColumnName + ")";
     }
 }

@@ -43,14 +43,6 @@ public class DatabaseTable {
         this.queryName = queryName;
     }
 
-    public boolean isColumnsTableSet() {
-        return isColumnsTableSet;
-    }
-
-    public void setColumnsTableSet(boolean columnsTableSet) {
-        isColumnsTableSet = columnsTableSet;
-    }
-
     public int getFromTableStartAt() {
         return fromTableStartAt;
     }
@@ -77,10 +69,6 @@ public class DatabaseTable {
 
     public String getTableName() {
         return tableName;
-    }
-
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
     }
 
     public List<ColumnItem> getColumns() {
@@ -163,16 +151,6 @@ public class DatabaseTable {
         }
         newItem.setTableAlias(alias);
         return newItem;
-    }
-
-    public static List<DatabaseTable> difference(List<DatabaseTable> allItems, List<DatabaseTable> filteredItems) {
-        List<DatabaseTable> newItems = new ArrayList<>(allItems);
-
-        for (DatabaseTable filteredItem : filteredItems) {
-            newItems.removeIf(item -> item.equals(filteredItem));
-        }
-
-        return newItems;
     }
 
     public static boolean redundantJoinExists(Query query, String typeOfJoin, List<JoinTable> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides, DatabaseTable fromTable) {

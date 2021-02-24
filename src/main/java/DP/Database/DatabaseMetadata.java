@@ -20,28 +20,8 @@ public class DatabaseMetadata {
         this.tables = tables;
     }
 
-    public String getTableCatalog() {
-        return tableCatalog;
-    }
-
-    public void setTableCatalog(String tableCatalog) {
-        this.tableCatalog = tableCatalog;
-    }
-
-    public String getTableSchema() {
-        return tableSchema;
-    }
-
-    public void setTableSchema(String tableSchema) {
-        this.tableSchema = tableSchema;
-    }
-
     public List<DatabaseTable> getTables() {
         return tables;
-    }
-
-    public void setTables(List<DatabaseTable> tables) {
-        this.tables = tables;
     }
 
     public static DatabaseMetadata LoadFromJson(String path) {
@@ -179,11 +159,6 @@ public class DatabaseMetadata {
             primaryKeys.addAll(table.getPrimaryKeys());
         }
         return primaryKeys;
-    }
-
-    public boolean existsInTablesPrimaryKeys(ArrayList<String> columns) {
-        ArrayList<String> allPrimaryKeys = getAllPrimaryKeys();
-        return allPrimaryKeys.containsAll(columns) && allPrimaryKeys.size() == columns.size();
     }
 
     public DatabaseMetadata withTables(List<DatabaseTable> inTables) {

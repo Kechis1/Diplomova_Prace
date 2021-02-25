@@ -42,7 +42,9 @@ public class LikeTransformation extends QueryHandler {
                             ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
                             ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
                             ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().LIKE().getText(),
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getText()
+                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getText(),
+                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0).getText(),
+                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1).getText()
                     );
 
                     if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {

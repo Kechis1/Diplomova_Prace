@@ -20,6 +20,8 @@ public class ConditionItem {
     private String rightSideValue;
     private String operator;
     private String fullCondition;
+    private String leftSideFullCondition;
+    private String rightSideFullCondition;
     private double leftSideNumberValue;
     private double rightSideNumberValue;
     private int startAt;
@@ -31,7 +33,7 @@ public class ConditionItem {
     private String leftLogicalOperator;
 
 
-    public ConditionItem(int startAt, int stopAt, ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator, String fullCondition) {
+    public ConditionItem(int startAt, int stopAt, ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator, String fullCondition, String leftSideFullCondition, String rightSideFullCondition) {
         this.startAt = startAt;
         this.stopAt = stopAt;
         this.leftSideDataType = leftSideDataType;
@@ -40,6 +42,8 @@ public class ConditionItem {
         this.rightSideValue = rightSideValue;
         this.operator = operator;
         this.fullCondition = fullCondition;
+        this.leftSideFullCondition = leftSideFullCondition;
+        this.rightSideFullCondition = rightSideFullCondition;
         initNumberValues();
     }
 
@@ -365,6 +369,58 @@ public class ConditionItem {
         return fullCondition;
     }
 
+    public String getLeftSideFullCondition() {
+        return leftSideFullCondition;
+    }
+
+    public void setLeftSideFullCondition(String leftSideFullCondition) {
+        this.leftSideFullCondition = leftSideFullCondition;
+    }
+
+    public String getRightSideFullCondition() {
+        return rightSideFullCondition;
+    }
+
+    public void setRightSideFullCondition(String rightSideFullCondition) {
+        this.rightSideFullCondition = rightSideFullCondition;
+    }
+
+    public void setLeftSideDataType(ConditionDataType leftSideDataType) {
+        this.leftSideDataType = leftSideDataType;
+    }
+
+    public void setLeftSideValue(String leftSideValue) {
+        this.leftSideValue = leftSideValue;
+    }
+
+    public void setRightSideDataType(ConditionDataType rightSideDataType) {
+        this.rightSideDataType = rightSideDataType;
+    }
+
+    public void setRightSideValue(String rightSideValue) {
+        this.rightSideValue = rightSideValue;
+    }
+
+    public void setOperator(String operator) {
+        this.operator = operator;
+    }
+
+    public void setFullCondition(String fullCondition) {
+        this.fullCondition = fullCondition;
+    }
+
+    public void setLeftSideNumberValue(double leftSideNumberValue) {
+        this.leftSideNumberValue = leftSideNumberValue;
+    }
+
+    public void setRightSideNumberValue(double rightSideNumberValue) {
+        this.rightSideNumberValue = rightSideNumberValue;
+    }
+
+    public int getLeftLogicalOperatorStopAt() {
+        return leftLogicalOperatorStopAt;
+    }
+
     @Override
     public String toString() {
         return "ConditionItem {" +
@@ -379,6 +435,8 @@ public class ConditionItem {
                 "\n\trightSideNumberValue=" + rightSideNumberValue +
                 "\n\tleftLogicalOperator=" + leftLogicalOperator +
                 "\n\tfullCondition=" + fullCondition +
+                "\n\tleftSideFullCondition=" + leftSideFullCondition +
+                "\n\trightSideCondition=" + rightSideFullCondition +
                 "\n}";
     }
 }

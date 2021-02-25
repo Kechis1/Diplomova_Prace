@@ -61,7 +61,9 @@ public class ExistsTransformation extends QueryHandler {
                                         scnContext.predicate().comparison_operator() != null
                                                 ? scnContext.predicate().comparison_operator().getText()
                                                 : null,
-                                        scnContext.predicate().getText()
+                                        scnContext.predicate().getText(),
+                                        scnContext.predicate().expression().get(0).getText(),
+                                        scnContext.predicate().expression().get(1).getText()
                                 );
                                 if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
                                     item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, scnContext, 0));

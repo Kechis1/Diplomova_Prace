@@ -114,8 +114,8 @@ public class SelectClauseTest {
         return Stream.of(
                 Arguments.arguments("SELECT PID, JMENO, ROCNIK FROM DBO.PREDMET WHERE ROCNIK = 2",
                         "SELECT PID, JMENO, 2 AS ROCNIK FROM DBO.PREDMET WHERE ROCNIK = 2"),
-                Arguments.arguments("SELECT SID, ROK, BODY FROM DBO.STUDUJE WHERE PID = 2 AND SID = PID",
-                        "SELECT 2 AS SID, ROK, BODY FROM DBO.STUDUJE WHERE PID = 2 AND SID = PID"),
+                Arguments.arguments("SELECT SID, ROK, BODY FROM DBO.STUDUJE WHERE PID = 2 AND DBO.STUDUJE.SID = PID",
+                        "SELECT 2 AS SID, ROK, BODY FROM DBO.STUDUJE WHERE PID = 2 AND DBO.STUDUJE.SID = 2"),
                 Arguments.arguments("SELECT SID, PID, BODY FROM STUDUJE WHERE EXISTS (SELECT * FROM STUDENT WHERE STUDUJE.SID = STUDENT.SID)",
                         "SELECT SID, PID, BODY FROM STUDUJE WHERE EXISTS (SELECT 1 FROM STUDENT WHERE STUDUJE.SID = STUDENT.SID)")
         );

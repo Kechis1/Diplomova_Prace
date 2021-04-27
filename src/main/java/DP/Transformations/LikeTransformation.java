@@ -35,22 +35,7 @@ public class LikeTransformation extends QueryHandler {
             @Override
             public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
                 if (ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().LIKE() != null) {
-                    ConditionItem item = new ConditionItem(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getStart().getStartIndex(),
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getStop().getStopIndex() + 1,
-                            ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
-                            ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
-                            ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
-                            ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().LIKE().getText(),
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getText(),
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0).getText(),
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1).getText()
-                    );
-
-                    if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                        item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
-                        item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 1));
-                    }
+                    ConditionItem item = ConditionItem.createFromLike(ctx, metadata);
                     conditions.add(item);
                 }
             }

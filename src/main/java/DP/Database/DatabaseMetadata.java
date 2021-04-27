@@ -137,7 +137,8 @@ public class DatabaseMetadata {
 
     public DatabaseTable findTable(String tableName, String tableAlias) {
         for (DatabaseTable item : tables) {
-            if (item.getTableName().equals(tableName) || item.getTableAlias().equals(tableAlias)) {
+            if ((item.getTableName() != null && item.getTableName().equals(tableName)) ||
+                    (item.getTableAlias() != null && item.getTableAlias().equals(tableAlias))) {
                 return item;
             }
         }
@@ -146,7 +147,8 @@ public class DatabaseMetadata {
 
     public int tableExists(String tableName, String tableAlias) {
         for (int i = 0; i < tables.size(); i++) {
-            if (tables.get(i).getTableName().equals(tableName) || tables.get(i).getTableAlias().equals(tableAlias)) {
+            if ((tables.get(i).getTableName() != null && tables.get(i).getTableName().equals(tableName)) ||
+                    (tables.get(i).getTableAlias() != null && tables.get(i).getTableAlias().equals(tableAlias))) {
                 return i;
             }
         }
@@ -185,7 +187,7 @@ public class DatabaseMetadata {
         if (leftSideColumnItem == null || rightSideColumnItem == null || !leftSideColumnItem.getName().equals(rightSideColumnItem.getName())) {
             return false;
         }
-        return (leftSideColumnItem.getTable() == null && rightSideColumnItem.getTable() == null) || leftSideColumnItem.getTable().getTableAlias() == null || rightSideColumnItem.getTable().getTableAlias() == null || leftSideColumnItem.getTable().getTableAlias().equals(rightSideColumnItem.getTable().getTableAlias());
+        return (leftSideColumnItem.getTable() == null && rightSideColumnItem.getTable() == null) || leftSideColumnItem.getTable() == null || leftSideColumnItem.getTable().getTableAlias() == null || rightSideColumnItem.getTable().getTableAlias() == null || leftSideColumnItem.getTable().getTableAlias().equals(rightSideColumnItem.getTable().getTableAlias());
     }
 
     public boolean columnExists(ColumnItem columnItem) {

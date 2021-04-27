@@ -28,8 +28,8 @@ public class WhereComparisonTransformation extends QueryHandler {
         final List<ConditionItem> conditions = TSqlParseWalker.findWhereConditions(metadata, select);
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
 
-        boolean isConditionNecessary = true;
         for (ConditionItem condition : conditions) {
+            boolean isConditionNecessary = true;
             if ((condition.getLeftSideDataType() == ConditionDataType.BINARY && Arrays.asList(ConditionDataType.BINARY, ConditionDataType.DECIMAL).contains(condition.getRightSideDataType())) ||
                     (condition.getLeftSideDataType() == ConditionDataType.DECIMAL && (condition.getRightSideDataType().isNumeric || condition.getRightSideDataType() == ConditionDataType.STRING_DECIMAL)) ||
                     (condition.getLeftSideDataType() == ConditionDataType.FLOAT && ((condition.getRightSideDataType().isNumeric && condition.getRightSideDataType() != ConditionDataType.BINARY) || (Arrays.asList(ConditionDataType.STRING_DECIMAL, ConditionDataType.STRING_FLOAT).contains(condition.getRightSideDataType())))) ||

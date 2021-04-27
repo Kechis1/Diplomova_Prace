@@ -85,7 +85,7 @@ public class ConditionItem {
 
                     if (whereStartsAt != -1 && conditions.get(j).getStartAt() > whereStartsAt) {
                         int whereConditionSize = 0;
-                        for (ConditionItem condition: conditions) {
+                        for (ConditionItem condition : conditions) {
                             if (condition.getStartAt() > whereStartsAt) {
                                 whereConditionSize++;
                             }
@@ -114,7 +114,7 @@ public class ConditionItem {
 
     public static boolean isConditionColumnNullable(List<ConditionItem> conditions, DatabaseTable table, boolean checkBothSides) {
         if (checkBothSides) {
-            for (ConditionItem currItem: conditions) {
+            for (ConditionItem currItem : conditions) {
                 if ((currItem.getLeftSideDataType() == ConditionDataType.COLUMN && currItem.getLeftSideColumnItem().isNullable) ||
                         (currItem.getRightSideDataType() == ConditionDataType.COLUMN && currItem.getRightSideColumnItem().isNullable)) {
                     return true;
@@ -122,7 +122,7 @@ public class ConditionItem {
             }
             return false;
         }
-        for (ConditionItem currItem: conditions) {
+        for (ConditionItem currItem : conditions) {
             if ((currItem.getLeftSideDataType() == ConditionDataType.COLUMN && currItem.getLeftSideColumnItem().isNullable() && ColumnItem.exists(table.getColumns(), currItem.getLeftSideColumnItem())) ||
                     (currItem.getRightSideDataType() == ConditionDataType.COLUMN && currItem.getRightSideColumnItem().isNullable() && ColumnItem.exists(table.getColumns(), currItem.getRightSideColumnItem()))) {
                 return true;
@@ -173,6 +173,27 @@ public class ConditionItem {
             }
         }
         return newConditions;
+    }
+
+    public static ConditionItem createFromLike(TSqlParser.Search_conditionContext ctx, DatabaseMetadata metadata) {
+        TSqlParser.PredicateContext pctx = ctx.search_condition_and().get(0).search_condition_not().get(0).predicate();
+        ConditionItem item = new ConditionItem(pctx.getStart().getStartIndex(),
+                pctx.getStop().getStopIndex() + 1,
+                ConditionItem.findDataType(pctx.expression().get(0)),
+                ConditionItem.findSideValue(pctx.expression().get(0)),
+                ConditionItem.findDataType(pctx.expression().get(1)),
+                ConditionItem.findSideValue(pctx.expression().get(1)),
+                pctx.LIKE().getText(),
+                pctx.getText(),
+                pctx.expression().get(0).getText(),
+                pctx.expression().get(1).getText()
+        );
+
+        if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
+            item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
+            item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 1));
+        }
+        return item;
     }
 
     public String getLeftLogicalOperator() {

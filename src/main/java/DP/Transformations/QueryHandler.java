@@ -48,7 +48,11 @@ public abstract class QueryHandler implements ITransformation {
         do {
             index = withSpaces.indexOf(' ', index + 1);
             if (index != -1) {
-                withoutSpaces = (withoutSpaces.substring(0, index) + " " + withoutSpaces.substring(index)).trim();
+                try {
+                    withoutSpaces = (withoutSpaces.substring(0, index) + " " + withoutSpaces.substring(index)).trim();
+                } catch (StringIndexOutOfBoundsException ignored) {
+                    return withSpaces;
+                }
             }
         } while (index >= 0);
         return withoutSpaces;

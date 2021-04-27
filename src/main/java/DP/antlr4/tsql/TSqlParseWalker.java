@@ -18,12 +18,18 @@ public class TSqlParseWalker {
                 if (ctx.expression_elem() != null && ctx.expression_elem().expression().function_call() != null) {
                     TSqlParser.AGGREGATE_WINDOWED_FUNCContext aggCtx =
                             (TSqlParser.AGGREGATE_WINDOWED_FUNCContext) ctx.expression_elem().expression().function_call().getRuleContext();
+                    String columnName;
+                    if (aggCtx.aggregate_windowed_function().STAR() != null) {
+                        columnName = "*";
+                    } else if (aggCtx.aggregate_windowed_function().all_distinct_expression().expression().full_column_name() == null) {
+                        columnName = aggCtx.aggregate_windowed_function().all_distinct_expression().expression().primitive_expression().constant().getText();
+                    } else {
+                        columnName = aggCtx.aggregate_windowed_function().all_distinct_expression().expression().full_column_name().column_name.getText();
+                    }
                     aggregateFunctionsInSelect.add(new AggregateItem(ctx.expression_elem().expression().function_call().getStart().getStartIndex(),
                             ctx.expression_elem().expression().function_call().getStop().getStopIndex(),
                             ctx.expression_elem().expression().function_call().getChild(0).getChild(2).getText(),
-                            aggCtx.aggregate_windowed_function().STAR() != null
-                                    ? "*"
-                                    : aggCtx.aggregate_windowed_function().all_distinct_expression().expression().full_column_name().column_name.getText(),
+                            columnName,
                             ctx.expression_elem().expression().function_call().getChild(0).getChild(0).getText()));
                 }
             }
@@ -140,7 +146,7 @@ public class TSqlParseWalker {
         }
         for (TSqlParser.Search_condition_andContext ctxAnd : ctx.search_condition_and()) {
             for (int i = 0; i < ctxAnd.search_condition_not().size(); i++) {
-                if (ctxAnd.search_condition_not().get(i).predicate().EXISTS() == null) {
+                if ((ctxAnd.search_condition_not().get(i).predicate().expression() != null && ctxAnd.search_condition_not().get(i).predicate().expression().size() > 1 && ctxAnd.search_condition_not().get(i).predicate().expression().get(1).bracket_expression() == null) && ctxAnd.search_condition_not().get(i).predicate().subquery() == null && ctxAnd.search_condition_not().get(i).predicate().EXISTS() == null && ctxAnd.search_condition_not().get(i).predicate().expression().get(0).function_call() == null) {
                     ConditionItem item = new ConditionItem(ctxAnd.search_condition_not().get(i).predicate().getStart().getStartIndex(),
                             ctxAnd.search_condition_not().get(i).predicate().getStop().getStopIndex() + 1,
                             ConditionItem.findDataType(ctxAnd.search_condition_not().get(i).predicate().expression().get(0)),
@@ -271,10 +277,10 @@ public class TSqlParseWalker {
                                         null,
                                         DatabaseTable.create(metadata,
                                                 null,
-                                                ctx.expression_elem().expression().full_column_name().table_name() != null
+                                                ctx.expression_elem().expression().full_column_name() != null
                                                         ? ctx.expression_elem().expression().full_column_name().table_name().table.getText()
                                                         : null),
-                                        ctx.expression_elem().expression().full_column_name().column_name.getText()
+                                        ctx.expression_elem().expression().full_column_name() != null ? ctx.expression_elem().expression().full_column_name().column_name.getText() : null
                                 );
                                 it.setStartAt(ctx.expression_elem().expression().getStart().getStartIndex());
                                 it.setStopAt(ctx.expression_elem().expression().getStop().getStopIndex());

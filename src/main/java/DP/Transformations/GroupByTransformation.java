@@ -51,13 +51,23 @@ public class GroupByTransformation extends QueryHandler {
 
             @Override
             public void enterAggregate_windowed_function(@NotNull TSqlParser.Aggregate_windowed_functionContext ctx) {
-                allAggregateFunctions.add(new AggregateItem(ctx.getStart().getStartIndex(),
-                        ctx.getStop().getStopIndex() + 1,
-                        ctx.getChild(2).getText(),
-                        ctx.STAR() != null
-                                ? "*"
-                                : ctx.all_distinct_expression().expression().full_column_name().column_name.getText(),
-                        ctx.getChild(0).getText()));
+                if (ctx.all_distinct_expression() != null && ctx.all_distinct_expression().expression().case_expression() == null) {
+                    String columnName;
+                    if (ctx.STAR() != null) {
+                        columnName = "*";
+                    } else if (ctx.all_distinct_expression().expression().full_column_name() == null) {
+                        columnName = ctx.all_distinct_expression().expression().primitive_expression().constant().getText();
+                    } else {
+                        columnName = ctx.all_distinct_expression().expression().full_column_name().column_name.getText();
+                    }
+                    allAggregateFunctions.add(new AggregateItem(ctx.getStart().getStartIndex(),
+                            ctx.getStop().getStopIndex() + 1,
+                            ctx.getChild(2).getText(),
+                            ctx.STAR() != null
+                                    ? "*"
+                                    : columnName,
+                            ctx.getChild(0).getText()));
+                }
             }
         }, select);
 

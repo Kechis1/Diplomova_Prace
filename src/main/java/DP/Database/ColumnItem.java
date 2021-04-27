@@ -151,6 +151,14 @@ public class ColumnItem {
                 return it;
             }
             ColumnItem it = table.findColumn(ctx.column_elem().column_name.getText());
+            if (it == null) {
+                it = new ColumnItem(
+                        null,
+                        null,
+                        null,
+                        ctx.column_elem().column_name.getText()
+                );
+            }
             it.setStartAt(ctx.column_elem().getStart().getStartIndex());
             it.setStopAt(ctx.column_elem().getStop().getStopIndex());
             return it;

@@ -51,7 +51,7 @@ public class GroupByTransformation extends QueryHandler {
 
             @Override
             public void enterAggregate_windowed_function(@NotNull TSqlParser.Aggregate_windowed_functionContext ctx) {
-                if (ctx.all_distinct_expression() != null && ctx.all_distinct_expression().expression().case_expression() == null) {
+                if (ctx.STAR() != null || ctx.all_distinct_expression().expression().case_expression() == null) {
                     String columnName;
                     if (ctx.STAR() != null) {
                         columnName = "*";

@@ -2,13 +2,15 @@ package DP;
 
 import DP.Database.DatabaseMetadata;
 import DP.Transformations.Query;
-import DP.Transformations.Transformation;
 import DP.Transformations.TransformationBuilder;
 import com.google.common.io.CharStreams;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class PerformanceTestMain {
     private static final String pathToMetadata = "databases/db_student_studuje_predmet.json";
@@ -24,10 +26,11 @@ public class PerformanceTestMain {
         }
 
         String[] queries = queriesText.split(";");
+        List<Long> times = new ArrayList<>();
 
-        for (String queryText : queries) {
-            queryText = queryText.replaceAll("\\s", " ").trim().toUpperCase();
-            System.out.println(queryText);
+        for (int i = 0; i < queries.length; i++) {
+            String queryText = queries[i].replaceAll("\\s", " ").trim().toUpperCase();
+
             Query query = new Query(queryText, queryText);
 
             TransformationBuilder builder = new TransformationBuilder(metadata);
@@ -36,10 +39,21 @@ public class PerformanceTestMain {
 
             builder.makeQuery(query);
 
-            long finish = System.nanoTime();
-            long timeElapsed = (finish - start)/1000000;
+            if (i > 2) {
+                long finish = System.nanoTime();
+                long timeElapsed = (finish - start) / 1000000;
+                times.add(timeElapsed);
 
-            System.out.println(timeElapsed + " ms\n");
+                System.out.println("#Q" + (i-2) + ": " + queryText);
+                System.out.println(timeElapsed + " ms\n");
+            }
         }
+
+        System.out.println("STATS:\n");
+        System.out.println("Total time: " + (times.stream().reduce(0L, Long::sum)) + " ms");
+        System.out.println("Max time: " + (Collections.max(times)) + " ms");
+        System.out.println("Min time: " + (Collections.min(times)) + " ms");
+        System.out.println("Avg time: " + (times.stream().mapToInt(Math::toIntExact).average().orElse(0.0)) + " ms");
     }
+
 }

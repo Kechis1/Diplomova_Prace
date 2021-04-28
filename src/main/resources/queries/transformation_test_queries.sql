@@ -24,35 +24,31 @@ from migratorybirds
 group by birdType
 order by count (1) desc;
 
-select hgmclent.clnt_name
-     , cmpadd.add_1
-     , cmpadd.add_2
-     , cmpadd.add_3
-     , hgmprty1.post_code
-     , hgmprty1.prty_id
-     , hraptvpd.seq_no
-     , vd_prd
-     , void_cd
-     , void_desr
-     , st_date
-     , seq_no
-     , end_date
-     , est_avldt
-     , lst_revn
-     , Rank() OVER (PARTITION BY clnt_name,cmpadd.add_1 ORDER BY hraptvpd.seq_no DESC) AS RNK
+select hgmclent.clnt_name,
+       cmpadd.add_1,
+       cmpadd.add_2,
+       cmpadd.add_3,
+       hgmprty1.post_code,
+       hgmprty1.prty_id,
+       hraptvpd.seq_no,
+       vd_prd,
+       void_cd,
+       void_desr,
+       st_date,
+       seq_no,
+       end_date,
+       est_avldt,
+       lst_revn,
+       Rank() OVER (PARTITION BY clnt_name,cmpadd.add_1 ORDER BY hraptvpd.seq_no DESC) AS RNK
 from hgmprty1
-         join hratency on prty_ref = prty_id
+         join hratency on hgmprty1.prty_ref = hratency.prty_id
          join hrartamt on hrartamt.rent_acc_no = hratency.rent_acc_no
          join hracracr on hracracr.rent_acc_no = hrartamt.rent_acc_no
          join hgmclent on hgmclent.client_no = hracracr.clnt_no
          join cmpadd on cmpadd.add_id = hgmprty1.add_cd
-         JOIN hraptvpd WITH (nolock)
-ON hraptvpd.prty_ref=hgmprty1.prty_id
-    JOIN hraptvps on hraptvps.prty_ref=hraptvpd.prty_ref AND seq_no=vd_prd
-where
-    tency_end_dt is NULL
-  AND
-    prim_clnt_yn=1;
+         JOIN hraptvpd WITH (nolock) ON hraptvpd.prty_ref = hgmprty1.prty_id
+        JOIN hraptvps on hraptvps.prty_ref=hraptvpd.prty_ref AND seq_no = vd_prd
+where tency_end_dt is NULL AND prim_clnt_yn = 1;
 
 SELECT DISTINCT v,
                 ROW_NUMBER() OVER (ORDER BY v) row_number
@@ -102,7 +98,7 @@ WHERE EXISTS
 
 
 
-SELECT P.PK_PatientId, PV.PK_PatientVisitId, ISNULL(P.FName, '') + ', ' + ISNULL(P.LName, '') AS NAME, MAX(TVP.PK_VisitProcedureId) AS PK_VisitProcedureId, DateSort FROM (SELECT PV.FK_PatientId PatientId, MAX(PK_PatientVisitId) PatientVisitId, MAX(PV.LastUpdated) AS DateSort FROM dbo.M_PatientVisit AS PV AND (PV.IsActive = 1) GROUP BY PV.FK_PatientId) AS LatestVisits, M_Patient AS p, TX_VisitProcedure AS tvp WHERE p.PK_PatientId = LatestVisits.PatientId AND tvp.FK_PatientVisitId = LatestVisits.PatientVisitId AND (P.IsActive = 1) AND (TVP.IsActive = 1) GROUP BY PK_PatientId, PK_PatientVisitId, ISNULL(P.FName, '') + ', ' + ISNULL(P.LName, ''), DateSort ORDER BY 1 DESC, DateSort DESC;
+SELECT P.PK_PatientId, PV.PK_PatientVisitId, ISNULL(P.FName, '') + ', ' + ISNULL(P.LName, '') AS NAME, MAX(TVP.PK_VisitProcedureId) AS PK_VisitProcedureId, DateSort FROM (SELECT PV.FK_PatientId PatientId, MAX(PK_PatientVisitId) PatientVisitId, MAX(PV.LastUpdated) AS DateSort FROM dbo.M_PatientVisit AS PV WHERE PV.IsActive = 1 GROUP BY PV.FK_PatientId) AS LatestVisits, M_Patient AS p, TX_VisitProcedure AS tvp WHERE p.PK_PatientId = LatestVisits.PatientId AND tvp.FK_PatientVisitId = LatestVisits.PatientVisitId AND (P.IsActive = 1) AND (TVP.IsActive = 1) GROUP BY PK_PatientId, PK_PatientVisitId, ISNULL(P.FName, '') + ', ' + ISNULL(P.LName, ''), DateSort ORDER BY 1 DESC, DateSort DESC;
 
 
 select name, age, count(*) as cnt
@@ -138,7 +134,11 @@ SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LI
 
 SELECT * FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE stt.sID LIKE stt.sID;
 
-SELECT stt.sid, stt.jmeno, COUNT(*) FROM student stt JOIN studuje ste on stt.sid = ste.sid WHERE stt.prijmeni LIKE '%ová' GROUP BY stt.sid, stt.jmeno;
+SELECT stt.sid, stt.jmeno, COUNT(*)
+FROM student stt
+         JOIN studuje ste on stt.sid = ste.sid
+WHERE stt.prijmeni LIKE '%ová'
+GROUP BY stt.sid, stt.jmeno;
 
 select s.[name] 'Schema',t.[name] 'Table',c.[name] 'Column',d.[name] 'Data Type',c.[max_length] 'Length',d.[max_length] 'Max Length',d.[precision] 'Precision', c.[is_identity] 'Is Id', c.[is_nullable] 'Is Nullable', c.[is_computed] 'Is Computed', d.[is_user_defined] 'Is UserDefined', t.[modify_date] 'Date Modified', t.[create_date] 'Date created' from sys.schemas s inner join sys.tables t on s.schema_id = t.schema_id inner join sys.columns c on t.object_id = c.object_id inner join sys.types d on c.user_type_id = d.user_type_id where c.name like '%ColumnName%';
 
@@ -166,9 +166,11 @@ SELECT name,email, COUNT(*) FROM users GROUP BY name, email HAVING COUNT(*) > 1;
 
 SELECT id, name, email FROM users u,users u2 WHERE u.name = u2.name AND u.email = u2.email AND u.id > u2.id;
 
-SELECT MIN(x.id), x.customer, x.total FROM PURCHASES xJOIN (SELECT p.customer, MAX(total) AS max_total FROM PURCHASES p GROUP BY p.customer) y ON y.customer = x.customer AND y.max_total = x.total GROUP BY x.customer, x.total;
+SELECT MIN(x.id), x.customer, x.total FROM PURCHASES x JOIN (SELECT p.customer, MAX(total) AS max_total FROM PURCHASES p GROUP BY p.customer) y ON y.customer = x.customer AND y.max_total = x.total GROUP BY x.customer, x.total;
 
-SELECT DISTINCT (customer) id, customer, total FROM purchases ORDER BY customer, total DESC, id;
+SELECT DISTINCT (customer) id, customer, total
+FROM purchases
+ORDER BY customer, total DESC, id;
 
 SELECT categoryName, AVG(unitPrice)FROM Products p INNER JOIN Categories c ON c.categoryId = p.categoryId GROUP BY categoryName HAVING AVG(unitPrice) > 10;
 

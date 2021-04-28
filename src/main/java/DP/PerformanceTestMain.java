@@ -2,6 +2,7 @@ package DP;
 
 import DP.Database.DatabaseMetadata;
 import DP.Transformations.Query;
+import DP.Transformations.Transformation;
 import DP.Transformations.TransformationBuilder;
 import com.google.common.io.CharStreams;
 
@@ -45,7 +46,18 @@ public class PerformanceTestMain {
                 times.add(timeElapsed);
 
                 System.out.println("#Q" + (i-2) + ": " + queryText);
-                System.out.println(timeElapsed + " ms\n");
+                System.out.println(timeElapsed + " ms");
+                for (int k = 1; k <= query.getCurrentRunNumber(); k++) {
+                    System.out.println("Run (" + k + "): ");
+                    if (query.getQueryTransforms().get(k) != null) {
+                        for (Transformation r : query.getQueryTransforms().get(k)) {
+                            System.out.println(r);
+                        }
+                    } else {
+                        System.out.println("--");
+                    }
+                }
+                System.out.println("\n");
             }
         }
 

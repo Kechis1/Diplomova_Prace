@@ -34,7 +34,7 @@ public class Main {
             System.out.println("Enter path to database metadata (optional)");
             inPathToMetadata = in.nextLine().trim();
             is = classloader.getResourceAsStream(inPathToMetadata);
-        } while (is == null);
+        } while (!inPathToMetadata.isEmpty() && is == null);
 
         if (inPathToMetadata.isEmpty()) {
             runExample(inQuery, pathToMetadata);

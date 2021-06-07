@@ -184,7 +184,7 @@ public class DatabaseMetadata {
     }
 
     public boolean columnsEqual(ColumnItem leftSideColumnItem, ColumnItem rightSideColumnItem) {
-        if (leftSideColumnItem == null || rightSideColumnItem == null || !leftSideColumnItem.getName().equals(rightSideColumnItem.getName())) {
+        if (leftSideColumnItem == null || rightSideColumnItem == null || rightSideColumnItem.getName() == null || leftSideColumnItem.getName() == null || !leftSideColumnItem.getName().equals(rightSideColumnItem.getName())) {
             return false;
         }
         return (leftSideColumnItem.getTable() == null && rightSideColumnItem.getTable() == null) || leftSideColumnItem.getTable() == null || leftSideColumnItem.getTable().getTableAlias() == null || rightSideColumnItem.getTable().getTableAlias() == null || leftSideColumnItem.getTable().getTableAlias().equals(rightSideColumnItem.getTable().getTableAlias());

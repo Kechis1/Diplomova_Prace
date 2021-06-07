@@ -196,7 +196,7 @@ public class DatabaseTable {
                 return item;
             }
         }
-        return null;
+        return new ColumnItem();
     }
 
     public boolean isEmpty() {

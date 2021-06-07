@@ -64,6 +64,10 @@ public class ColumnItem {
         this.name = name;
     }
 
+    public ColumnItem() {
+
+    }
+
     public int getStartAt() {
         return startAt;
     }

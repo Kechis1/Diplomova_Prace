@@ -31,6 +31,7 @@ public class ConditionItem {
     private int rightLogicalOperatorStartAt = -1;
     private int rightLogicalOperatorStopAt = -1;
     private String leftLogicalOperator;
+    private String rightLogicalOperator;
 
 
     public ConditionItem(int startAt, int stopAt, ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator, String fullCondition, String leftSideFullCondition, String rightSideFullCondition) {
@@ -175,25 +176,71 @@ public class ConditionItem {
         return newConditions;
     }
 
-    public static ConditionItem createFromLike(TSqlParser.Search_conditionContext ctx, DatabaseMetadata metadata) {
-        TSqlParser.PredicateContext pctx = ctx.search_condition_and().get(0).search_condition_not().get(0).predicate();
-        ConditionItem item = new ConditionItem(pctx.getStart().getStartIndex(),
-                pctx.getStop().getStopIndex() + 1,
-                ConditionItem.findDataType(pctx.expression().get(0)),
-                ConditionItem.findSideValue(pctx.expression().get(0)),
-                ConditionItem.findDataType(pctx.expression().get(1)),
-                ConditionItem.findSideValue(pctx.expression().get(1)),
-                pctx.LIKE().getText(),
-                pctx.getText(),
-                pctx.expression().get(0).getText(),
-                pctx.expression().get(1).getText()
-        );
-
-        if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
-            item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
-            item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 1));
+    public static List<ConditionItem> createFromLike(TSqlParser.Search_conditionContext ctx, DatabaseMetadata metadata) {
+        List<ConditionItem> conditions = new ArrayList<>();
+        List<Integer> ors = new ArrayList<>();
+        for (int i = 0; i < ctx.OR().size(); i++) {
+            ors.add(i);
         }
-        return item;
+        for (TSqlParser.Search_condition_andContext ctxAnd : ctx.search_condition_and()) {
+            for (int i = 0; i < ctxAnd.search_condition_not().size(); i++) {
+                TSqlParser.PredicateContext pctx = ctxAnd.search_condition_not().get(i).predicate();
+                if (pctx.LIKE() != null) {
+                    ConditionItem item = new ConditionItem(pctx.getStart().getStartIndex(),
+                            pctx.getStop().getStopIndex() + 1,
+                            ConditionItem.findDataType(pctx.expression().get(0)),
+                            ConditionItem.findSideValue(pctx.expression().get(0)),
+                            ConditionItem.findDataType(pctx.expression().get(1)),
+                            ConditionItem.findSideValue(pctx.expression().get(1)),
+                            pctx.LIKE().getText(),
+                            pctx.getText(),
+                            pctx.expression().get(0).getText(),
+                            pctx.expression().get(1).getText()
+                    );
+
+                    if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
+                        item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 0));
+                        item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 1));
+                    }
+
+                    if (ctxAnd.AND() != null && !ctxAnd.AND().isEmpty()) {
+                        if (i == 0) {
+                            item.setRightLogicalOperator("AND");
+                            item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStartIndex());
+                            item.setRightLogicalOperatorStopAt(ctxAnd.AND(i).getSymbol().getStopIndex());
+                        } else if (i == ctxAnd.search_condition_not().size() - 1) {
+                            item.setLeftLogicalOperator("AND");
+                            item.setLeftLogicalOperatorStartAt(ctxAnd.AND(ctxAnd.AND().size() - 1).getSymbol().getStartIndex());
+                            item.setLeftLogicalOperatorStopAt(ctxAnd.AND(ctxAnd.AND().size() - 1).getSymbol().getStopIndex());
+                        } else {
+                            item.setLeftLogicalOperator("AND");
+                            item.setLeftLogicalOperatorStartAt(ctxAnd.AND(i - 1).getSymbol().getStartIndex());
+                            item.setLeftLogicalOperatorStopAt(ctxAnd.AND(i - 1).getSymbol().getStopIndex());
+                            item.setRightLogicalOperator("AND");
+                            item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStartIndex());
+                            item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStopIndex());
+                        }
+                    } else if (ctx.OR() != null) {
+                        for (int h = 0; h < ors.size(); h++) {
+                            if (ctx.OR().get(ors.get(h)).getSymbol().getStartIndex() < ctxAnd.getStart().getStartIndex()) {
+                                item.setLeftLogicalOperator("OR");
+                                item.setLeftLogicalOperatorStartAt(ctx.OR().get(ors.get(h)).getSymbol().getStartIndex());
+                                item.setLeftLogicalOperatorStopAt(ctx.OR().get(ors.get(h)).getSymbol().getStopIndex());
+                            } else {
+                                item.setRightLogicalOperator("OR");
+                                item.setRightLogicalOperatorStartAt(ctx.OR().get(ors.get(h)).getSymbol().getStartIndex());
+                                item.setRightLogicalOperatorStopAt(ctx.OR().get(ors.get(h)).getSymbol().getStopIndex());
+                            }
+                            ors.remove(h);
+                            break;
+                        }
+                    }
+                    conditions.add(item);
+                }
+            }
+        }
+
+        return conditions;
     }
 
     public String getLeftLogicalOperator() {
@@ -202,6 +249,14 @@ public class ConditionItem {
 
     public void setLeftLogicalOperator(String leftLogicalOperator) {
         this.leftLogicalOperator = leftLogicalOperator;
+    }
+
+    public String getRightLogicalOperator() {
+        return rightLogicalOperator;
+    }
+
+    public void setRightLogicalOperator(String rightLogicalOperator) {
+        this.rightLogicalOperator = rightLogicalOperator;
     }
 
     public int getStartAt() {
@@ -455,6 +510,7 @@ public class ConditionItem {
                 "\n\tleftSideNumberValue=" + leftSideNumberValue +
                 "\n\trightSideNumberValue=" + rightSideNumberValue +
                 "\n\tleftLogicalOperator=" + leftLogicalOperator +
+                "\n\trightLogicalOperator=" + rightLogicalOperator +
                 "\n\tfullCondition=" + fullCondition +
                 "\n\tleftSideFullCondition=" + leftSideFullCondition +
                 "\n\trightSideCondition=" + rightSideFullCondition +

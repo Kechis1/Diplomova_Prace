@@ -47,7 +47,7 @@ from hgmprty1
          join hgmclent on hgmclent.client_no = hracracr.clnt_no
          join cmpadd on cmpadd.add_id = hgmprty1.add_cd
          JOIN hraptvpd WITH (nolock) ON hraptvpd.prty_ref = hgmprty1.prty_id
-        JOIN hraptvps on hraptvps.prty_ref=hraptvpd.prty_ref AND seq_no = vd_prd
+    JOIN hraptvps on hraptvps.prty_ref=hraptvpd.prty_ref AND seq_no = vd_prd
 where tency_end_dt is NULL AND prim_clnt_yn = 1;
 
 SELECT DISTINCT v,

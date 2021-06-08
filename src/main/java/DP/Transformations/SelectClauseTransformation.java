@@ -64,29 +64,6 @@ public class SelectClauseTransformation extends QueryHandler {
 
         final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadataWithTables, select);
 
-        ColumnItem equals = ColumnItem.duplicatesExists(allColumnsInSelect);
-        if (equals != null) {
-            query.addTransformation(new Transformation(query.getCurrentQuery(),
-                    query.getCurrentQuery(),
-                    UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
-                    action,
-                    false
-            ));
-            return query;
-        }
-
-        for (ColumnItem item : allColumnsInSelect) {
-            if (item.isConstant() && foundUnion.isEmpty()) {
-                query.addTransformation(new Transformation(query.getCurrentQuery(),
-                        query.getCurrentQuery(),
-                        UnnecessaryStatementException.messageConstant + " " + item.getName(),
-                        action,
-                        false
-                ));
-                return query;
-            }
-        }
-
         final List<ConditionItem> conditions = TSqlParseWalker.findConditions(metadataWithTables, select);
         final List<ConditionItem> uniqueAttributesConditions = ConditionItem.removeMultipleAttributeConditions(conditions);
 
@@ -164,6 +141,29 @@ public class SelectClauseTransformation extends QueryHandler {
                         return query;
                     }
                 }
+            }
+        }
+
+        ColumnItem equals = ColumnItem.duplicatesExists(allColumnsInSelect);
+        if (equals != null) {
+            query.addTransformation(new Transformation(query.getCurrentQuery(),
+                    query.getCurrentQuery(),
+                    UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
+                    action,
+                    false
+            ));
+            return query;
+        }
+
+        for (ColumnItem item : allColumnsInSelect) {
+            if (item.isConstant() && foundUnion.isEmpty()) {
+                query.addTransformation(new Transformation(query.getCurrentQuery(),
+                        query.getCurrentQuery(),
+                        UnnecessaryStatementException.messageConstant + " " + item.getName(),
+                        action,
+                        false
+                ));
+                return query;
             }
         }
 

@@ -40,16 +40,18 @@ public class RandomTest {
 
     public static Stream<Arguments> doFindUnnecessaryBetweenSource() {
         return Stream.of(
-                /*Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'adam' AND 1 LIKE 1",
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'adam' AND 1 LIKE 1",
                         "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam'"),
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 LIKE 1",
-                        "SELECT JMENO FROM STUDENT"),*/
+                        "SELECT JMENO FROM STUDENT"),
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' AND 1 LIKE 1 AND PRIJMENI = 'SS'",
                         "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' and prijmeni = 'ss'"),
-             /*   Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' OR 1 LIKE 1",
-                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' or 1 like 1"),*/
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' OR 1 LIKE 1",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' or 1 like 1"),
                 Arguments.arguments("SELECT JMENO, JMENO FROM STUDENT WHERE JMENO = 'ADAM'",
-                        "SELECT 'adam' as jmeno, 'adam' as jmeno FROM STUDENT where jmeno = 'adam'")/* ,
+                        "SELECT 'adam' as jmeno, 'adam' as jmeno FROM STUDENT where jmeno = 'adam'"),
+                Arguments.arguments("SELECT JMENO, JMENO FROM STUDENT",
+                        "SELECT jmeno, jmeno FROM STUDENT"),
                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 LIKE 1 AND JMENO = 'ADAM'",
                         "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam'"),
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 LIKE 1 OR JMENO = 'ADAM'",
@@ -67,7 +69,7 @@ public class RandomTest {
                 Arguments.arguments("SELECT * FROM student x WHERE EXISTS(SELECT * FROM studuje y WHERE x.sID + 1 = y.sID + 1)",
                         "SELECT * FROM student x WHERE EXISTS(SELECT 1 FROM studuje y WHERE x.sID + 1 = y.sID + 1)"),
                 Arguments.arguments("SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID AND 1=1",
-                        "SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID")*/
+                        "SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID")
         );
     }
 }

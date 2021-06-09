@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ExistsTransformation extends QueryHandler {
-    private final String action = "ExistsTransformation";
-
     public ExistsTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
         super(handler, databaseMetadata);
     }
@@ -90,24 +88,27 @@ public class ExistsTransformation extends QueryHandler {
                         exist.getConditions() == null || exist.getConditions().size() == 1 ? (query.getCurrentQuery().substring(0, query.getCurrentQuery().substring(0, exist.getPredicateStartAt()).lastIndexOf("WHERE")) + query.getCurrentQuery().substring(exist.getPredicateStopAt() + 1).trim()).trim() :
                                 (query.getCurrentQuery().substring(0, exist.getPredicateStartAt()) + query.getCurrentQuery().substring(exist.getPredicateStopAt() + 1).trim()).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS",
-                        action,
-                        true
+                        Action.ExistsTransformation,
+                        true,
+                        null
                 ));
                 return query;
             } else if (exist.isNot() && exist.getTable() == null) {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery(),
                         QueryHandler.restoreSpaces(query.getCurrentQuery().substring(exist.getPredicateStartAt()) + query.getCurrentQuery().substring(exist.getPredicateStopAt()), exist.getFullPredicate()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
-                        action,
-                        false
+                        Action.ExistsTransformation,
+                        false,
+                        null
                 ));
             }
         }
         query.addTransformation(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
-                action,
-                false
+                Action.ExistsTransformation,
+                false,
+                null
         ));
         return query;
     }

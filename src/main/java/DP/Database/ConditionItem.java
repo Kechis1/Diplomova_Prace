@@ -1,5 +1,6 @@
 package DP.Database;
 
+import DP.Transformations.Action;
 import DP.Transformations.JoinConditionTransformation;
 import DP.Transformations.Query;
 import DP.Transformations.Transformation;
@@ -66,8 +67,9 @@ public class ConditionItem {
                         query.addTransformation(new Transformation(query.getCurrentQuery(),
                                 newQueryString,
                                 UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION",
-                                JoinConditionTransformation.action,
-                                true
+                                Action.JoinConditionTransformation,
+                                true,
+                                null
                         ));
                         return true;
                     }
@@ -103,8 +105,9 @@ public class ConditionItem {
                     query.addTransformation(new Transformation(query.getCurrentQuery(),
                             newQueryString,
                             UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION",
-                            JoinConditionTransformation.action,
-                            true
+                            Action.JoinConditionTransformation,
+                            true,
+                            null
                     ));
                     return true;
                 }

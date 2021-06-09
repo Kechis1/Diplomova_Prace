@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 public class JoinTableTransformation extends QueryHandler {
-    public static final String action = "JoinTableTransformation";
-
     public JoinTableTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
         super(handler, databaseMetadata);
     }
@@ -49,8 +47,9 @@ public class JoinTableTransformation extends QueryHandler {
             query.addTransformation(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
-                    action,
-                    false
+                    Action.JoinTableTransformation,
+                    false,
+                    null
             ));
             return query;
         }
@@ -68,8 +67,9 @@ public class JoinTableTransformation extends QueryHandler {
             query.addTransformation(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
-                    action,
-                    false
+                    Action.JoinTableTransformation,
+                    false,
+                    null
             ));
         }
         return query;

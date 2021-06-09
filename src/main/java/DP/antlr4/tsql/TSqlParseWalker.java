@@ -259,7 +259,7 @@ public class TSqlParseWalker {
                                         null,
                                         ctx.expression_elem().as_column_alias() == null
                                                 ? null
-                                                : ctx.expression_elem().as_column_alias().getText(),
+                                                : ctx.expression_elem().as_column_alias().column_alias().getText(),
                                         false,
                                         null,
                                         null,

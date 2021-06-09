@@ -13,8 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 
 public class JoinConditionTransformation extends QueryHandler {
-    public static final String action = "JoinConditionTransformation";
-
     public JoinConditionTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
         super(handler, databaseMetadata);
     }
@@ -96,8 +94,9 @@ public class JoinConditionTransformation extends QueryHandler {
             query.addTransformation(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
-                    action,
-                    false
+                    Action.JoinConditionTransformation,
+                    false,
+                    null
             ));
         }
         return query;

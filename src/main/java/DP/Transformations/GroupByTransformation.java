@@ -15,8 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GroupByTransformation extends QueryHandler {
-    private final String action = "GroupByTransformation";
-
     public GroupByTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
         super(handler, databaseMetadata);
     }
@@ -78,16 +76,18 @@ public class GroupByTransformation extends QueryHandler {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery().substring(0, query.getCurrentQuery().indexOf("GROUP BY")).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY",
-                        action,
-                        true
+                        Action.GroupByTransformation,
+                        true,
+                        null
                 ));
                 return query;
             }
             query.addTransformation(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     "OK",
-                    action,
-                    false
+                    Action.GroupByTransformation,
+                    false,
+                    null
             ));
             return query;
         }
@@ -99,15 +99,17 @@ public class GroupByTransformation extends QueryHandler {
                     transform = new Transformation(query.getCurrentQuery(),
                             (query.getCurrentQuery().substring(0, item.getStartAt()) + "1" + query.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
                             item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " 1",
-                            action,
-                            true
+                            Action.GroupByTransformation,
+                            true,
+                            null
                     );
                 } else {
                     transform = new Transformation(query.getCurrentQuery(),
                             (query.getCurrentQuery().substring(0, item.getStartAt()) + item.getFullColumnName() + query.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
                             item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " " + item.getFullColumnName(),
-                            action,
-                            true
+                            Action.GroupByTransformation,
+                            true,
+                            null
                     );
                 }
                 query.addTransformation(transform);
@@ -120,8 +122,9 @@ public class GroupByTransformation extends QueryHandler {
         query.addTransformation(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
-                action,
-                false
+                Action.GroupByTransformation,
+                false,
+                null
         ));
         return query;
     }

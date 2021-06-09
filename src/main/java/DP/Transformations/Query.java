@@ -15,6 +15,21 @@ public class Query {
         this.currentQuery = currentQuery;
     }
 
+    public List<OperatorTransformation> getIgnoredOperatorsByAction(Action action) {
+        List<OperatorTransformation> items = new ArrayList<>();
+        for (int i = 0; i < currentRunNumber; i++) {
+            for (Transformation t: queryTransformations.get(i)) {
+                if (t.getOperatorTransformations() == null || !t.getAction().equals(action)) continue;
+                for (OperatorTransformation o: t.getOperatorTransformations()) {
+                    if (o.isIgnored()) {
+                        items.add(o);
+                    }
+                }
+            }
+        }
+        return items;
+    }
+
     public int getCurrentRunNumber() {
         return currentRunNumber;
     }

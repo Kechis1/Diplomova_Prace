@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LikeTransformation extends QueryHandler {
-    private final String action = "LikeTransformation";
-
     public LikeTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
         super(handler, databaseMetadata);
     }
@@ -54,8 +52,9 @@ public class LikeTransformation extends QueryHandler {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery(),
                         restoreSpaces(query.getCurrentQuery().substring(condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt()), condition.getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
-                        action,
-                        false
+                        Action.LikeTransformation,
+                        false,
+                        null
                 ));
                 return query;
             } else if ((condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN && SQLLogicalOperators.like(condition.getLeftSideValue(), condition.getRightSideValue()))
@@ -67,8 +66,9 @@ public class LikeTransformation extends QueryHandler {
                     query.addTransformation(new Transformation(query.getCurrentQuery(),
                             query.getCurrentQuery(),
                             "OK",
-                            action,
-                            false
+                            Action.LikeTransformation,
+                            false,
+                            null
                     ));
                     return query;
                 }
@@ -90,8 +90,9 @@ public class LikeTransformation extends QueryHandler {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
                         newQuery,
                         UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
-                        action,
-                        true
+                        Action.LikeTransformation,
+                        true,
+                        null
                 ));
                 return query;
             }
@@ -99,8 +100,9 @@ public class LikeTransformation extends QueryHandler {
         query.addTransformation(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
-                action,
-                false
+                Action.LikeTransformation,
+                false,
+                null
         ));
         return query;
     }

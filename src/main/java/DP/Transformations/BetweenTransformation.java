@@ -14,9 +14,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BetweenTransformation extends QueryHandler {
-    private final String action = "BetweenTransformation";
-    
-    
     public BetweenTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
         super(handler, databaseMetadata);
     }
@@ -114,16 +111,18 @@ public class BetweenTransformation extends QueryHandler {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
                         (query.getCurrentQuery().substring(0, conditions.get(i).getStartAt()) + query.getCurrentQuery().substring(conditions.get(i).getStopAt() + 1)).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION BETWEEN",
-                        action,
-                        true
+                        Action.BetweenTransformation,
+                        true,
+                        null
                 ));
                 return query;
             } else if (currentColumn) {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery(),
                         QueryHandler.restoreSpaces(query.getCurrentQuery().substring(conditions.get(i).getStartAt()) + query.getCurrentQuery().substring(conditions.get(i).getStopAt()), conditions.get(i).getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
-                        action,
-                        false
+                        Action.BetweenTransformation,
+                        false,
+                        null
                 ));
                 return query;
             }
@@ -132,8 +131,9 @@ public class BetweenTransformation extends QueryHandler {
         query.addTransformation(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
-                action,
-                false
+                Action.BetweenTransformation,
+                false,
+                null
         ));
         return query;
     }

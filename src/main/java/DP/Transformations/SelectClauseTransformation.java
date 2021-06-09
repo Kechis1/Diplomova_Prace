@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SelectClauseTransformation extends QueryHandler {
-    private final String action = "SelectClauseTransformation";
-
     public SelectClauseTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
         super(handler, databaseMetadata);
     }
@@ -56,8 +54,9 @@ public class SelectClauseTransformation extends QueryHandler {
             query.addTransformation(new Transformation(query.getCurrentQuery(),
                     (query.getCurrentQuery().substring(0, foundExistsNotConstant.get(0).getSelectListStartAt()) + "1" + query.getCurrentQuery().substring(foundExistsNotConstant.get(0).getSelectListStopAt() + 1)).trim(),
                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
-                    action,
-                    true
+                    Action.SelectClauseTransformation,
+                    true,
+                    null
             ));
             return query;
         }
@@ -86,8 +85,9 @@ public class SelectClauseTransformation extends QueryHandler {
                         query.addTransformation(new Transformation(query.getCurrentQuery(),
                                 (query.getCurrentQuery().substring(0, column.getStartAt()) + query.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
                                 UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
-                                action,
-                                true
+                                Action.SelectClauseTransformation,
+                                true,
+                                null
                         ));
                         return query;
                     }
@@ -110,8 +110,9 @@ public class SelectClauseTransformation extends QueryHandler {
                             query.addTransformation(new Transformation(query.getCurrentQuery(),
                                     newCurrentQuery,
                                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
-                                    action,
-                                    true
+                                    Action.SelectClauseTransformation,
+                                    true,
+                                    null
                             ));
                             return query;
                         }
@@ -135,8 +136,9 @@ public class SelectClauseTransformation extends QueryHandler {
                         query.addTransformation(new Transformation(query.getCurrentQuery(),
                                 (query.getCurrentQuery().substring(0, column.getStartAt()) + value + " AS " + column.getName() + query.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
                                 UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
-                                action,
-                                true
+                                Action.SelectClauseTransformation,
+                                true,
+                                null
                         ));
                         return query;
                     }
@@ -149,8 +151,9 @@ public class SelectClauseTransformation extends QueryHandler {
             query.addTransformation(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
-                    action,
-                    false
+                    Action.SelectClauseTransformation,
+                    false,
+                    null
             ));
             return query;
         }
@@ -160,8 +163,9 @@ public class SelectClauseTransformation extends QueryHandler {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery(),
                         UnnecessaryStatementException.messageConstant + " " + item.getName(),
-                        action,
-                        false
+                        Action.SelectClauseTransformation,
+                        false,
+                        null
                 ));
                 return query;
             }
@@ -170,8 +174,9 @@ public class SelectClauseTransformation extends QueryHandler {
         query.addTransformation(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
-                action,
-                false
+                Action.SelectClauseTransformation,
+                false,
+                null
         ));
         return query;
     }

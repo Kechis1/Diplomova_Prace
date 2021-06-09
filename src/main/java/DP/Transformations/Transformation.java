@@ -1,21 +1,25 @@
 package DP.Transformations;
 
+import java.util.*;
+
 public class Transformation {
     String inputQuery;
     String outputQuery;
     String message;
-    String action;
+    Action action;
     boolean changed;
+    List<OperatorTransformation> operatorTransformations;
 
     public Transformation() {
     }
 
-    public Transformation(String inputQuery, String outputQuery, String message, String action, boolean changed) {
+    public Transformation(String inputQuery, String outputQuery, String message, Action action, boolean changed, List<OperatorTransformation> operatorTransformations) {
         this.inputQuery = inputQuery;
         this.outputQuery = outputQuery;
         this.message = message;
         this.action = action;
         this.changed = changed;
+        this.operatorTransformations = operatorTransformations;
     }
 
     public boolean isChanged() {
@@ -50,12 +54,34 @@ public class Transformation {
         this.message = message;
     }
 
-    public String getAction() {
+    public Action getAction() {
         return action;
     }
 
-    public void setAction(String action) {
+    public void setAction(Action action) {
         this.action = action;
+    }
+
+    public List<OperatorTransformation> getOperatorTransformations() {
+        return operatorTransformations;
+    }
+
+    public void setOperatorTransformations(List<OperatorTransformation> operatorTransformations) {
+        this.operatorTransformations = operatorTransformations;
+    }
+
+    public void addOperatorTransformation(OperatorTransformation operatorTransformation) {
+        if (this.getOperatorTransformations() == null) {
+            this.operatorTransformations = new ArrayList<>();
+        }
+        this.operatorTransformations.add(operatorTransformation);
+    }
+
+    public void addOperatorTransformation(List<OperatorTransformation> operatorTransformation) {
+        if (this.getOperatorTransformations() == null) {
+            this.operatorTransformations = new ArrayList<>();
+        }
+        this.operatorTransformations.addAll(operatorTransformation);
     }
 
     @Override

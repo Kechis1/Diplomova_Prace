@@ -10,8 +10,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class WhereComparisonTransformation extends QueryHandler {
-    private final String action = "WhereComparisonTransformation";
-
     public WhereComparisonTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
         super(handler, databaseMetadata);
     }
@@ -52,16 +50,18 @@ public class WhereComparisonTransformation extends QueryHandler {
                         conditions.size() == 1 ? (query.getCurrentQuery().substring(0, (query.getCurrentQuery().substring(0, condition.getStartAt()).lastIndexOf("WHERE"))) + query.getCurrentQuery().substring(condition.getStopAt()).trim()).trim() :
                                 (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim(),
                         UnnecessaryStatementException.messageUnnecessaryStatement + " WHERE CONDITION",
-                        action,
-                        true
+                        Action.WhereComparisonTransformation,
+                        true,
+                        null
                 ));
                 return query;
             } else if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery(),
                         QueryHandler.restoreSpaces(query.getCurrentQuery().substring(condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt()), condition.getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
-                        action,
-                        false
+                        Action.WhereComparisonTransformation,
+                        false,
+                        null
                 ));
                 return query;
             }
@@ -69,8 +69,9 @@ public class WhereComparisonTransformation extends QueryHandler {
         query.addTransformation(new Transformation(query.getCurrentQuery(),
                 query.getCurrentQuery(),
                 "OK",
-                action,
-                false
+                Action.WhereComparisonTransformation,
+                false,
+                null
         ));
         return query;
     }

@@ -29,7 +29,7 @@ public class Query {
 
     public boolean IgnoredOperatorExists(Action action, String find) {
         for (int i = 1; i <= currentRunNumber; i++) {
-            if (queryTransformations.get(i) == null) continue;
+            if (queryTransformations == null || queryTransformations.get(i) == null) continue;
             for (Transformation t: queryTransformations.get(i)) {
                 if (t.getoperatorTransformation() == null || !t.getAction().equals(action)) continue;
                 if (t.getoperatorTransformation().isIgnored() && find.equals(t.getoperatorTransformation().getTo())) {

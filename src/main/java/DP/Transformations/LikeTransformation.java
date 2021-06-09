@@ -43,11 +43,9 @@ public class LikeTransformation extends QueryHandler {
         }, select);
 
         DatabaseMetadata newMetadata = metadata.withTables(allTables);
-        System.out.println(conditionSize[0]);
 
         for (ConditionItem condition : conditions) {
 
-            System.out.println(condition);
             if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN && !SQLLogicalOperators.like(condition.getLeftSideValue(), condition.getRightSideValue())) {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery(),

@@ -1,5 +1,6 @@
 package DP.Database;
 
+import DP.Transformations.Action;
 import DP.Transformations.JoinTableTransformation;
 import DP.Transformations.Query;
 import DP.Transformations.Transformation;
@@ -176,8 +177,9 @@ public class DatabaseTable {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
                         currentQuery,
                         UnnecessaryStatementException.messageUnnecessaryStatement + " " + typeOfJoin + " JOIN",
-                        JoinTableTransformation.action,
-                        true
+                        Action.JoinTableTransformation,
+                        true,
+                        null
                 ));
                 return true;
             }

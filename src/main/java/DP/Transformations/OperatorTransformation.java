@@ -2,13 +2,11 @@ package DP.Transformations;
 
 public class OperatorTransformation {
     boolean ignored;
-    String subject;
     String from;
     String to;
 
-    public OperatorTransformation(boolean ignored, String subject, String from, String to) {
+    public OperatorTransformation(boolean ignored, String from, String to) {
         this.ignored = ignored;
-        this.subject = subject;
         this.from = from;
         this.to = to;
     }
@@ -19,14 +17,6 @@ public class OperatorTransformation {
 
     public void setIgnored(boolean ignored) {
         this.ignored = ignored;
-    }
-
-    public String getSubject() {
-        return subject;
-    }
-
-    public void setSubject(String subject) {
-        this.subject = subject;
     }
 
     public String getFrom() {
@@ -43,5 +33,14 @@ public class OperatorTransformation {
 
     public void setTo(String to) {
         this.to = to;
+    }
+
+    @Override
+    public String toString() {
+        return "OperatorTransformation{" +
+                "ignored=" + ignored +
+                ", from='" + from + '\'' +
+                ", to='" + to + '\'' +
+                '}';
     }
 }

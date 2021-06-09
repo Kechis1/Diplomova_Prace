@@ -112,7 +112,7 @@ public class SelectClauseTransformation extends QueryHandler {
                                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                                     Action.SelectClauseTransformation,
                                     true,
-                                    null
+                                    new OperatorTransformation(true, columnInSelect.getName(), value + " AS " + columnInSelect.getName())
                             ));
                             return query;
                         }
@@ -138,7 +138,7 @@ public class SelectClauseTransformation extends QueryHandler {
                                 UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                                 Action.SelectClauseTransformation,
                                 true,
-                                null
+                                new OperatorTransformation(true, column.getName(), value + " AS " + column.getName())
                         ));
                         return query;
                     }
@@ -157,9 +157,8 @@ public class SelectClauseTransformation extends QueryHandler {
             ));
             return query;
         }
-
         for (ColumnItem item : allColumnsInSelect) {
-            if (item.isConstant() && foundUnion.isEmpty()) {
+            if (item.isConstant() && foundUnion.isEmpty() && !query.IgnoredOperatorExists(Action.SelectClauseTransformation, item.getValue() + " AS " + item.getName())) {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery(),
                         UnnecessaryStatementException.messageConstant + " " + item.getName(),

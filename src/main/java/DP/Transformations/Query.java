@@ -15,19 +15,29 @@ public class Query {
         this.currentQuery = currentQuery;
     }
 
-    public List<OperatorTransformation> getIgnoredOperatorsByAction(Action action) {
+    public List<OperatorTransformation> getOperators() {
         List<OperatorTransformation> items = new ArrayList<>();
-        for (int i = 0; i < currentRunNumber; i++) {
+        for (int i = 1; i <= currentRunNumber; i++) {
+            if (queryTransformations.get(i) == null) continue;
             for (Transformation t: queryTransformations.get(i)) {
-                if (t.getOperatorTransformations() == null || !t.getAction().equals(action)) continue;
-                for (OperatorTransformation o: t.getOperatorTransformations()) {
-                    if (o.isIgnored()) {
-                        items.add(o);
-                    }
-                }
+                if (t.getoperatorTransformation() == null) continue;
+                items.add(t.getoperatorTransformation());
             }
         }
         return items;
+    }
+
+    public boolean IgnoredOperatorExists(Action action, String find) {
+        for (int i = 1; i <= currentRunNumber; i++) {
+            if (queryTransformations.get(i) == null) continue;
+            for (Transformation t: queryTransformations.get(i)) {
+                if (t.getoperatorTransformation() == null || !t.getAction().equals(action)) continue;
+                if (t.getoperatorTransformation().isIgnored() && find.equals(t.getoperatorTransformation().getTo())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public int getCurrentRunNumber() {

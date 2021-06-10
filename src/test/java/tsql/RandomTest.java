@@ -36,7 +36,6 @@ public class RandomTest {
     void doFindUnnecessaryBetweenFullRunTest(String requestQuery, String fullRunResultQuery) {
         Query query = new Query(requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
         for (int i = 1; i <= query.getCurrentRunNumber(); i++) {
             System.out.println("Run (" + i + "): ");
             if (query.getQueryTransforms().get(i) != null) {
@@ -47,6 +46,7 @@ public class RandomTest {
                 System.out.println("--");
             }
         }
+        assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
     }
 
     public static Stream<Arguments> doFindUnnecessaryBetweenSource() {
@@ -55,8 +55,8 @@ public class RandomTest {
                         "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam'"),
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 LIKE 1",
                         "SELECT JMENO FROM STUDENT"),
-                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' AND 1 LIKE 1 AND PRIJMENI = 'SS'",
-                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' and prijmeni = 'ss'"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' AND 1 LIKE 1 AND ROK_NAROZENI = 2000",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' and ROK_NAROZENI = 2000"),
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' OR 1 LIKE 1",
                         "SELECT JMENO FROM STUDENT where jmeno = 'adam' or 1 like 1"),
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' AND JMENO = 'PETR'",
@@ -68,7 +68,7 @@ public class RandomTest {
                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 LIKE 1 AND JMENO = 'ADAM'",
                         "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam'"),
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 LIKE 1 OR JMENO = 'ADAM'",
-                        "SELECT 'adam' as jmeno FROM STUDENT where 1 LIKE 1 or jmeno = 'adam'"),
+                        "SELECT jmeno FROM STUDENT where 1 LIKE 1 or jmeno = 'adam'"),
                 Arguments.arguments("SELECT 'AHOJ' FROM STUDENT",
                         "SELECT 'ahoj' FROM STUDENT"),
                 Arguments.arguments("SELECT 1 AS A FROM DBO.STUDENT",

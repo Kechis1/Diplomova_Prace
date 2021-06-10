@@ -221,7 +221,7 @@ public class ConditionItem {
                             item.setLeftLogicalOperatorStopAt(ctxAnd.AND(i - 1).getSymbol().getStopIndex());
                             item.setRightLogicalOperator("AND");
                             item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStartIndex());
-                            item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStopIndex());
+                            item.setRightLogicalOperatorStopAt(ctxAnd.AND(i).getSymbol().getStopIndex());
                         }
                     } else if (ctx.OR() != null) {
                         for (int h = 0; h < ors.size(); h++) {
@@ -502,21 +502,25 @@ public class ConditionItem {
 
     @Override
     public String toString() {
-        return "ConditionItem {" +
-                "\n\tleftSideColumnItem=" + leftSideColumnItem +
-                "\n\trightSideColumnItem=" + rightSideColumnItem +
+        return "ConditionItem{" +
                 "\n\tleftSideDataType=" + leftSideDataType +
-                "\n\tleftSideValue='" + leftSideValue + '\'' +
-                "\n\trightSideDataType=" + rightSideDataType +
-                "\n\trightSideValue='" + rightSideValue + '\'' +
-                "\n\toperator='" + operator + '\'' +
-                "\n\tleftSideNumberValue=" + leftSideNumberValue +
-                "\n\trightSideNumberValue=" + rightSideNumberValue +
-                "\n\tleftLogicalOperator=" + leftLogicalOperator +
-                "\n\trightLogicalOperator=" + rightLogicalOperator +
-                "\n\tfullCondition=" + fullCondition +
-                "\n\tleftSideFullCondition=" + leftSideFullCondition +
-                "\n\trightSideCondition=" + rightSideFullCondition +
-                "\n}";
+                "\n\t, leftSideValue='" + leftSideValue + '\'' +
+                "\n\t, rightSideDataType=" + rightSideDataType +
+                "\n\t, rightSideValue='" + rightSideValue + '\'' +
+                "\n\t, operator='" + operator + '\'' +
+                "\n\t, fullCondition='" + fullCondition + '\'' +
+                "\n\t, leftSideFullCondition='" + leftSideFullCondition + '\'' +
+                "\n\t, rightSideFullCondition='" + rightSideFullCondition + '\'' +
+                "\n\t, leftSideNumberValue=" + leftSideNumberValue +
+                "\n\t, rightSideNumberValue=" + rightSideNumberValue +
+                "\n\t, startAt=" + startAt +
+                "\n\t, stopAt=" + stopAt +
+                "\n\t, leftLogicalOperatorStartAt=" + leftLogicalOperatorStartAt +
+                "\n\t, leftLogicalOperatorStopAt=" + leftLogicalOperatorStopAt +
+                "\n\t, rightLogicalOperatorStartAt=" + rightLogicalOperatorStartAt +
+                "\n\t, rightLogicalOperatorStopAt=" + rightLogicalOperatorStopAt +
+                "\n\t, leftLogicalOperator='" + leftLogicalOperator + '\'' +
+                "\n\t, rightLogicalOperator='" + rightLogicalOperator + '\'' +
+                '}';
     }
 }

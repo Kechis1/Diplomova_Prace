@@ -160,7 +160,7 @@ public class SelectClauseTransformation extends QueryHandler {
         if (equals != null) {
             query.addTransformation(new Transformation(query.getCurrentQuery(),
                     query.getCurrentQuery(),
-                    UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
+                    UnnecessaryStatementException.messageDuplicateAttribute,
                     Action.SelectClauseTransformation,
                     false,
                     null

@@ -63,7 +63,7 @@ public class LikeTransformation extends QueryHandler {
                 if ((condition.getLeftLogicalOperator() != null && condition.getLeftLogicalOperator().equals("OR")) || (condition.getRightLogicalOperator() != null && condition.getRightLogicalOperator().equals("OR"))) {
                     query.addTransformation(new Transformation(query.getCurrentQuery(),
                             query.getCurrentQuery(),
-                            "OK",
+                            "LIKE " + UnnecessaryStatementException.messageConditionIsAlwaysTrue,
                             Action.LikeTransformation,
                             false,
                             null

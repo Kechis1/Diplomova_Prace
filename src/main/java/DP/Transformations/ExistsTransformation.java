@@ -59,6 +59,7 @@ public class ExistsTransformation extends QueryHandler {
                                         scnContext.predicate().comparison_operator() != null
                                                 ? scnContext.predicate().comparison_operator().getText()
                                                 : null,
+                                        ConditionOperator.findOperatorFromString(scnContext.predicate().getText()),
                                         scnContext.predicate().getText(),
                                         scnContext.predicate().expression().get(0).getText(),
                                         scnContext.predicate().expression().get(1).getText()

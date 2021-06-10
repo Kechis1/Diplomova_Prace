@@ -20,6 +20,7 @@ public class ConditionItem {
     private ConditionDataType rightSideDataType;
     private String rightSideValue;
     private String operator;
+    private ConditionOperator operatorType;
     private String fullCondition;
     private String leftSideFullCondition;
     private String rightSideFullCondition;
@@ -35,9 +36,10 @@ public class ConditionItem {
     private String rightLogicalOperator;
 
 
-    public ConditionItem(int startAt, int stopAt, ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator, String fullCondition, String leftSideFullCondition, String rightSideFullCondition) {
+    public ConditionItem(int startAt, int stopAt, ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator, ConditionOperator operatorType, String fullCondition, String leftSideFullCondition, String rightSideFullCondition) {
         this.startAt = startAt;
         this.stopAt = stopAt;
+        this.operatorType = operatorType;
         this.leftSideDataType = leftSideDataType;
         this.leftSideValue = leftSideValue;
         this.rightSideDataType = rightSideDataType;
@@ -47,6 +49,14 @@ public class ConditionItem {
         this.leftSideFullCondition = leftSideFullCondition;
         this.rightSideFullCondition = rightSideFullCondition;
         initNumberValues();
+    }
+
+    public ConditionOperator getOperatorType() {
+        return operatorType;
+    }
+
+    public void setOperatorType(ConditionOperator operatorType) {
+        this.operatorType = operatorType;
     }
 
     public static boolean duplicatesExists(Query query, DatabaseMetadata metadata, HashMap<Integer, List<ConditionItem>> conditions) {
@@ -196,6 +206,7 @@ public class ConditionItem {
                             ConditionItem.findDataType(pctx.expression().get(1)),
                             ConditionItem.findSideValue(pctx.expression().get(1)),
                             pctx.LIKE().getText(),
+                            ConditionOperator.LIKE,
                             pctx.getText(),
                             pctx.expression().get(0).getText(),
                             pctx.expression().get(1).getText()
@@ -244,6 +255,17 @@ public class ConditionItem {
         }
 
         return conditions;
+    }
+
+    public static List<ConditionItem> filterByOperator(List<ConditionItem> conditions, ConditionOperator operator) {
+        List<ConditionItem> items = new ArrayList<>();
+
+        for (ConditionItem item : conditions) {
+            if (item.getOperatorType().equals(operator)) {
+                items.add(item);
+            }
+        }
+        return items;
     }
 
     public String getLeftLogicalOperator() {

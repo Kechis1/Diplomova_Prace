@@ -41,6 +41,7 @@ public class BetweenTransformation extends QueryHandler {
                             ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
                             ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
                             ">=",
+                            ConditionOperator.BETWEEN,
                             ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getText(),
                             ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0).getText(),
                             ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1).getText()
@@ -63,6 +64,7 @@ public class BetweenTransformation extends QueryHandler {
                             ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(2)),
                             ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(2)),
                             "<=",
+                            ConditionOperator.BETWEEN,
                             ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getText(),
                             ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0).getText(),
                             ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(2).getText()

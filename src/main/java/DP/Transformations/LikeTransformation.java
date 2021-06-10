@@ -26,25 +26,13 @@ public class LikeTransformation extends QueryHandler {
     public Query transformQuery(final DatabaseMetadata metadata, Query query) {
         TSqlParser parser = parseQuery(query.getCurrentQuery());
         ParseTree select = parser.select_statement();
-        final List<ConditionItem> conditions = new ArrayList<>();
+        final List<ConditionItem> conditions = TSqlParseWalker.findWhereConditions(metadata, select);
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
-        final Integer[] conditionSize = {0};
-
-        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
-            @Override
-            public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
-                for (TSqlParser.Search_condition_andContext and : ctx.search_condition_and()) {
-                    for (TSqlParser.Search_condition_notContext not : and.search_condition_not()) {
-                        conditionSize[0] = conditionSize[0] + 1;
-                    }
-                }
-                conditions.addAll(ConditionItem.createFromLike(ctx, metadata));
-            }
-        }, select);
+        final List<ConditionItem> likeConditions = ConditionItem.filterByOperator(conditions, ConditionOperator.LIKE);
 
         DatabaseMetadata newMetadata = metadata.withTables(allTables);
 
-        for (ConditionItem condition : conditions) {
+        for (ConditionItem condition : likeConditions) {
 
             if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN && !SQLLogicalOperators.like(condition.getLeftSideValue(), condition.getRightSideValue())) {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
@@ -73,7 +61,7 @@ public class LikeTransformation extends QueryHandler {
 
                 String newQuery;
 
-                if (conditionSize[0] == 1) {
+                if (conditions.size() == 1) {
                     newQuery = (query.getCurrentQuery().substring(0, (query.getCurrentQuery().substring(0, condition.getStartAt()).lastIndexOf("WHERE"))) + query.getCurrentQuery().substring(condition.getStopAt()).trim()).trim();
                 } else {
                     if (condition.getRightLogicalOperator() != null) {

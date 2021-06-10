@@ -167,6 +167,13 @@ public class TSqlParseWalker {
                     }
                     if (ctxAnd.AND() != null && !ctxAnd.AND().isEmpty()) {
                         if (i == 0) {
+                            if (ors.size() > 0 && ctx.OR().get(ors.get(0)).getSymbol().getStartIndex() < ctxAnd.search_condition_not().get(i).getStart().getStartIndex()) {
+                                item.setLeftLogicalOperator("OR");
+                                item.setLeftLogicalOperatorStartAt(ctx.OR().get(ors.get(0)).getSymbol().getStartIndex());
+                                item.setLeftLogicalOperatorStopAt(ctx.OR().get(ors.get(0)).getSymbol().getStopIndex());
+                                ors.remove(0);
+                            }
+                            item.setRightLogicalOperator("AND");
                             item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStartIndex());
                             item.setRightLogicalOperatorStopAt(ctxAnd.AND(i).getSymbol().getStopIndex());
                         } else if (i == ctxAnd.search_condition_not().size() - 1) {
@@ -177,16 +184,20 @@ public class TSqlParseWalker {
                             item.setLeftLogicalOperator("AND");
                             item.setLeftLogicalOperatorStartAt(ctxAnd.AND(i - 1).getSymbol().getStartIndex());
                             item.setLeftLogicalOperatorStopAt(ctxAnd.AND(i - 1).getSymbol().getStopIndex());
+                            item.setRightLogicalOperator("AND");
                             item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStartIndex());
-                            item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStopIndex());
+                            item.setRightLogicalOperatorStopAt(ctxAnd.AND(i).getSymbol().getStopIndex());
                         }
-                    } else if (ctx.OR() != null) {
-                        for (int h = 0; h < ors.size(); h++) {
-                            if (ctx.OR().get(ors.get(h)).getSymbol().getStartIndex() < ctxAnd.getStart().getStartIndex()) {
-                                item.setLeftLogicalOperator("OR");
-                                ors.remove(h);
-                                break;
-                            }
+                    } else if (ors.size() > 0) {
+                        if (ctx.OR().get(ors.get(0)).getSymbol().getStartIndex() < ctxAnd.search_condition_not().get(i).getStart().getStartIndex()) {
+                            item.setLeftLogicalOperator("OR");
+                            item.setLeftLogicalOperatorStartAt(ctx.OR().get(ors.get(0)).getSymbol().getStartIndex());
+                            item.setLeftLogicalOperatorStopAt(ctx.OR().get(ors.get(0)).getSymbol().getStopIndex());
+                            ors.remove(0);
+                        } else {
+                            item.setRightLogicalOperator("OR");
+                            item.setRightLogicalOperatorStartAt(ctx.OR().get(ors.get(0)).getSymbol().getStartIndex());
+                            item.setRightLogicalOperatorStopAt(ctx.OR().get(ors.get(0)).getSymbol().getStopIndex());
                         }
                     }
                     conditions.add(item);

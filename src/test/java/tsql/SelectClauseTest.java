@@ -46,33 +46,32 @@ public class SelectClauseTest {
         assertFalse(query.isChanged());
     }
 
-    @ParameterizedTest(name = "doFindUnnecessarySelectClauseOneRunTest {index} query = {0}, resultQuery = {1}")
-    @MethodSource("doFindUnnecessarySelectClauseSource")
-    void doFindUnnecessarySelectClauseOneRunTest(String requestQuery, String resultQuery) {
+    @ParameterizedTest(name = "doFindConstantsInSelectClauseOneRunTest {index} query = {0}, resultQuery = {1}")
+    @MethodSource("doFindConstantsInSelectClauseSource")
+    void doFindConstantsInSelectClauseOneRunTest(String requestQuery, String resultQuery) {
         Query query = new Query(requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
-        assertEquals(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE", query.getQueryTransforms().get(1).get(0).getMessage());
-        assertTrue(query.isChanged());
+        assertTrue(query.getQueryTransforms().get(1).get(0).getMessage().contains(UnnecessaryStatementException.messageConstant));
+        assertFalse(query.isChanged());
     }
 
-    @ParameterizedTest(name = "doFindUnnecessarySelectClauseFullRunTest {index} query = {0}, resultQuery = {2}, transformationsInFirstRun = {3}, transformationsSecondInRun = {4}")
-    @MethodSource("doFindUnnecessarySelectClauseSource")
-    void doFindUnnecessarySelectClauseFullRunTest(String requestQuery, String oneRunResultQuery, String fullRunResultQuery, int transformationsInFirstRun, int transformationsInSecondRun) {
+    @ParameterizedTest(name = "doFindDuplicatesInSelectClauseOneRunTest {index} query = {0}, resultQuery = {1}")
+    @MethodSource("doFindDuplicatesInSelectClauseSource")
+    void doFindDuplicatesInSelectClauseOneRunTest(String requestQuery, String resultQuery) {
         Query query = new Query(requestQuery, requestQuery);
-        transformationBuilder.makeQuery(query);
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
-        assertEquals(query.getCurrentRunNumber(), 2);
-        assertNotNull(query.getQueryTransforms());
-        assertEquals(query.getQueryTransforms().get(1).size(), transformationsInFirstRun);
-        assertEquals(query.getQueryTransforms().get(2).size(), transformationsInSecondRun);
-        assertEquals(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE", query.getQueryTransforms().get(1).get(transformationsInFirstRun-2).getMessage());
-        assertTrue(query.isChanged());
+        query.addRun(1, false);
+        query.setCurrentRunNumber(1);
+        transformation.transformQuery(metadata, query);
+        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
+        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertTrue(query.getQueryTransforms().get(1).get(0).getMessage().contains(UnnecessaryStatementException.messageDuplicateAttribute));
+        assertFalse(query.isChanged());
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryAttributeInSelectThatCanBeRewrittenTest {index} query = {0}, resultQuery = {1}")
@@ -90,23 +89,23 @@ public class SelectClauseTest {
         assertTrue(query.isChanged());
     }
 
-    public static Stream<Arguments> doFindUnnecessarySelectClauseSource() {
+    public static Stream<Arguments> doFindDuplicatesInSelectClauseSource() {
         return Stream.of(
                 Arguments.arguments("SELECT PID, JMENO, JMENO FROM DBO.PREDMET",
-                        "SELECT PID, JMENO,  FROM DBO.PREDMET",
-                        "SELECT PID,JMENO  FROM DBO.PREDMET",
-                        2,
-                        1),
+                        "SELECT PID, JMENO, JMENO FROM DBO.PREDMET"),
                 Arguments.arguments("SELECT PDT.PID, STE.PID, PDT.JMENO FROM PREDMET PDT INNER JOIN STUDUJE STE ON PDT.PID = STE.PID WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS'",
-                        "SELECT PDT.PID, , PDT.JMENO FROM PREDMET PDT INNER JOIN STUDUJE STE ON PDT.PID = STE.PID WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS'",
-                        "SELECT PDT.PID,PDT.JMENO FROM PREDMET PDT INNER JOIN STUDUJE STE ON PDT.PID = STE.PID WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS'",
-                        5,
-                        4),
+                        "SELECT PDT.PID, STE.PID, PDT.JMENO FROM PREDMET PDT INNER JOIN STUDUJE STE ON PDT.PID = STE.PID WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS'")
+        );
+    }
+
+    public static Stream<Arguments> doFindConstantsInSelectClauseSource() {
+        return Stream.of(
                 Arguments.arguments("SELECT PID, JMENO, 2 FROM DBO.PREDMET WHERE ROCNIK = 2",
-                        "SELECT PID, JMENO,  FROM DBO.PREDMET WHERE ROCNIK = 2",
-                        "SELECT PID,JMENO  FROM DBO.PREDMET WHERE ROCNIK = 2",
-                        3,
-                        2)
+                        "SELECT PID, JMENO, 2 FROM DBO.PREDMET WHERE ROCNIK = 2"),
+                Arguments.arguments("SELECT PID, JMENO, 2 AS A FROM DBO.PREDMET WHERE ROCNIK = 2",
+                        "SELECT PID, JMENO, 2 AS A FROM DBO.PREDMET WHERE ROCNIK = 2"),
+                Arguments.arguments("SELECT PID, JMENO, 'Ahoj' AS A FROM DBO.PREDMET WHERE ROCNIK = 2",
+                        "SELECT PID, JMENO, 'Ahoj' AS A FROM DBO.PREDMET WHERE ROCNIK = 2")
         );
     }
 

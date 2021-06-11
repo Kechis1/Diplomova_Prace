@@ -52,7 +52,7 @@ public class RandomTest {
     public static Stream<Arguments> doFindUnnecessaryBetweenSource() {
         return Stream.of(
                 // WhereTransformation
-                Arguments.arguments("SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE stt.sID = stt.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID",
+                /*Arguments.arguments("SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE stt.sID = stt.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID",
                         "SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID"),
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'adam' AND 1 = 1",
                         "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam'"),
@@ -69,6 +69,27 @@ public class RandomTest {
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 = 1 OR JMENO = 'ADAM'",
                         "SELECT jmeno FROM STUDENT where 1 = 1 or jmeno = 'adam'"),
                 Arguments.arguments("SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID AND 1 = 1",
+                        "SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID")*/
+
+
+                // BetweenTransformation
+                Arguments.arguments("SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE stt.sID BETWEEN stt.sID AND stt.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID",
+                        "SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'adam' AND 1 BETWEEN 1 AND 1",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam'"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 BETWEEN 1 AND 1",
+                        "SELECT JMENO FROM STUDENT"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' AND 1 BETWEEN 1 AND 1 AND ROK_NAROZENI = 2000",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' and ROK_NAROZENI = 2000"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' OR JMENO = 'Emil' AND 1 BETWEEN 1 AND 1",
+                        "SELECT JMENO FROM STUDENT where jmeno = 'adam' OR JMENO = 'Emil'"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' OR 1 BETWEEN 1 AND 1",
+                        "SELECT JMENO FROM STUDENT where jmeno = 'adam' or 1 BETWEEN 1 AND 1"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 BETWEEN 1 AND 1 AND JMENO = 'ADAM'",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam'"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 BETWEEN 1 AND 1 OR JMENO = 'ADAM'",
+                        "SELECT jmeno FROM STUDENT where 1 BETWEEN 1 AND 1 or jmeno = 'adam'"),
+                Arguments.arguments("SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID AND 1 BETWEEN 1 AND 1",
                         "SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID")
 
 

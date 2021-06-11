@@ -102,7 +102,7 @@ public class Transformation {
         return operatorTransformation;
     }
 
-    public void setoperatorTransformation(OperatorTransformation operatorTransformation) {
+    public void setOperatorTransformation(OperatorTransformation operatorTransformation) {
         this.operatorTransformation = operatorTransformation;
     }
 

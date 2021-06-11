@@ -450,6 +450,15 @@ public class ConditionItem {
         this.rightSideNumberValue = rightSideNumberValue;
     }
 
+    public static boolean isOrUsed(List<ConditionItem> conditions) {
+        for (ConditionItem item : conditions) {
+            if ((item.getRightLogicalOperator() != null && item.getRightLogicalOperator().equals("OR")) || (item.getLeftLogicalOperator() != null && item.getLeftLogicalOperator().equals("OR"))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public int getLeftLogicalOperatorStopAt() {
         return leftLogicalOperatorStopAt;
     }

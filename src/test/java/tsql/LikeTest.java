@@ -67,22 +67,10 @@ public class LikeTest {
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-
-        for (int i = 1; i <= query.getCurrentRunNumber(); i++) {
-            System.out.println("Run (" + i + "): ");
-            if (query.getQueryTransforms().get(i) != null) {
-                for (Transformation r : query.getQueryTransforms().get(i)) {
-                    System.out.println(r);
-                }
-            } else {
-                System.out.println("--");
-            }
-        }
-
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE", query.getQueryTransforms().get(1).get(0).getMessage());
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " LIKE CONDITION", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
     }
 
@@ -97,7 +85,7 @@ public class LikeTest {
         assertNotNull(query.getQueryTransforms());
         assertEquals(query.getQueryTransforms().get(1).size(), transformationsInFirstRun);
         assertEquals(query.getQueryTransforms().get(2).size(), transformationsInSecondRun);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE", query.getQueryTransforms().get(1).get(transformationsInFirstRun - 3).getMessage());
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " LIKE CONDITION", query.getQueryTransforms().get(1).get(transformationsInFirstRun - 3).getMessage());
         assertTrue(query.isChanged());
     }
 

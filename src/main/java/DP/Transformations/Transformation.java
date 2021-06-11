@@ -1,5 +1,8 @@
 package DP.Transformations;
- 
+
+import DP.Database.ConditionItem;
+import DP.Exceptions.UnnecessaryStatementException;
+
 public class Transformation {
     String inputQuery;
     String outputQuery;
@@ -18,6 +21,41 @@ public class Transformation {
         this.action = action;
         this.changed = changed;
         this.operatorTransformation = operatorTransformation;
+    }
+
+    public static Query addNewTransformationBasedOnLogicalOperator(Query query, ConditionItem condition, int conditionSize, Action action, String message) {
+        if ((condition.getLeftLogicalOperator() != null && condition.getLeftLogicalOperator().equals("OR")) || (condition.getRightLogicalOperator() != null && condition.getRightLogicalOperator().equals("OR"))) {
+            query.addTransformation(new Transformation(query.getCurrentQuery(),
+                    query.getCurrentQuery(),
+                    message + " " + UnnecessaryStatementException.messageConditionIsAlwaysTrue,
+                    action,
+                    false,
+                    null
+            ));
+            return query;
+        }
+
+        String newQuery;
+
+        if (conditionSize == 1) {
+            newQuery = (query.getCurrentQuery().substring(0, (query.getCurrentQuery().substring(0, condition.getStartAt()).lastIndexOf("WHERE"))) + query.getCurrentQuery().substring(condition.getStopAt()).trim()).trim();
+        } else {
+            if (condition.getRightLogicalOperator() != null) {
+                newQuery = (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getRightLogicalOperatorStopAt() + 2)).trim();
+            } else if (condition.getLeftLogicalOperator() != null) {
+                newQuery = (query.getCurrentQuery().substring(0, condition.getLeftLogicalOperatorStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim();
+            } else {
+                newQuery = (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim();
+            }
+        }
+        query.addTransformation(new Transformation(query.getCurrentQuery(),
+                newQuery,
+                UnnecessaryStatementException.messageUnnecessaryStatement + " " + message,
+                action,
+                true,
+                null
+        ));
+        return query;
     }
 
     public boolean isChanged() {

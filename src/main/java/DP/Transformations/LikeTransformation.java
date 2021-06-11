@@ -48,39 +48,7 @@ public class LikeTransformation extends QueryHandler {
                     (condition.getRightSideDataType() == ConditionDataType.COLUMN || condition.getRightSideDataType() == ConditionDataType.STRING))
                     && ((condition.getRightSideDataType() == ConditionDataType.STRING && condition.getRightSideValue().matches("^[%]+$")) || (newMetadata.columnsEqual(condition.getLeftSideColumnItem(), condition.getRightSideColumnItem())))) {
 
-                if ((condition.getLeftLogicalOperator() != null && condition.getLeftLogicalOperator().equals("OR")) || (condition.getRightLogicalOperator() != null && condition.getRightLogicalOperator().equals("OR"))) {
-                    query.addTransformation(new Transformation(query.getCurrentQuery(),
-                            query.getCurrentQuery(),
-                            "LIKE " + UnnecessaryStatementException.messageConditionIsAlwaysTrue,
-                            Action.LikeTransformation,
-                            false,
-                            null
-                    ));
-                    return query;
-                }
-
-                String newQuery;
-
-                if (conditions.size() == 1) {
-                    newQuery = (query.getCurrentQuery().substring(0, (query.getCurrentQuery().substring(0, condition.getStartAt()).lastIndexOf("WHERE"))) + query.getCurrentQuery().substring(condition.getStopAt()).trim()).trim();
-                } else {
-                    if (condition.getRightLogicalOperator() != null) {
-                        newQuery = (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getRightLogicalOperatorStopAt() + 2)).trim();
-                    } else if (condition.getLeftLogicalOperator() != null) {
-                        newQuery = (query.getCurrentQuery().substring(0, condition.getLeftLogicalOperatorStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim();
-                    } else {
-                        newQuery = (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim();
-                    }
-                }
-
-                query.addTransformation(new Transformation(query.getCurrentQuery(),
-                        newQuery,
-                        UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION LIKE",
-                        Action.LikeTransformation,
-                        true,
-                        null
-                ));
-                return query;
+                return Transformation.addNewTransformationBasedOnLogicalOperator(query, condition, conditions.size(), Action.LikeTransformation, "LIKE CONDITION");
             }
         }
         query.addTransformation(new Transformation(query.getCurrentQuery(),

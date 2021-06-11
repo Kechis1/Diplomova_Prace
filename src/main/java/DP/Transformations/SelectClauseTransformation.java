@@ -121,13 +121,7 @@ public class SelectClauseTransformation extends QueryHandler {
             }
         }
 
-        boolean isOrUsed = false;
-        for (ConditionItem item : conditions) {
-            if ((item.getRightLogicalOperator() != null && item.getRightLogicalOperator().equals("OR")) || (item.getLeftLogicalOperator() != null && item.getLeftLogicalOperator().equals("OR"))) {
-                isOrUsed = true;
-                break;
-            }
-        }
+        boolean isOrUsed = ConditionItem.isOrUsed(conditions);
 
         if (!isOrUsed) {
             for (ConditionItem item : uniqueAttributesConditions) {

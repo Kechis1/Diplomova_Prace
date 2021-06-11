@@ -34,6 +34,8 @@ public class ConditionItem {
     private int rightLogicalOperatorStopAt = -1;
     private String leftLogicalOperator;
     private String rightLogicalOperator;
+    private ConditionItem betweenLeftCondition;
+    private ConditionItem betweenRightCondition;
 
 
     public ConditionItem(int startAt, int stopAt, ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator, ConditionOperator operatorType, String fullCondition, String leftSideFullCondition, String rightSideFullCondition) {
@@ -51,12 +53,40 @@ public class ConditionItem {
         initNumberValues();
     }
 
+    public ConditionItem(ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator, String fullCondition, String leftSideFullCondition, String rightSideFullCondition) {
+        this.leftSideDataType = leftSideDataType;
+        this.leftSideValue = leftSideValue;
+        this.rightSideDataType = rightSideDataType;
+        this.rightSideValue = rightSideValue;
+        this.operator = operator;
+        this.fullCondition = fullCondition;
+        this.leftSideFullCondition = leftSideFullCondition;
+        this.rightSideFullCondition = rightSideFullCondition;
+        initNumberValues();
+    }
+
     public ConditionOperator getOperatorType() {
         return operatorType;
     }
 
     public void setOperatorType(ConditionOperator operatorType) {
         this.operatorType = operatorType;
+    }
+
+    public ConditionItem getBetweenLeftCondition() {
+        return betweenLeftCondition;
+    }
+
+    public void setBetweenLeftCondition(ConditionItem betweenLeftCondition) {
+        this.betweenLeftCondition = betweenLeftCondition;
+    }
+
+    public ConditionItem getBetweenRightCondition() {
+        return betweenRightCondition;
+    }
+
+    public void setBetweenRightCondition(ConditionItem betweenRightCondition) {
+        this.betweenRightCondition = betweenRightCondition;
     }
 
     public static boolean duplicatesExists(Query query, DatabaseMetadata metadata, HashMap<Integer, List<ConditionItem>> conditions) {
@@ -484,6 +514,8 @@ public class ConditionItem {
                 "\n\t, rightLogicalOperatorStopAt=" + rightLogicalOperatorStopAt +
                 "\n\t, leftLogicalOperator='" + leftLogicalOperator + '\'' +
                 "\n\t, rightLogicalOperator='" + rightLogicalOperator + '\'' +
-                '}';
+                "\n\t, betweenLeftCondition='" + betweenLeftCondition + '\'' +
+                "\n\t, betweenRightCondition='" + betweenRightCondition + '\'' +
+                "\n}";
     }
 }

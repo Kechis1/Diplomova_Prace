@@ -165,6 +165,11 @@ public class TSqlParseWalker {
                     if (item.getRightSideDataType() == ConditionDataType.COLUMN) {
                         item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 1));
                     }
+
+                    if (ctxAnd.search_condition_not().get(i).predicate().BETWEEN() != null) {
+                        setBetweenCondition(item, i, metadata, ctxAnd);
+                    }
+
                     if (ctxAnd.AND() != null && !ctxAnd.AND().isEmpty()) {
                         if (i == 0) {
                             if (ors.size() > 0 && ctx.OR().get(ors.get(0)).getSymbol().getStartIndex() < ctxAnd.search_condition_not().get(i).getStart().getStartIndex()) {
@@ -205,6 +210,45 @@ public class TSqlParseWalker {
             }
         }
         return conditions;
+    }
+
+    private static void setBetweenCondition(ConditionItem item, int i, final DatabaseMetadata metadata, TSqlParser.Search_condition_andContext ctxAnd) {
+        ConditionItem betweenCondition = new ConditionItem(ConditionItem.findDataType(ctxAnd.search_condition_not().get(i).predicate().expression().get(0)),
+                ConditionItem.findSideValue(ctxAnd.search_condition_not().get(i).predicate().expression().get(0)),
+                ConditionItem.findDataType(ctxAnd.search_condition_not().get(i).predicate().expression().get(1)),
+                ConditionItem.findSideValue(ctxAnd.search_condition_not().get(i).predicate().expression().get(1)),
+                ">=",
+                ctxAnd.search_condition_not().get(i).predicate().getText(),
+                ctxAnd.search_condition_not().get(i).predicate().expression().get(0).getText(),
+                ctxAnd.search_condition_not().get(i).predicate().expression().get(1).getText()
+        );
+
+        if (betweenCondition.getLeftSideDataType() == ConditionDataType.COLUMN && betweenCondition.getRightSideDataType() == ConditionDataType.COLUMN) {
+            betweenCondition.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 0));
+            betweenCondition.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 1));
+        }
+
+        item.setBetweenLeftCondition(betweenCondition);
+
+        betweenCondition = new ConditionItem(ConditionItem.findDataType(ctxAnd.search_condition_not().get(i).predicate().expression().get(0)),
+                ConditionItem.findSideValue(ctxAnd.search_condition_not().get(i).predicate().expression().get(0)),
+                ConditionItem.findDataType(ctxAnd.search_condition_not().get(i).predicate().expression().get(2)),
+                ConditionItem.findSideValue(ctxAnd.search_condition_not().get(i).predicate().expression().get(2)),
+                "<=",
+                ctxAnd.search_condition_not().get(i).predicate().getText(),
+                ctxAnd.search_condition_not().get(i).predicate().expression().get(0).getText(),
+                ctxAnd.search_condition_not().get(i).predicate().expression().get(2).getText()
+        );
+
+        betweenCondition.setStartAt(ctxAnd.search_condition_not().get(i).getStart().getStartIndex());
+        betweenCondition.setStopAt(ctxAnd.search_condition_not().get(i).getStop().getStopIndex());
+
+        if (betweenCondition.getLeftSideDataType() == ConditionDataType.COLUMN && betweenCondition.getRightSideDataType() == ConditionDataType.COLUMN) {
+            betweenCondition.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 0));
+            betweenCondition.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 2));
+        }
+
+        item.setBetweenRightCondition(betweenCondition);
     }
 
     public static List<DatabaseTable> findFromTable(final DatabaseMetadata metadata, ParseTree select) {
@@ -307,62 +351,5 @@ public class TSqlParseWalker {
             }
         }, select);
         return columns;
-    }
-
-    public static List<ConditionItem> findBetweenConditions(final DatabaseMetadata metadata, ParseTree select) {
-        List<ConditionItem> betweenConditions = new ArrayList<>();
-        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
-            @Override
-            public void enterSearch_condition(@NotNull TSqlParser.Search_conditionContext ctx) {
-                if (ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().BETWEEN() != null) {
-                    ConditionItem item = new ConditionItem(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getStart().getStartIndex(),
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getStop().getStopIndex() + 1,
-                            ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
-                            ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
-                            ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
-                            ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1)),
-                            ">=",
-                            ConditionOperator.BETWEEN,
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getText(),
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0).getText(),
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(1).getText()
-                    );
-
-                    if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                        item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
-                        item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 1));
-                    }
-
-                    item.setStartAt(ctx.search_condition_and().get(0).search_condition_not().get(0).getStart().getStartIndex());
-                    item.setStopAt(ctx.search_condition_and().get(0).search_condition_not().get(0).getStop().getStopIndex());
-
-                    betweenConditions.add(item);
-
-                    item = new ConditionItem(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getStart().getStartIndex(),
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getStop().getStopIndex() + 1,
-                            ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
-                            ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0)),
-                            ConditionItem.findDataType(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(2)),
-                            ConditionItem.findSideValue(ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(2)),
-                            "<=",
-                            ConditionOperator.BETWEEN,
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().getText(),
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(0).getText(),
-                            ctx.search_condition_and().get(0).search_condition_not().get(0).predicate().expression().get(2).getText()
-                    );
-
-                    item.setStartAt(ctx.search_condition_and().get(0).search_condition_not().get(0).getStart().getStartIndex());
-                    item.setStopAt(ctx.search_condition_and().get(0).search_condition_not().get(0).getStop().getStopIndex());
-
-                    if (item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                        item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 0));
-                        item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctx.search_condition_and().get(0).search_condition_not().get(0), 2));
-                    }
-
-                    betweenConditions.add(item);
-                }
-            }
-        }, select);
-        return betweenConditions;
     }
 }

@@ -69,7 +69,7 @@ public class BetweenTest {
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
         assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION BETWEEN", query.getQueryTransforms().get(1).get(0).getMessage());
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " BETWEEN CONDITION", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
     }
 
@@ -84,7 +84,7 @@ public class BetweenTest {
         assertNotNull(query.getQueryTransforms());
         assertEquals(query.getQueryTransforms().get(1).size(), 3);
         assertEquals(query.getQueryTransforms().get(2).size(), 1);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " CONDITION BETWEEN", query.getQueryTransforms().get(1).get(0).getMessage());
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " BETWEEN CONDITION", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
     }
 
@@ -92,19 +92,19 @@ public class BetweenTest {
     public static Stream<Arguments> doFindUnnecessaryBetweenSource() {
         return Stream.of(
                 Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 'b' BETWEEN 'a' AND 'c'",
-                        "SELECT * FROM DBO.STUDENT WHERE",
+                        "SELECT * FROM DBO.STUDENT",
                         "SELECT * FROM DBO.STUDENT"),
                 Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 'abc' BETWEEN 'aaa' AND 'abc'",
-                        "SELECT * FROM DBO.STUDENT WHERE",
+                        "SELECT * FROM DBO.STUDENT",
                         "SELECT * FROM DBO.STUDENT"),
                 Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 1 BETWEEN 0 AND 2",
-                        "SELECT * FROM DBO.STUDENT WHERE",
+                        "SELECT * FROM DBO.STUDENT",
                         "SELECT * FROM DBO.STUDENT"),
                 Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE 1.5 BETWEEN 1.2 AND 1.7",
-                        "SELECT * FROM DBO.STUDENT WHERE",
+                        "SELECT * FROM DBO.STUDENT",
                         "SELECT * FROM DBO.STUDENT"),
                 Arguments.arguments("SELECT * FROM DBO.STUDENT WHERE jmeno BETWEEN jmeno AND jmeno",
-                        "SELECT * FROM DBO.STUDENT WHERE",
+                        "SELECT * FROM DBO.STUDENT",
                         "SELECT * FROM DBO.STUDENT")
         );
     }

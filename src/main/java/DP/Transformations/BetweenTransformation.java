@@ -31,9 +31,6 @@ public class BetweenTransformation extends QueryHandler {
         final List<ConditionItem> betweenConditions = ConditionItem.filterByOperator(conditions, ConditionOperator.BETWEEN);
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
 
-        // System.out.println(conditions);
-        // System.out.println(betweenConditions);
-
         boolean currentNecessary;
         boolean currentColumn;
         for (ConditionItem condition: betweenConditions) {

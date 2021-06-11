@@ -48,7 +48,7 @@ public class LikeTransformation extends QueryHandler {
                     (condition.getRightSideDataType() == ConditionDataType.COLUMN || condition.getRightSideDataType() == ConditionDataType.STRING))
                     && ((condition.getRightSideDataType() == ConditionDataType.STRING && condition.getRightSideValue().matches("^[%]+$")) || (newMetadata.columnsEqual(condition.getLeftSideColumnItem(), condition.getRightSideColumnItem())))) {
 
-                return Transformation.addNewTransformationBasedOnLogicalOperator(query, condition, conditions.size(), Action.LikeTransformation, "LIKE CONDITION");
+                return Transformation.addNewTransformationBasedOnLogicalOperator(query, condition, conditions.size(), Action.LikeTransformation, "LIKE");
             }
         }
         query.addTransformation(new Transformation(query.getCurrentQuery(),

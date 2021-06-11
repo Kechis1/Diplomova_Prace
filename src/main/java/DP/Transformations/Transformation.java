@@ -50,7 +50,7 @@ public class Transformation {
         }
         query.addTransformation(new Transformation(query.getCurrentQuery(),
                 newQuery,
-                UnnecessaryStatementException.messageUnnecessaryStatement + " " + message,
+                UnnecessaryStatementException.messageUnnecessaryStatement + " " + message + " CONDITION",
                 action,
                 true,
                 null

@@ -47,7 +47,7 @@ public class WhereComparisonTransformation extends QueryHandler {
             }
 
             if (!isConditionNecessary) {
-                return Transformation.addNewTransformationBasedOnLogicalOperator(query, condition, conditions.size(), Action.WhereComparisonTransformation, "WHERE CONDITION");
+                return Transformation.addNewTransformationBasedOnLogicalOperator(query, condition, conditions.size(), Action.WhereComparisonTransformation, "WHERE");
             } else if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery(),

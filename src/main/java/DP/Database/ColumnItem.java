@@ -9,6 +9,7 @@ public class ColumnItem {
     String schema;
     DatabaseTable table;
     String name;
+    String fullName;
     boolean isForeignKey;
     String referencesTableName;
     String referencesColumnName;
@@ -20,11 +21,12 @@ public class ColumnItem {
     int startAt;
     int stopAt;
 
-    public ColumnItem(String database, String schema, DatabaseTable table, String name, boolean isForeignKey, String referencesTableName, String referencesColumnName, DatabaseTable referencesTable, ColumnItem referencesColumn, boolean isNullable, boolean isConstant, String value) {
+    public ColumnItem(String database, String schema, DatabaseTable table, String name, String fullName, boolean isForeignKey, String referencesTableName, String referencesColumnName, DatabaseTable referencesTable, ColumnItem referencesColumn, boolean isNullable, boolean isConstant, String value) {
         this.database = database;
         this.schema = schema;
         this.table = table;
         this.name = name;
+        this.fullName = fullName;
         this.isForeignKey = isForeignKey;
         this.referencesTableName = referencesTableName;
         this.referencesColumnName = referencesColumnName;
@@ -35,11 +37,12 @@ public class ColumnItem {
         this.value = value;
     }
 
-    public ColumnItem(String database, String schema, DatabaseTable table, String name, boolean isForeignKey, String referencesTableName, String referencesColumnName, DatabaseTable referencesTable, ColumnItem referencesColumn, boolean isNullable) {
+    public ColumnItem(String database, String schema, DatabaseTable table, String name, String fullName, boolean isForeignKey, String referencesTableName, String referencesColumnName, DatabaseTable referencesTable, ColumnItem referencesColumn, boolean isNullable) {
         this.database = database;
         this.schema = schema;
         this.table = table;
         this.name = name;
+        this.fullName = fullName;
         this.isForeignKey = isForeignKey;
         this.referencesTableName = referencesTableName;
         this.referencesColumnName = referencesColumnName;
@@ -48,20 +51,22 @@ public class ColumnItem {
         this.isNullable = isNullable;
     }
 
-    public ColumnItem(String database, String schema, DatabaseTable table, String name, boolean isNullable) {
+    public ColumnItem(String database, String schema, DatabaseTable table, String name, String fullName, boolean isNullable) {
         this.database = database;
         this.schema = schema;
         this.table = table;
         this.name = name;
+        this.fullName = fullName;
         this.isForeignKey = false;
         this.isNullable = isNullable;
     }
 
-    public ColumnItem(String database, String schema, DatabaseTable table, String name) {
+    public ColumnItem(String database, String schema, DatabaseTable table, String name, String fullName) {
         this.database = database;
         this.schema = schema;
         this.table = table;
         this.name = name;
+        this.fullName = fullName;
     }
 
     public ColumnItem() {
@@ -82,6 +87,14 @@ public class ColumnItem {
 
     public void setStopAt(int stopAt) {
         this.stopAt = stopAt;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public static ColumnItem findOrCreate(DatabaseMetadata metadata, TSqlParser.Search_condition_notContext ctx, int index) {
@@ -109,18 +122,24 @@ public class ColumnItem {
                                 ? ctx.predicate().expression().get(index).full_column_name().table_name().schema.getText()
                                 : null,
                         table,
-                        ctx.predicate().expression().get(index).full_column_name().column_name.getText());
+                        ctx.predicate().expression().get(index).full_column_name().column_name.getText(),
+                        ctx.predicate().expression().get(index).full_column_name().getText());
             }
-            return table.findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
+            ColumnItem c = table.findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
+            c.setFullName(ctx.predicate().expression().get(index).full_column_name().getText());
+            return c;
         } else if (metadata.getTables().size() == 1) {
-            return metadata.getTables().get(0).findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
+            ColumnItem c = metadata.getTables().get(0).findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
+            c.setFullName(ctx.predicate().expression().get(index).full_column_name().getText());
+            return c;
         }
 
         return new ColumnItem(
                 null,
                 null,
                 null,
-                ctx.predicate().expression().get(index).full_column_name().column_name.getText()
+                ctx.predicate().expression().get(index).full_column_name().column_name.getText(),
+                ctx.predicate().expression().get(index).full_column_name().getText()
         );
     }
 
@@ -149,7 +168,8 @@ public class ColumnItem {
                                 ? ctx.column_elem().table_name().schema.getText()
                                 : null,
                         table,
-                        ctx.column_elem().column_name.getText());
+                        ctx.column_elem().column_name.getText(),
+                        ctx.column_elem().getText());
                 it.setStartAt(ctx.column_elem().getStart().getStartIndex());
                 it.setStopAt(ctx.column_elem().getStop().getStopIndex());
                 return it;
@@ -160,7 +180,8 @@ public class ColumnItem {
                         null,
                         null,
                         null,
-                        ctx.column_elem().column_name.getText()
+                        ctx.column_elem().column_name.getText(),
+                        ctx.column_elem().getText()
                 );
             }
             it.setStartAt(ctx.column_elem().getStart().getStartIndex());
@@ -168,6 +189,7 @@ public class ColumnItem {
             return it;
         } else if (metadata.getTables().size() == 1) {
             ColumnItem it = metadata.getTables().get(0).findColumn(ctx.column_elem().column_name.getText());
+            it.setFullName(ctx.column_elem().getText());
             it.setStartAt(ctx.column_elem().getStart().getStartIndex());
             it.setStopAt(ctx.column_elem().getStop().getStopIndex());
             return it;
@@ -177,7 +199,8 @@ public class ColumnItem {
                 null,
                 null,
                 null,
-                ctx.column_elem().column_name.getText()
+                ctx.column_elem().column_name.getText(),
+                ctx.column_elem().getText()
         );
         it.setStartAt(ctx.column_elem().getStart().getStartIndex());
         it.setStopAt(ctx.column_elem().getStop().getStopIndex());
@@ -260,6 +283,7 @@ public class ColumnItem {
                 ", schema='" + schema + '\'' +
                 ", table=" + tableString +
                 ", name='" + name + '\'' +
+                ", fullName='" + fullName + '\'' +
                 ", isForeignKey=" + isForeignKey +
                 ", referencesTableName='" + referencesTableName + '\'' +
                 ", referencesColumnName='" + referencesColumnName + '\'' +

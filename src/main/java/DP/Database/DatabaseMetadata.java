@@ -77,11 +77,13 @@ public class DatabaseMetadata {
                             object.getString("table_schema").toUpperCase(),
                             null,
                             item.getString("name").toUpperCase(),
+                            item.getString("name").toUpperCase(),
                             item.getBoolean("is_nullable")));
                 } else {
                     tableColumns.add(new ColumnItem(object.getString("table_catalog").toUpperCase(),
                             object.getString("table_schema").toUpperCase(),
                             null,
+                            item.getString("name").toUpperCase(),
                             item.getString("name").toUpperCase(),
                             true,
                             tableForeignKeys.get(foundIndex).getReferencesTableName(),

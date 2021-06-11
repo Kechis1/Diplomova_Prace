@@ -258,6 +258,7 @@ public class TSqlParseWalker {
                                             ctx.asterisk().table_name() != null
                                                     ? ctx.asterisk().table_name().getText()
                                                     : null),
+                                    ctx.asterisk().STAR().getText(),
                                     ctx.asterisk().STAR().getText());
                             it.setStartAt(ctx.getStart().getStartIndex());
                             it.setStopAt(ctx.getStop().getStopIndex());
@@ -272,6 +273,7 @@ public class TSqlParseWalker {
                                         ctx.expression_elem().as_column_alias() == null
                                                 ? null
                                                 : ctx.expression_elem().as_column_alias().column_alias().getText(),
+                                        ctx.expression_elem().getText(),
                                         false,
                                         null,
                                         null,
@@ -292,7 +294,8 @@ public class TSqlParseWalker {
                                                 ctx.expression_elem().expression().full_column_name() != null
                                                         ? ctx.expression_elem().expression().full_column_name().table_name().table.getText()
                                                         : null),
-                                        ctx.expression_elem().expression().full_column_name() != null ? ctx.expression_elem().expression().full_column_name().column_name.getText() : null
+                                        ctx.expression_elem().expression().full_column_name() != null ? ctx.expression_elem().expression().full_column_name().column_name.getText() : null,
+                                        ctx.expression_elem().getText()
                                 );
                                 it.setStartAt(ctx.expression_elem().expression().getStart().getStartIndex());
                                 it.setStopAt(ctx.expression_elem().expression().getStop().getStopIndex());

@@ -99,8 +99,8 @@ public class GroupByTest {
                 1),
                 Arguments.arguments("SELECT pr.pId, stt.sID, ste.sID, ste.pID FROM dbo.student stt JOIN dbo.studuje ste ON stt.sID = ste.sID JOIN dbo.predmet pr ON ste.pID = pr.pID GROUP BY pr.pID, stt.sID, ste.pID, ste.sID, ste.rok",
                         "SELECT PR.PID, STT.SID, STE.SID, STE.PID FROM DBO.STUDENT STT JOIN DBO.STUDUJE STE ON STT.SID = STE.SID JOIN DBO.PREDMET PR ON STE.PID = PR.PID",
-                        "SELECT PR.PID,STT.SID FROM DBO.STUDENT STT JOIN DBO.STUDUJE STE ON STT.SID = STE.SID JOIN DBO.PREDMET PR ON STE.PID = PR.PID",
-                        7,
+                        "SELECT PR.PID, STT.SID, STE.SID, STE.PID FROM DBO.STUDENT STT JOIN DBO.STUDUJE STE ON STT.SID = STE.SID JOIN DBO.PREDMET PR ON STE.PID = PR.PID",
+                        5,
                         3)
         );
     }

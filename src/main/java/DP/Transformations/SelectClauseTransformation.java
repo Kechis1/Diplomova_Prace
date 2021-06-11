@@ -83,10 +83,10 @@ public class SelectClauseTransformation extends QueryHandler {
                     }
                     if (bothInSelect == 1) {
                         query.addTransformation(new Transformation(query.getCurrentQuery(),
-                                (query.getCurrentQuery().substring(0, column.getStartAt()) + query.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
-                                UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE",
+                                query.getCurrentQuery(),
+                                UnnecessaryStatementException.messageDuplicateAttribute,
                                 Action.SelectClauseTransformation,
-                                true,
+                                false,
                                 null
                         ));
                         return query;

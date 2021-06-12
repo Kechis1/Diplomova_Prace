@@ -125,16 +125,18 @@ public class RandomTest {
                 Arguments.arguments("SELECT 1 FROM DBO.STUDENT ORDER BY SID",
                         "SELECT 1 FROM DBO.STUDENT ORDER BY SID"),
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'Petr' ORDER BY SID",
-                        "SELECT 'Petr' as jmeno FROM STUDENT WHERE jmeno = 'Petr' ORDER BY SID"),*/
+                        "SELECT 'Petr' as jmeno FROM STUDENT WHERE jmeno = 'Petr' ORDER BY SID"),
 
 
                 //  JoinTableTransformation
-                /*Arguments.arguments("SELECT DISTINCT predmet.jmeno FROM student JOIN (predmet LEFT JOIN studuje ON predmet.pID = studuje.pID) ON student.sID = studuje.sID",
-                        "SELECT DISTINCT predmet.jmeno FROM student JOIN (predmet LEFT JOIN studuje ON predmet.pID = studuje.pID) ON student.sID = studuje.sID"),*/
+                Arguments.arguments("SELECT DISTINCT predmet.jmeno FROM student JOIN (predmet LEFT JOIN studuje ON predmet.pID = studuje.pID) ON student.sID = studuje.sID",
+                        "SELECT DISTINCT predmet.jmeno FROM student JOIN (predmet LEFT JOIN studuje ON predmet.pID = studuje.pID) ON student.sID = studuje.sID"),
 
                 // ExistsTransformation
                 Arguments.arguments("SELECT * FROM DBO.STUDUJE SDT WHERE EXISTS (SELECT * FROM DBO.PREDMET PDT WHERE SDT.PID = PDT.PID) ORDER BY SDT.SID",
                         "SELECT * FROM DBO.STUDUJE SDT ORDER BY SDT.SID"),
+                Arguments.arguments("SELECT * FROM student WHERE 1 = ADD_F(A + 3)",
+                        "SELECT * FROM student WHERE 1 = ADD_F(A + 3)"),
                 Arguments.arguments("SELECT * FROM student x WHERE EXISTS(SELECT * FROM studuje y WHERE x.sID + 1 = y.sID + 1) ORDER BY x.SID",
                         "SELECT * FROM student x WHERE EXISTS(SELECT 1 FROM studuje y WHERE x.sID + 1 = y.sID + 1) ORDER BY x.SID"),
                 Arguments.arguments("SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE EXISTS(SELECT 1) GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID",
@@ -154,7 +156,7 @@ public class RandomTest {
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE EXISTS(SELECT 1) OR JMENO = 'ADAM' ORDER BY STUDENT.SID",
                         "SELECT jmeno FROM STUDENT where EXISTS(SELECT 1) or jmeno = 'adam' ORDER BY STUDENT.SID"),
                 Arguments.arguments("SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID AND EXISTS(SELECT 1) ORDER BY SSTT.SID",
-                        "SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID ORDER BY STT.SID")
+                        "SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID ORDER BY STT.SID")*/
         );
     }
 }

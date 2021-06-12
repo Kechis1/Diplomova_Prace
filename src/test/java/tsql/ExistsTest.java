@@ -58,7 +58,7 @@ public class ExistsTest {
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
         assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS", query.getQueryTransforms().get(1).get(0).getMessage());
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS CONDITION", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
     }
 
@@ -73,7 +73,7 @@ public class ExistsTest {
         assertNotNull(query.getQueryTransforms());
         assertEquals(query.getQueryTransforms().get(1).size(), 3);
         assertEquals(query.getQueryTransforms().get(2).size(), 1);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS", query.getQueryTransforms().get(1).get(0).getMessage());
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS CONDITION", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
     }
 
@@ -89,7 +89,7 @@ public class ExistsTest {
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
         assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
-        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS", query.getQueryTransforms().get(1).get(0).getMessage());
+        assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS CONDITION", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
     }
 
@@ -118,7 +118,7 @@ public class ExistsTest {
         transformation.transformQuery(metadata, query);
         assertEquals(condition + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet, query.getQueryTransforms().get(1).get(0).getMessage());
         assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 2);
+        assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertFalse(query.isChanged());
     }
 
@@ -174,9 +174,7 @@ public class ExistsTest {
 
     public static Stream<Arguments> doExistsWhereResultIsEmptySetSource() {
         return Stream.of(
-                Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE NOT EXISTS (SELECT 1)",
+                Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE NOT EXISTS (SELECT 1)",
                         "NOT EXISTS (SELECT 1)")
         );
     }

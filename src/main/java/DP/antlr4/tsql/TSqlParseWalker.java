@@ -117,13 +117,15 @@ public class TSqlParseWalker {
     public static List<ConditionItem> findWhereConditions(final DatabaseMetadata metadata, ParseTree select) {
         List<ConditionItem> conditions = new ArrayList<>();
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            int index = 0;
             @Override
-            public void enterQuery_specification(TSqlParser.Query_specificationContext ctx) {
-                if (ctx.WHERE() != null) {
-                    for (TSqlParser.Search_conditionContext t : ctx.search_condition()) {
-                        conditions.addAll(findConditions(metadata, t, ctx.HAVING() == null ? -1 : ctx.HAVING().getSymbol().getStartIndex(), ctx.GROUP() == null ? -1 : ctx.GROUP().getSymbol().getStartIndex()));
-                    }
+            public void enterSelect_statement(TSqlParser.Select_statementContext ctx) {
+                if (index == 0 && ctx.query_expression() != null &&
+                        ctx.query_expression().query_specification() != null &&
+                        ctx.query_expression().query_specification().WHERE() != null) {
+                    conditions.addAll(findConditions(metadata, ctx.query_expression().query_specification().where, ctx.query_expression().query_specification().HAVING() == null ? -1 : ctx.query_expression().query_specification().HAVING().getSymbol().getStartIndex(), ctx.query_expression().query_specification().GROUP() == null ? -1 : ctx.query_expression().query_specification().GROUP().getSymbol().getStartIndex()));
                 }
+                index++;
             }
         }, select);
         return conditions;
@@ -140,76 +142,140 @@ public class TSqlParseWalker {
 
     public static Collection<? extends ConditionItem> findConditionsFromSearchCtx(final DatabaseMetadata metadata, TSqlParser.Search_conditionContext ctx) {
         List<ConditionItem> conditions = new ArrayList<>();
-        List<Integer> ors = new ArrayList<>();
-        for (int i = 0; i < ctx.OR().size(); i++) {
-            ors.add(i);
-        }
+        List<Integer> ors = setOrsInConditions(ctx);
+
         for (TSqlParser.Search_condition_andContext ctxAnd : ctx.search_condition_and()) {
             for (int i = 0; i < ctxAnd.search_condition_not().size(); i++) {
-                if ((ctxAnd.search_condition_not().get(i).predicate().expression() != null && ctxAnd.search_condition_not().get(i).predicate().expression().size() > 1 && ctxAnd.search_condition_not().get(i).predicate().expression().get(1).bracket_expression() == null) && ctxAnd.search_condition_not().get(i).predicate().subquery() == null && ctxAnd.search_condition_not().get(i).predicate().EXISTS() == null && ctxAnd.search_condition_not().get(i).predicate().expression().get(0).function_call() == null) {
-                    ConditionItem item = new ConditionItem(ctxAnd.search_condition_not().get(i).predicate().getStart().getStartIndex(),
-                            ctxAnd.search_condition_not().get(i).predicate().getStop().getStopIndex() + 1,
-                            ConditionItem.findDataType(ctxAnd.search_condition_not().get(i).predicate().expression().get(0)),
-                            ConditionItem.findSideValue(ctxAnd.search_condition_not().get(i).predicate().expression().get(0)),
-                            ConditionItem.findDataType(ctxAnd.search_condition_not().get(i).predicate().expression().get(1)),
-                            ConditionItem.findSideValue(ctxAnd.search_condition_not().get(i).predicate().expression().get(1)),
-                            ctxAnd.search_condition_not().get(i).predicate().getChild(1).getText(),
-                            ConditionOperator.findOperatorFromString(ctxAnd.search_condition_not().get(i).predicate().getChild(1).getText()),
-                            ctxAnd.search_condition_not().get(i).predicate().getText(),
-                            ctxAnd.search_condition_not().get(i).predicate().expression().get(0).getText(),
-                            ctxAnd.search_condition_not().get(i).predicate().expression().get(1).getText()
-                    );
-                    if (item.getLeftSideDataType() == ConditionDataType.COLUMN) {
-                        item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 0));
-                    }
-                    if (item.getRightSideDataType() == ConditionDataType.COLUMN) {
-                        item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 1));
-                    }
-
-                    if (ctxAnd.search_condition_not().get(i).predicate().BETWEEN() != null) {
-                        setBetweenCondition(item, i, metadata, ctxAnd);
-                    }
-
-                    if (ctxAnd.AND() != null && !ctxAnd.AND().isEmpty()) {
-                        if (i == 0) {
-                            if (ors.size() > 0 && ctx.OR().get(ors.get(0)).getSymbol().getStartIndex() < ctxAnd.search_condition_not().get(i).getStart().getStartIndex()) {
-                                item.setLeftLogicalOperator("OR");
-                                item.setLeftLogicalOperatorStartAt(ctx.OR().get(ors.get(0)).getSymbol().getStartIndex());
-                                item.setLeftLogicalOperatorStopAt(ctx.OR().get(ors.get(0)).getSymbol().getStopIndex());
-                                ors.remove(0);
-                            }
-                            item.setRightLogicalOperator("AND");
-                            item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStartIndex());
-                            item.setRightLogicalOperatorStopAt(ctxAnd.AND(i).getSymbol().getStopIndex());
-                        } else if (i == ctxAnd.search_condition_not().size() - 1) {
-                            item.setLeftLogicalOperator("AND");
-                            item.setLeftLogicalOperatorStartAt(ctxAnd.AND(ctxAnd.AND().size() - 1).getSymbol().getStartIndex());
-                            item.setLeftLogicalOperatorStopAt(ctxAnd.AND(ctxAnd.AND().size() - 1).getSymbol().getStopIndex());
-                        } else {
-                            item.setLeftLogicalOperator("AND");
-                            item.setLeftLogicalOperatorStartAt(ctxAnd.AND(i - 1).getSymbol().getStartIndex());
-                            item.setLeftLogicalOperatorStopAt(ctxAnd.AND(i - 1).getSymbol().getStopIndex());
-                            item.setRightLogicalOperator("AND");
-                            item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStartIndex());
-                            item.setRightLogicalOperatorStopAt(ctxAnd.AND(i).getSymbol().getStopIndex());
-                        }
-                    } else if (ors.size() > 0) {
-                        if (ctx.OR().get(ors.get(0)).getSymbol().getStartIndex() < ctxAnd.search_condition_not().get(i).getStart().getStartIndex()) {
-                            item.setLeftLogicalOperator("OR");
-                            item.setLeftLogicalOperatorStartAt(ctx.OR().get(ors.get(0)).getSymbol().getStartIndex());
-                            item.setLeftLogicalOperatorStopAt(ctx.OR().get(ors.get(0)).getSymbol().getStopIndex());
-                            ors.remove(0);
-                        } else {
-                            item.setRightLogicalOperator("OR");
-                            item.setRightLogicalOperatorStartAt(ctx.OR().get(ors.get(0)).getSymbol().getStartIndex());
-                            item.setRightLogicalOperatorStopAt(ctx.OR().get(ors.get(0)).getSymbol().getStopIndex());
-                        }
-                    }
+                ConditionItem item = buildCondition(ors, ctx, ctxAnd, i, metadata);
+                if (item != null) {
                     conditions.add(item);
                 }
             }
         }
         return conditions;
+    }
+
+    private static void setConditionLogicalOperators(List<Integer> ors, TSqlParser.Search_conditionContext ctx, TSqlParser.Search_condition_andContext ctxAnd, int i, ConditionItem item) {
+        if (ctxAnd.AND() != null && !ctxAnd.AND().isEmpty()) {
+            if (i == 0) {
+                if (ors.size() > 0 && ctx.OR().get(ors.get(0)).getSymbol().getStartIndex() < ctxAnd.search_condition_not().get(i).getStart().getStartIndex()) {
+                    item.setLeftLogicalOperator("OR");
+                    item.setLeftLogicalOperatorStartAt(ctx.OR().get(ors.get(0)).getSymbol().getStartIndex());
+                    item.setLeftLogicalOperatorStopAt(ctx.OR().get(ors.get(0)).getSymbol().getStopIndex());
+                    ors.remove(0);
+                }
+                item.setRightLogicalOperator("AND");
+                item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStartIndex());
+                item.setRightLogicalOperatorStopAt(ctxAnd.AND(i).getSymbol().getStopIndex());
+            } else if (i == ctxAnd.search_condition_not().size() - 1) {
+                item.setLeftLogicalOperator("AND");
+                item.setLeftLogicalOperatorStartAt(ctxAnd.AND(ctxAnd.AND().size() - 1).getSymbol().getStartIndex());
+                item.setLeftLogicalOperatorStopAt(ctxAnd.AND(ctxAnd.AND().size() - 1).getSymbol().getStopIndex());
+            } else {
+                item.setLeftLogicalOperator("AND");
+                item.setLeftLogicalOperatorStartAt(ctxAnd.AND(i - 1).getSymbol().getStartIndex());
+                item.setLeftLogicalOperatorStopAt(ctxAnd.AND(i - 1).getSymbol().getStopIndex());
+                item.setRightLogicalOperator("AND");
+                item.setRightLogicalOperatorStartAt(ctxAnd.AND(i).getSymbol().getStartIndex());
+                item.setRightLogicalOperatorStopAt(ctxAnd.AND(i).getSymbol().getStopIndex());
+            }
+        } else if (ors.size() > 0) {
+            if (ctx.OR().get(ors.get(0)).getSymbol().getStartIndex() < ctxAnd.search_condition_not().get(i).getStart().getStartIndex()) {
+                item.setLeftLogicalOperator("OR");
+                item.setLeftLogicalOperatorStartAt(ctx.OR().get(ors.get(0)).getSymbol().getStartIndex());
+                item.setLeftLogicalOperatorStopAt(ctx.OR().get(ors.get(0)).getSymbol().getStopIndex());
+                ors.remove(0);
+            } else {
+                item.setRightLogicalOperator("OR");
+                item.setRightLogicalOperatorStartAt(ctx.OR().get(ors.get(0)).getSymbol().getStartIndex());
+                item.setRightLogicalOperatorStopAt(ctx.OR().get(ors.get(0)).getSymbol().getStopIndex());
+            }
+        }
+    }
+
+    private static ConditionItem buildCondition(List<Integer> ors, TSqlParser.Search_conditionContext ctx, TSqlParser.Search_condition_andContext ctxAnd, int i, DatabaseMetadata metadata) {
+        if ((ctxAnd.search_condition_not().get(i).predicate().expression() != null && ctxAnd.search_condition_not().get(i).predicate().expression().size() > 1 && ctxAnd.search_condition_not().get(i).predicate().expression().get(1).bracket_expression() == null) && ctxAnd.search_condition_not().get(i).predicate().subquery() == null && ctxAnd.search_condition_not().get(i).predicate().EXISTS() == null && ctxAnd.search_condition_not().get(i).predicate().expression().get(0).function_call() == null) {
+            return buildNotExistsCondition(ors, ctx, ctxAnd, i, metadata);
+        } else if (ctxAnd.search_condition_not().get(i).predicate() != null && ctxAnd.search_condition_not().get(i).predicate().EXISTS() != null) {
+            return buildExistsCondition(ors, ctx, ctxAnd, i, metadata);
+        }
+        return null;
+    }
+
+    private static ConditionItem buildNotExistsCondition(List<Integer> ors, TSqlParser.Search_conditionContext ctx, TSqlParser.Search_condition_andContext ctxAnd, int i, final DatabaseMetadata metadata) {
+        ConditionItem item = new ConditionItem(ctxAnd.search_condition_not().get(i).predicate().getStart().getStartIndex(),
+                ctxAnd.search_condition_not().get(i).predicate().getStop().getStopIndex() + 1,
+                ConditionItem.findDataType(ctxAnd.search_condition_not().get(i).predicate().expression().get(0)),
+                ConditionItem.findSideValue(ctxAnd.search_condition_not().get(i).predicate().expression().get(0)),
+                ConditionItem.findDataType(ctxAnd.search_condition_not().get(i).predicate().expression().get(1)),
+                ConditionItem.findSideValue(ctxAnd.search_condition_not().get(i).predicate().expression().get(1)),
+                ctxAnd.search_condition_not().get(i).predicate().getChild(1).getText(),
+                ConditionOperator.findOperatorFromString(ctxAnd.search_condition_not().get(i).predicate().getChild(1).getText()),
+                ctxAnd.search_condition_not().get(i).predicate().getText(),
+                ctxAnd.search_condition_not().get(i).predicate().expression().get(0).getText(),
+                ctxAnd.search_condition_not().get(i).predicate().expression().get(1).getText()
+        );
+        if (item.getLeftSideDataType() == ConditionDataType.COLUMN) {
+            item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 0));
+        }
+        if (item.getRightSideDataType() == ConditionDataType.COLUMN) {
+            item.setRightSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 1));
+        }
+
+        if (ctxAnd.search_condition_not().get(i).predicate().BETWEEN() != null) {
+            setBetweenCondition(item, i, metadata, ctxAnd);
+        }
+
+        setConditionLogicalOperators(ors, ctx, ctxAnd, i, item);
+        return item;
+    }
+
+    private static ConditionItem buildExistsCondition(List<Integer> ors, TSqlParser.Search_conditionContext ctx, TSqlParser.Search_condition_andContext ctxAnd, int i, final DatabaseMetadata metadata) {
+        ConditionItem item = new ConditionItem();
+        item.setStartAt(ctxAnd.search_condition_not().get(i).getStart().getStartIndex());
+        item.setStopAt(ctxAnd.search_condition_not().get(i).getStop().getStopIndex() + 1);
+        item.setOperator("EXISTS");
+        item.setOperatorType(ConditionOperator.EXISTS);
+        item.setFullCondition(ctxAnd.search_condition_not().get(i).getText());
+        setExistsCondition(item, i, metadata, ctxAnd);
+        setConditionLogicalOperators(ors, ctx, ctxAnd, i, item);
+        return item;
+    }
+
+    public static void setExistsCondition(ConditionItem item, int i, final DatabaseMetadata metadata, TSqlParser.Search_condition_andContext ctxAnd) {
+        ExistItem eItem = new ExistItem();
+        eItem.setFullPredicate(ctxAnd.search_condition_not(i).getText());
+        eItem.setNot(ctxAnd.search_condition_not(i).NOT() != null);
+
+        TSqlParser.Query_specificationContext qSpecContext = ctxAnd.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification();
+        if (qSpecContext.FROM() != null && qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().table_name_with_hint() != null) {
+            eItem.setTable(metadata.findTable(qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText(),
+                    qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().as_table_alias() == null
+                            ? null
+                            : qSpecContext.table_sources().table_source().get(0).table_source_item_joined().table_source_item().as_table_alias().getText()));
+        }
+        if (qSpecContext.WHERE() != null) {
+            List<ConditionItem> eConditions = new ArrayList<>();
+            for (TSqlParser.Search_conditionContext eCtxS : qSpecContext.search_condition()) {
+                List<Integer> ors = setOrsInConditions(eCtxS);
+                for (TSqlParser.Search_condition_andContext eCtxAnd : eCtxS.search_condition_and()) {
+                    for (int j = 0; j < eCtxAnd.search_condition_not().size(); j++) {
+                        eConditions.add(buildCondition(ors, eCtxS, eCtxAnd, j, metadata));
+                    }
+                }
+            }
+
+            eItem.setConditions(eConditions);
+        }
+        item.setExistItem(eItem);
+    }
+
+    private static List<Integer> setOrsInConditions(TSqlParser.Search_conditionContext ctx) {
+        List<Integer> ors = new ArrayList<>();
+        for (int j = 0; j < ctx.OR().size(); j++) {
+            ors.add(j);
+        }
+        return ors;
     }
 
     private static void setBetweenCondition(ConditionItem item, int i, final DatabaseMetadata metadata, TSqlParser.Search_condition_andContext ctxAnd) {

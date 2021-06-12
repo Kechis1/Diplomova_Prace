@@ -25,7 +25,7 @@ public class WhereComparisonTransformation extends QueryHandler {
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
         final List<ConditionItem> whereConditions = ConditionItem.filterByOperator(conditions, ConditionOperator.AO);
 
-        boolean foundError = ConditionItem.findAndProcessErrorInConditions("WHERE", Action.WhereComparisonTransformation, whereConditions, metadata, query, allTables);
+        boolean foundError = ConditionItem.findAndProcessErrorInConditions("WHERE", Action.WhereComparisonTransformation, whereConditions, conditions, metadata, query, allTables);
         if (foundError) {
             return query;
         }

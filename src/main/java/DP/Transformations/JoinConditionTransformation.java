@@ -55,7 +55,7 @@ public class JoinConditionTransformation extends QueryHandler {
 
         for (JoinItem join : joins) {
             if (join.getConditions().size() > 1) {
-                boolean foundError = ConditionItem.findAndProcessErrorInConditions("JOIN", Action.JoinConditionTransformation, join.getConditions(), metadata, query, allTables);
+                boolean foundError = ConditionItem.findAndProcessErrorInConditions("JOIN", Action.JoinConditionTransformation, join.getConditions(), join.getConditions(), metadata, query, allTables);
                 if (foundError) {
                     return query;
                 }

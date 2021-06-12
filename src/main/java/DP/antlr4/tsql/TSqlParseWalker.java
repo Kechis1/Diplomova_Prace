@@ -370,14 +370,12 @@ public class TSqlParseWalker {
 
     public static List<ColumnItem> findColumnsInSelect(final DatabaseMetadata metadata, ParseTree select) {
         final List<ColumnItem> columns = new ArrayList<>();
-        final List<Boolean> foundSelect = new ArrayList<>();
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
-
+            int index = 0;
             @Override
             public void enterSelect_statement(TSqlParser.Select_statementContext mCtx) {
                 try {
-                    if (foundSelect.isEmpty()) {
-                        foundSelect.add(true);
+                    if (index == 0) {
                         for (TSqlParser.Select_list_elemContext ctx : mCtx.query_expression().query_specification().select_list().select_list_elem()) {
                             if (ctx.asterisk() != null) {
                                 ColumnItem it = new ColumnItem(null,
@@ -436,6 +434,7 @@ public class TSqlParseWalker {
                 } catch (RuntimeException ignored) {
 
                 }
+                index++;
             }
         }, select);
         return columns;

@@ -67,8 +67,8 @@ public class ConditionItem {
 
     }
 
-    public static boolean findAndProcessErrorInConditions(String message, Action action, List<ConditionItem> conditions, final DatabaseMetadata metadata, Query query, List<DatabaseTable> tables) {
-        for (ConditionItem condition : conditions) {
+    public static boolean findAndProcessErrorInConditions(String message, Action action, List<ConditionItem> filteredConditions, List<ConditionItem> allConditions, final DatabaseMetadata metadata, Query query, List<DatabaseTable> tables) {
+        for (ConditionItem condition : filteredConditions) {
             if (condition.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
             boolean isConditionNecessary = true;
             if ((condition.getLeftSideDataType() == ConditionDataType.BINARY && Arrays.asList(ConditionDataType.BINARY, ConditionDataType.DECIMAL).contains(condition.getRightSideDataType())) ||
@@ -89,7 +89,7 @@ public class ConditionItem {
             }
 
             if (!isConditionNecessary) {
-                Transformation.addNewTransformationBasedOnLogicalOperator(query, condition, conditions.size(), action, message);
+                Transformation.addNewTransformationBasedOnLogicalOperator(query, condition, allConditions.size(), action, message);
                 return true;
             } else if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),

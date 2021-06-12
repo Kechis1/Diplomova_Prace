@@ -89,6 +89,10 @@ public class ColumnItem {
         this.stopAt = stopAt;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getFullName() {
         return fullName;
     }
@@ -128,10 +132,13 @@ public class ColumnItem {
             ColumnItem c = table.findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
             c.setFullName(ctx.predicate().expression().get(index).full_column_name().getText());
             return c;
-        } else if (metadata.getTables().size() == 1) {
-            ColumnItem c = metadata.getTables().get(0).findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
-            c.setFullName(ctx.predicate().expression().get(index).full_column_name().getText());
-            return c;
+        }
+        for (DatabaseTable t: metadata.getTables()) {
+            ColumnItem c = t.findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
+            if (c.getTable() != null) {
+                c.setFullName(ctx.predicate().expression().get(index).full_column_name().getText());
+                return c;
+            }
         }
 
         return new ColumnItem(
@@ -187,24 +194,28 @@ public class ColumnItem {
             it.setStartAt(ctx.column_elem().getStart().getStartIndex());
             it.setStopAt(ctx.column_elem().getStop().getStopIndex());
             return it;
-        } else if (metadata.getTables().size() == 1) {
-            ColumnItem it = metadata.getTables().get(0).findColumn(ctx.column_elem().column_name.getText());
-            it.setFullName(ctx.column_elem().getText());
-            it.setStartAt(ctx.column_elem().getStart().getStartIndex());
-            it.setStopAt(ctx.column_elem().getStop().getStopIndex());
-            return it;
         }
 
-        ColumnItem it = new ColumnItem(
+        for (DatabaseTable t: metadata.getTables()) {
+            ColumnItem c = t.findColumn(ctx.column_elem().column_name.getText());
+            if (c.getTable() != null) {
+                c.setFullName(ctx.column_elem().getText());
+                c.setStartAt(ctx.column_elem().getStart().getStartIndex());
+                c.setStopAt(ctx.column_elem().getStop().getStopIndex());
+                return c;
+            }
+        }
+
+        ColumnItem c = new ColumnItem(
                 null,
                 null,
                 null,
                 ctx.column_elem().column_name.getText(),
                 ctx.column_elem().getText()
         );
-        it.setStartAt(ctx.column_elem().getStart().getStartIndex());
-        it.setStopAt(ctx.column_elem().getStop().getStopIndex());
-        return it;
+        c.setStartAt(ctx.column_elem().getStart().getStartIndex());
+        c.setStopAt(ctx.column_elem().getStop().getStopIndex());
+        return c;
     }
 
     public static boolean exists(List<ColumnItem> allColumns, ColumnItem columnItem) {

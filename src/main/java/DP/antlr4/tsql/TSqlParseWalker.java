@@ -146,9 +146,13 @@ public class TSqlParseWalker {
 
         for (TSqlParser.Search_condition_andContext ctxAnd : ctx.search_condition_and()) {
             for (int i = 0; i < ctxAnd.search_condition_not().size(); i++) {
-                ConditionItem item = buildCondition(ors, ctx, ctxAnd, i, metadata);
-                if (item != null) {
-                    conditions.add(item);
+                try {
+                    ConditionItem item = buildCondition(ors, ctx, ctxAnd, i, metadata);
+                    if (item != null) {
+                        conditions.add(item);
+                    }
+                } catch (RuntimeException ignored) {
+
                 }
             }
         }
@@ -194,10 +198,14 @@ public class TSqlParseWalker {
     }
 
     private static ConditionItem buildCondition(List<Integer> ors, TSqlParser.Search_conditionContext ctx, TSqlParser.Search_condition_andContext ctxAnd, int i, DatabaseMetadata metadata) {
-        if ((ctxAnd.search_condition_not().get(i).predicate().expression() != null && ctxAnd.search_condition_not().get(i).predicate().expression().size() > 1 && ctxAnd.search_condition_not().get(i).predicate().expression().get(1).bracket_expression() == null) && ctxAnd.search_condition_not().get(i).predicate().subquery() == null && ctxAnd.search_condition_not().get(i).predicate().EXISTS() == null && ctxAnd.search_condition_not().get(i).predicate().expression().get(0).function_call() == null) {
-            return buildNotExistsCondition(ors, ctx, ctxAnd, i, metadata);
-        } else if (ctxAnd.search_condition_not().get(i).predicate() != null && ctxAnd.search_condition_not().get(i).predicate().EXISTS() != null) {
+        if (ctxAnd.search_condition_not().get(i).predicate() == null) {
+            return null;
+        }
+        if (ctxAnd.search_condition_not().get(i).predicate().EXISTS() != null) {
             return buildExistsCondition(ors, ctx, ctxAnd, i, metadata);
+        }
+        if (ctxAnd.search_condition_not().get(i).predicate().expression() != null && ctxAnd.search_condition_not().get(i).predicate().expression().size() > 1 && ctxAnd.search_condition_not().get(i).predicate().expression().get(1).bracket_expression() == null && ctxAnd.search_condition_not().get(i).predicate().subquery() == null) {
+            return buildNotExistsCondition(ors, ctx, ctxAnd, i, metadata);
         }
         return null;
     }
@@ -357,62 +365,66 @@ public class TSqlParseWalker {
 
             @Override
             public void enterSelect_statement(TSqlParser.Select_statementContext mCtx) {
-                if (foundSelect.isEmpty()) {
-                    foundSelect.add(true);
-                    for (TSqlParser.Select_list_elemContext ctx : mCtx.query_expression().query_specification().select_list().select_list_elem()) {
-                        if (ctx.asterisk() != null) {
-                            ColumnItem it = new ColumnItem(null,
-                                    null,
-                                    DatabaseTable.create(metadata,
-                                            null,
-                                            ctx.asterisk().table_name() != null
-                                                    ? ctx.asterisk().table_name().getText()
-                                                    : null),
-                                    ctx.asterisk().STAR().getText(),
-                                    ctx.asterisk().STAR().getText());
-                            it.setStartAt(ctx.getStart().getStartIndex());
-                            it.setStopAt(ctx.getStop().getStopIndex());
-                            columns.add(it);
-                        } else if (ctx.column_elem() != null) {
-                            columns.add(ColumnItem.findOrCreate(metadata, ctx));
-                        } else if (ctx.expression_elem() != null) {
-                            if (ctx.expression_elem().expression().primitive_expression() != null) {
-                                ColumnItem it = new ColumnItem(null,
-                                        null,
-                                        null,
-                                        ctx.expression_elem().as_column_alias() == null
-                                                ? null
-                                                : ctx.expression_elem().as_column_alias().column_alias().getText(),
-                                        ctx.expression_elem().getText(),
-                                        false,
-                                        null,
-                                        null,
-                                        null,
-                                        null,
-                                        false,
-                                        true,
-                                        ctx.expression_elem().expression().primitive_expression().constant().getText()
-                                );
-                                it.setStartAt(ctx.expression_elem().expression().primitive_expression().getStart().getStartIndex());
-                                it.setStopAt(ctx.expression_elem().expression().primitive_expression().getStop().getStopIndex());
-                                columns.add(it);
-                            } else {
+                try {
+                    if (foundSelect.isEmpty()) {
+                        foundSelect.add(true);
+                        for (TSqlParser.Select_list_elemContext ctx : mCtx.query_expression().query_specification().select_list().select_list_elem()) {
+                            if (ctx.asterisk() != null) {
                                 ColumnItem it = new ColumnItem(null,
                                         null,
                                         DatabaseTable.create(metadata,
                                                 null,
-                                                ctx.expression_elem().expression().full_column_name() != null
-                                                        ? ctx.expression_elem().expression().full_column_name().table_name().table.getText()
+                                                ctx.asterisk().table_name() != null
+                                                        ? ctx.asterisk().table_name().getText()
                                                         : null),
-                                        ctx.expression_elem().expression().full_column_name() != null ? ctx.expression_elem().expression().full_column_name().column_name.getText() : null,
-                                        ctx.expression_elem().getText()
-                                );
-                                it.setStartAt(ctx.expression_elem().expression().getStart().getStartIndex());
-                                it.setStopAt(ctx.expression_elem().expression().getStop().getStopIndex());
+                                        ctx.asterisk().STAR().getText(),
+                                        ctx.asterisk().STAR().getText());
+                                it.setStartAt(ctx.getStart().getStartIndex());
+                                it.setStopAt(ctx.getStop().getStopIndex());
                                 columns.add(it);
+                            } else if (ctx.column_elem() != null) {
+                                columns.add(ColumnItem.findOrCreate(metadata, ctx));
+                            } else if (ctx.expression_elem() != null) {
+                                if (ctx.expression_elem().expression().primitive_expression() != null) {
+                                    ColumnItem it = new ColumnItem(null,
+                                            null,
+                                            null,
+                                            ctx.expression_elem().as_column_alias() == null
+                                                    ? null
+                                                    : ctx.expression_elem().as_column_alias().column_alias().getText(),
+                                            ctx.expression_elem().getText(),
+                                            false,
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                            false,
+                                            true,
+                                            ctx.expression_elem().expression().primitive_expression().constant().getText()
+                                    );
+                                    it.setStartAt(ctx.expression_elem().expression().primitive_expression().getStart().getStartIndex());
+                                    it.setStopAt(ctx.expression_elem().expression().primitive_expression().getStop().getStopIndex());
+                                    columns.add(it);
+                                } else {
+                                    ColumnItem it = new ColumnItem(null,
+                                            null,
+                                            DatabaseTable.create(metadata,
+                                                    null,
+                                                    ctx.expression_elem().expression().full_column_name() != null
+                                                            ? ctx.expression_elem().expression().full_column_name().table_name().table.getText()
+                                                            : null),
+                                            ctx.expression_elem().expression().full_column_name() != null ? ctx.expression_elem().expression().full_column_name().column_name.getText() : null,
+                                            ctx.expression_elem().getText()
+                                    );
+                                    it.setStartAt(ctx.expression_elem().expression().getStart().getStartIndex());
+                                    it.setStopAt(ctx.expression_elem().expression().getStop().getStopIndex());
+                                    columns.add(it);
+                                }
                             }
                         }
                     }
+                } catch (RuntimeException ignored) {
+
                 }
             }
         }, select);

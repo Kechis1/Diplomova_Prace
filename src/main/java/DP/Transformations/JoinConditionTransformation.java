@@ -1,7 +1,6 @@
 package DP.Transformations;
 
-import DP.Database.ConditionItem;
-import DP.Database.DatabaseMetadata;
+import DP.Database.*;
 import DP.antlr4.tsql.TSqlParseWalker;
 import DP.antlr4.tsql.parser.TSqlParser;
 import DP.antlr4.tsql.parser.TSqlParserBaseListener;
@@ -27,34 +26,12 @@ public class JoinConditionTransformation extends QueryHandler {
         TSqlParser parser = parseQuery(query.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<ConditionItem> leftJoinConditions = new ArrayList<>();
+        final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
         final HashMap<Integer, List<ConditionItem>> rightJoinConditions = new HashMap<>();
         final HashMap<Integer, List<ConditionItem>> fullOuterJoinConditions = new HashMap<>();
         final List<ConditionItem> innerConditions = new ArrayList<>();
-        final List<ConditionItem> whereConditions = new ArrayList<>();
-
-        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
-            @Override
-            public void enterJoin_part(TSqlParser.Join_partContext ctx) {
-                if (ctx.LEFT() != null) {
-                    leftJoinConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
-                } else if (ctx.RIGHT() != null) {
-                    rightJoinConditions.put(rightJoinConditions.size(), (List<ConditionItem>) TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
-                } else if (ctx.FULL() != null && ctx.OUTER() != null) {
-                    fullOuterJoinConditions.put(fullOuterJoinConditions.size(), (List<ConditionItem>) TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
-                } else {
-                    innerConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
-                }
-            }
-
-            @Override
-            public void enterQuery_specification(TSqlParser.Query_specificationContext ctx) {
-                if (ctx.search_condition() != null) {
-                    for (TSqlParser.Search_conditionContext sCtx : ctx.search_condition()) {
-                        whereConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, sCtx));
-                    }
-                }
-            }
-        }, select);
+        final List<ConditionItem> whereConditions = TSqlParseWalker.findWhereConditions(metadata, select);
+        final List<JoinItem> joins = TSqlParseWalker.findJoinConditions(metadata, select, leftJoinConditions, rightJoinConditions, fullOuterJoinConditions, innerConditions);
 
         if (!(leftJoinConditions.size() != 0 || rightJoinConditions.size() != 0 || fullOuterJoinConditions.size() != 0)) {
             innerConditions.addAll(whereConditions);
@@ -73,6 +50,15 @@ public class JoinConditionTransformation extends QueryHandler {
         if (!rightJoinConditions.isEmpty()) {
             for (int i = 0; i < rightJoinConditions.size(); i++) {
                 allConditions.addAll(rightJoinConditions.get(i));
+            }
+        }
+
+        for (JoinItem join : joins) {
+            if (join.getConditions().size() > 1) {
+                boolean foundError = ConditionItem.findAndProcessErrorInConditions("JOIN", Action.JoinConditionTransformation, join.getConditions(), metadata, query, allTables);
+                if (foundError) {
+                    return query;
+                }
             }
         }
 

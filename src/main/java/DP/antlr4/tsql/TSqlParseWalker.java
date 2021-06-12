@@ -151,8 +151,8 @@ public class TSqlParseWalker {
                     if (item != null) {
                         conditions.add(item);
                     }
-                } catch (RuntimeException ignored) {
-
+                } catch (RuntimeException e) {
+                    conditions.add(buildSampleCondition(ors, ctx, ctxAnd, i, metadata));
                 }
             }
         }
@@ -208,6 +208,16 @@ public class TSqlParseWalker {
             return buildNotExistsCondition(ors, ctx, ctxAnd, i, metadata);
         }
         return null;
+    }
+
+    private static ConditionItem buildSampleCondition(List<Integer> ors, TSqlParser.Search_conditionContext ctx, TSqlParser.Search_condition_andContext ctxAnd, int i, final DatabaseMetadata metadata) {
+        ConditionItem item = new ConditionItem();
+        item.setStartAt(ctxAnd.search_condition_not().get(i).predicate().getStart().getStartIndex());
+        item.setStopAt(ctxAnd.search_condition_not().get(i).predicate().getStop().getStopIndex() + 1);
+        item.setFullCondition(ctxAnd.search_condition_not().get(i).predicate().getText());
+        item.setOperatorType(ConditionOperator.SAMPLE);
+        setConditionLogicalOperators(ors, ctx, ctxAnd, i, item);
+        return item;
     }
 
     private static ConditionItem buildNotExistsCondition(List<Integer> ors, TSqlParser.Search_conditionContext ctx, TSqlParser.Search_condition_andContext ctxAnd, int i, final DatabaseMetadata metadata) {
@@ -429,5 +439,32 @@ public class TSqlParseWalker {
             }
         }, select);
         return columns;
+    }
+
+    public static List<JoinItem> findJoinConditions(final DatabaseMetadata metadata, ParseTree select, List<ConditionItem> leftJoinConditions, HashMap<Integer, List<ConditionItem>> rightJoinConditions, HashMap<Integer, List<ConditionItem>> fullOuterJoinConditions, List<ConditionItem> innerConditions) {
+        List<JoinItem> joins = new ArrayList<>();
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            @Override
+            public void enterJoin_part(TSqlParser.Join_partContext ctx) {
+                JoinItem join = new JoinItem();
+                List<ConditionItem> conditions = (List<ConditionItem>) TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition());
+                join.setConditions(conditions);
+                if (ctx.LEFT() != null) {
+                    join.setType(JoinType.LEFT);
+                    leftJoinConditions.addAll(conditions);
+                } else if (ctx.RIGHT() != null) {
+                    join.setType(JoinType.RIGHT);
+                    rightJoinConditions.put(rightJoinConditions.size(), conditions);
+                } else if (ctx.FULL() != null && ctx.OUTER() != null) {
+                    join.setType(JoinType.FULL_OUTER);
+                    fullOuterJoinConditions.put(fullOuterJoinConditions.size(), conditions);
+                } else {
+                    join.setType(JoinType.INNER);
+                    innerConditions.addAll(conditions);
+                }
+                joins.add(join);
+            }
+        }, select);
+        return joins;
     }
 }

@@ -1,13 +1,11 @@
 package DP.Database;
 
-import DP.Transformations.Action;
-import DP.Transformations.JoinConditionTransformation;
-import DP.Transformations.Query;
-import DP.Transformations.Transformation;
+import DP.Transformations.*;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlParser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -67,6 +65,44 @@ public class ConditionItem {
 
     public ConditionItem() {
 
+    }
+
+    public static boolean findAndProcessErrorInConditions(String message, Action action, List<ConditionItem> conditions, final DatabaseMetadata metadata, Query query, List<DatabaseTable> tables) {
+        for (ConditionItem condition : conditions) {
+            if (condition.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
+            boolean isConditionNecessary = true;
+            if ((condition.getLeftSideDataType() == ConditionDataType.BINARY && Arrays.asList(ConditionDataType.BINARY, ConditionDataType.DECIMAL).contains(condition.getRightSideDataType())) ||
+                    (condition.getLeftSideDataType() == ConditionDataType.DECIMAL && (condition.getRightSideDataType().isNumeric || condition.getRightSideDataType() == ConditionDataType.STRING_DECIMAL)) ||
+                    (condition.getLeftSideDataType() == ConditionDataType.FLOAT && ((condition.getRightSideDataType().isNumeric && condition.getRightSideDataType() != ConditionDataType.BINARY) || (Arrays.asList(ConditionDataType.STRING_DECIMAL, ConditionDataType.STRING_FLOAT).contains(condition.getRightSideDataType())))) ||
+                    (condition.getLeftSideDataType() == ConditionDataType.REAL && !Arrays.asList(ConditionDataType.BINARY, ConditionDataType.STRING_BINARY).contains(condition.getRightSideDataType())) ||
+                    (condition.getLeftSideDataType() == ConditionDataType.STRING_DECIMAL && condition.getRightSideDataType() != ConditionDataType.BINARY) ||
+                    (condition.getLeftSideDataType() == ConditionDataType.STRING_FLOAT && Arrays.asList(ConditionDataType.REAL, ConditionDataType.FLOAT).contains(condition.getRightSideDataType())) ||
+                    (condition.getLeftSideDataType() == ConditionDataType.STRING_REAL && condition.getRightSideDataType() == ConditionDataType.REAL)) {
+                isConditionNecessary = condition.compareNumberAgainstNumber();
+            } else if (condition.getRightSideDataType() == ConditionDataType.STRING &&
+                    Arrays.asList(ConditionDataType.STRING_BINARY, ConditionDataType.STRING_DECIMAL, ConditionDataType.STRING_FLOAT, ConditionDataType.STRING_REAL, ConditionDataType.STRING)
+                            .contains(condition.getLeftSideDataType())) {
+                isConditionNecessary = condition.compareStringAgainstString();
+            } else if (condition.getRightSideDataType() == ConditionDataType.COLUMN && condition.getRightSideDataType() == ConditionDataType.COLUMN) {
+                DatabaseMetadata newMetadata = metadata.withTables(tables);
+                isConditionNecessary = condition.compareColumnAgainstColumn(newMetadata);
+            }
+
+            if (!isConditionNecessary) {
+                Transformation.addNewTransformationBasedOnLogicalOperator(query, condition, conditions.size(), action, message);
+                return true;
+            } else if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
+                query.addTransformation(new Transformation(query.getCurrentQuery(),
+                        query.getCurrentQuery(),
+                        QueryHandler.restoreSpaces(query.getCurrentQuery().substring(condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt()), condition.getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
+                        action,
+                        false,
+                        null
+                ));
+                return true;
+            }
+        }
+        return false;
     }
 
     public ExistItem getExistItem() {
@@ -134,7 +170,9 @@ public class ConditionItem {
     public static boolean duplicatesExists(Query query, DatabaseMetadata metadata, List<ConditionItem> conditions) {
         int whereStartsAt = query.getCurrentQuery().indexOf("WHERE");
         for (int i = 0; i < conditions.size() - 1; i++) {
+            if (conditions.get(i).getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
             for (int j = i + 1; j < conditions.size(); j++) {
+                if (conditions.get(i).getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
                 if (conditions.get(i).compareToCondition(metadata, conditions.get(j))) {
                     String newQueryString;
 
@@ -171,6 +209,7 @@ public class ConditionItem {
     public static boolean isConditionColumnNullable(List<ConditionItem> conditions, DatabaseTable table, boolean checkBothSides) {
         if (checkBothSides) {
             for (ConditionItem currItem : conditions) {
+                if (currItem.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
                 if ((currItem.getLeftSideDataType() == ConditionDataType.COLUMN && currItem.getLeftSideColumnItem().isNullable) ||
                         (currItem.getRightSideDataType() == ConditionDataType.COLUMN && currItem.getRightSideColumnItem().isNullable)) {
                     return true;
@@ -179,6 +218,7 @@ public class ConditionItem {
             return false;
         }
         for (ConditionItem currItem : conditions) {
+            if (currItem.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
             if ((currItem.getLeftSideDataType() == ConditionDataType.COLUMN && currItem.getLeftSideColumnItem().isNullable() && ColumnItem.exists(table.getColumns(), currItem.getLeftSideColumnItem())) ||
                     (currItem.getRightSideDataType() == ConditionDataType.COLUMN && currItem.getRightSideColumnItem().isNullable() && ColumnItem.exists(table.getColumns(), currItem.getRightSideColumnItem()))) {
                 return true;

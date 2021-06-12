@@ -4,6 +4,7 @@ public enum ConditionOperator {
     BETWEEN,
     EXISTS,
     LIKE,
+    SAMPLE,
     AO;
 
     public static ConditionOperator findOperatorFromString(String operator) {

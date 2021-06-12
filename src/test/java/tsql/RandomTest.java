@@ -135,8 +135,8 @@ public class RandomTest {
                 // ExistsTransformation
                 Arguments.arguments("SELECT * FROM DBO.STUDUJE SDT WHERE EXISTS (SELECT * FROM DBO.PREDMET PDT WHERE SDT.PID = PDT.PID) ORDER BY SDT.SID",
                         "SELECT * FROM DBO.STUDUJE SDT ORDER BY SDT.SID"),
-                Arguments.arguments("SELECT * FROM student WHERE 1 = ADD_F(A + 3)",
-                        "SELECT * FROM student WHERE 1 = ADD_F(A + 3)"),
+                Arguments.arguments("SELECT * FROM student WHERE 1 = DATEADD(DAY, 1, ROK_NAROZENI)",
+                        "SELECT * FROM student WHERE 1 = DATEADD(DAY, 1, ROK_NAROZENI)"),
                 Arguments.arguments("SELECT * FROM student x WHERE EXISTS(SELECT * FROM studuje y WHERE x.sID + 1 = y.sID + 1) ORDER BY x.SID",
                         "SELECT * FROM student x WHERE EXISTS(SELECT 1 FROM studuje y WHERE x.sID + 1 = y.sID + 1) ORDER BY x.SID"),
                 Arguments.arguments("SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE EXISTS(SELECT 1) GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID",
@@ -156,7 +156,29 @@ public class RandomTest {
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE EXISTS(SELECT 1) OR JMENO = 'ADAM' ORDER BY STUDENT.SID",
                         "SELECT jmeno FROM STUDENT where EXISTS(SELECT 1) or jmeno = 'adam' ORDER BY STUDENT.SID"),
                 Arguments.arguments("SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID AND EXISTS(SELECT 1) ORDER BY SSTT.SID",
-                        "SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID ORDER BY STT.SID")*/
+                        "SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID ORDER BY STT.SID"),*/
+
+                // JoinConditionTransformation
+                Arguments.arguments("SELECT * FROM student JOIN STUDUJE ON 1 = DATEADD(DAY, 1, ROK_NAROZENI) ORDER BY STUDENT.SID",
+                        "SELECT * FROM student JOIN STUDUJE ON 1 = DATEADD(DAY, 1, ROK_NAROZENI) ORDER BY STUDENT.SID"),
+                Arguments.arguments("SELECT * FROM student JOIN STUDUJE ON 1 = DATEADD(DAY, 1, ROK_NAROZENI) OR 1 = 1 ORDER BY STUDENT.SID",
+                        "SELECT * FROM student JOIN STUDUJE ON 1 = DATEADD(DAY, 1, ROK_NAROZENI) OR 1 = 1 ORDER BY STUDENT.SID"),
+                Arguments.arguments("SELECT * FROM student x JOIN studuje y ON x.sID + 1 = y.sID + 1 ORDER BY x.SID",
+                        "SELECT * FROM student x JOIN studuje y ON x.sID + 1 = y.sID + 1 ORDER BY x.SID"),
+                Arguments.arguments("SELECT STT.SID FROM STUDENT STT JOIN STUDUJE SDE ON 1 = 1 WHERE ROK_NAROZENI = JMENO GROUP BY STT.SID HAVING SUM(STT.SID) > 3 ORDER BY STT.SID",
+                        "SELECT stt.sid FROM student stt JOIN studuje sde ON 1 = 1 WHERE ROK_NAROZENI = JMENO GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID AND 1 = 1 WHERE JMENO = 'adam' ORDER BY STUDUJE.SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID where jmeno = 'adam' ORDER BY STUDUJE.SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID AND 1 = 1 AND ROK_NAROZENI = '33' WHERE JMENO = 'ADAM' AND ROK_NAROZENI = 2000 ORDER BY STUDUJE.SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID AND ROK_NAROZENI = '33' where jmeno = 'adam' and ROK_NAROZENI = 2000 ORDER BY STUDUJE.SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT JOIN STUDUJE ON STUDENT.JMENO = 'ADAM' OR STUDENT.JMENO = 'Emil' AND 1 = 1 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT JOIN STUDUJE ON STUDENT.JMENO = 'ADAM' OR STUDENT.JMENO = 'Emil' ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT JOIN STUDUJE ON STUDENT.JMENO = 'ADAM' OR 1 = 1 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT JOIN STUDUJE ON STUDENT.JMENO = 'ADAM' OR 1 = 1 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT JOIN STUDUJE ON 1 = 1 AND JMENO = 'ADAM' ORDER BY SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT JOIN STUDUJE ON JMENO = 'ADAM' ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT JOIN STUDUJE ON 1 = 1 OR JMENO = 'ADAM' ORDER BY STUDENT.SID",
+                        "SELECT jmeno FROM STUDENT JOIN STUDUJE ON 1 = 1 OR JMENO = 'ADAM' ORDER BY STUDENT.SID")
         );
     }
 }

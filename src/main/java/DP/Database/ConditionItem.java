@@ -34,7 +34,7 @@ public class ConditionItem {
     private String rightLogicalOperator;
     private ConditionItem betweenLeftCondition;
     private ConditionItem betweenRightCondition;
-    private ExistItem existItem;
+    private ExistsItem existsItem;
 
     public ConditionItem(int startAt, int stopAt, ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator, ConditionOperator operatorType, String fullCondition, String leftSideFullCondition, String rightSideFullCondition) {
         this.startAt = startAt;
@@ -105,12 +105,12 @@ public class ConditionItem {
         return false;
     }
 
-    public ExistItem getExistItem() {
-        return existItem;
+    public ExistsItem getExistsItem() {
+        return existsItem;
     }
 
-    public void setExistItem(ExistItem existItem) {
-        this.existItem = existItem;
+    public void setExistsItem(ExistsItem existsItem) {
+        this.existsItem = existsItem;
     }
 
     public ConditionOperator getOperatorType() {

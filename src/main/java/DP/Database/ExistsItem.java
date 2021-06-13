@@ -2,20 +2,20 @@ package DP.Database;
 
 import java.util.List;
 
-public class ExistItem {
+public class ExistsItem {
     DatabaseTable table;
     boolean not;
     List<ConditionItem> conditions;
     int selectListStartAt;
     int selectListStopAt;
-    String fullPredicate;
+    String fullExists;
 
-    public ExistItem(int selectListStartAt, int selectListStopAt) {
+    public ExistsItem(int selectListStartAt, int selectListStopAt) {
         this.selectListStartAt = selectListStartAt;
         this.selectListStopAt = selectListStopAt;
     }
 
-    public ExistItem() {
+    public ExistsItem() {
     }
 
     public int getSelectListStartAt() {
@@ -50,20 +50,31 @@ public class ExistItem {
         this.not = not;
     }
 
-    public String getFullPredicate() {
-        return fullPredicate;
+    public String getFullExists() {
+        return fullExists;
     }
 
-    public void setFullPredicate(String fullPredicate) {
-        this.fullPredicate = fullPredicate;
+    public void setFullExists(String fullExists) {
+        this.fullExists = fullExists;
+    }
+
+    public void setSelectListStartAt(int selectListStartAt) {
+        this.selectListStartAt = selectListStartAt;
+    }
+
+    public void setSelectListStopAt(int selectListStopAt) {
+        this.selectListStopAt = selectListStopAt;
     }
 
     @Override
     public String toString() {
-        return "ExistItem{" +
+        return "ExistsItem{" +
                 "table=" + table +
                 ", not=" + not +
                 ", conditions=" + conditions +
+                ", selectListStartAt=" + selectListStartAt +
+                ", selectListStopAt=" + selectListStopAt +
+                ", fullExists='" + fullExists + '\'' +
                 '}';
     }
 }

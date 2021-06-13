@@ -26,7 +26,7 @@ public class SelectClauseTransformation extends QueryHandler {
         TSqlParser parser = parseQuery(query.getCurrentQuery());
         ParseTree select = parser.select_statement();
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
-        final List<ExistItem> foundExistsNotConstant = new ArrayList<>();
+        final List<ExistsItem> foundExistsNotConstant = new ArrayList<>();
         final List<Boolean> foundUnion = new ArrayList<>();
         DatabaseMetadata metadataWithTables = metadata.withTables(allTables);
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
@@ -37,7 +37,7 @@ public class SelectClauseTransformation extends QueryHandler {
                             (ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().select_list_elem().size() > 1 ||
                                     ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().select_list_elem().get(0).expression_elem() == null ||
                                     ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().select_list_elem().get(0).expression_elem().expression().primitive_expression().constant() == null)) {
-                        foundExistsNotConstant.add(new ExistItem(ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().getStart().getStartIndex(),
+                        foundExistsNotConstant.add(new ExistsItem(ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().getStart().getStartIndex(),
                                 ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().getStop().getStopIndex()
                         ));
                     }

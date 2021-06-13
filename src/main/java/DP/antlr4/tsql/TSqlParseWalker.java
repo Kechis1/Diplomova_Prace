@@ -296,8 +296,8 @@ public class TSqlParseWalker {
     }
 
     public static void setExistsCondition(ConditionItem item, int i, final DatabaseMetadata metadata, TSqlParser.Search_condition_andContext ctxAnd) {
-        ExistItem eItem = new ExistItem();
-        eItem.setFullPredicate(ctxAnd.search_condition_not(i).getText());
+        ExistsItem eItem = new ExistsItem();
+        eItem.setFullExists(ctxAnd.search_condition_not(i).getText());
         eItem.setNot(ctxAnd.search_condition_not(i).NOT() != null);
 
         TSqlParser.Query_specificationContext qSpecContext = ctxAnd.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification();
@@ -320,7 +320,7 @@ public class TSqlParseWalker {
 
             eItem.setConditions(eConditions);
         }
-        item.setExistItem(eItem);
+        item.setExistsItem(eItem);
     }
 
     private static List<Integer> setOrsInConditions(TSqlParser.Search_conditionContext ctx) {

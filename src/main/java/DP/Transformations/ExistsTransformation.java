@@ -32,14 +32,14 @@ public class ExistsTransformation extends QueryHandler {
 
         for (ConditionItem condition : existConditions) {
             if (condition.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
-            if ((condition.getExistItem().isNot() && condition.getExistItem().getTable() != null && condition.getExistItem().getTable().isEmpty()) ||
-                    (!condition.getExistItem().isNot() && (condition.getExistItem().getTable() == null ||
-                            (!condition.getExistItem().getTable().isEmpty() &&
-                                    (condition.getExistItem().getConditions() == null || condition.getExistItem().getConditions().size() == 0 ||
-                                            (condition.getExistItem().getConditions().size() == 1 && ConditionItem.isComparingForeignKey(fromTable, condition.getExistItem().getTable(), condition.getExistItem().getConditions().get(0)))))))) {
+            if ((condition.getExistsItem().isNot() && condition.getExistsItem().getTable() != null && condition.getExistsItem().getTable().isEmpty()) ||
+                    (!condition.getExistsItem().isNot() && (condition.getExistsItem().getTable() == null ||
+                            (!condition.getExistsItem().getTable().isEmpty() &&
+                                    (condition.getExistsItem().getConditions() == null || condition.getExistsItem().getConditions().size() == 0 ||
+                                            (condition.getExistsItem().getConditions().size() == 1 && ConditionItem.isComparingForeignKey(fromTable, condition.getExistsItem().getTable(), condition.getExistsItem().getConditions().get(0)))))))) {
 
                 return Transformation.addNewTransformationBasedOnLogicalOperator(query, condition, conditions.size(), Action.ExistsTransformation, "EXISTS");
-            } else if (condition.getExistItem().isNot() && condition.getExistItem().getTable() == null) {
+            } else if (condition.getExistsItem().isNot() && condition.getExistsItem().getTable() == null) {
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
                         query.getCurrentQuery(),
                         QueryHandler.restoreSpaces(query.getCurrentQuery().substring(condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt()), condition.getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,

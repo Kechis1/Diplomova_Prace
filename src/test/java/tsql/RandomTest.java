@@ -135,9 +135,13 @@ public class RandomTest {
                 //  JoinTableTransformation
                 Arguments.arguments("SELECT DISTINCT predmet.jmeno FROM student JOIN (predmet LEFT JOIN studuje ON predmet.pID = studuje.pID) ON student.sID = studuje.sID",
                         "SELECT DISTINCT predmet.jmeno FROM student JOIN (predmet LEFT JOIN studuje ON predmet.pID = studuje.pID) ON student.sID = studuje.sID"),
+                        /*SELECT Orders.OrderID, Customers.CustomerName, Shippers.ShipperName
+                FROM ((Orders
+                        INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID)
+                INNER JOIN Shippers ON Orders.ShipperID = Shippers.ShipperID);*/
 
                 // ExistsTransformation
-                Arguments.arguments("SELECT * FROM DBO.STUDUJE SDT WHERE EXISTS (SELECT * FROM DBO.PREDMET PDT WHERE SDT.PID = PDT.PID) ORDER BY SDT.SID",
+                /*Arguments.arguments("SELECT * FROM DBO.STUDUJE SDT WHERE EXISTS (SELECT * FROM DBO.PREDMET PDT WHERE SDT.PID = PDT.PID) ORDER BY SDT.SID",
                         "SELECT * FROM DBO.STUDUJE SDT ORDER BY SDT.SID"),
                 Arguments.arguments("SELECT * FROM student WHERE 1 = DATEADD(DAY, 1, ROK_NAROZENI)",
                         "SELECT * FROM student WHERE 1 = DATEADD(DAY, 1, ROK_NAROZENI)"),
@@ -189,7 +193,7 @@ public class RandomTest {
 */
 
                 // GroupByTransformation
-                Arguments.arguments("SELECT SID FROM STUDENT GROUP BY SID HAVING sum(SID) > 3",
+                /*Arguments.arguments("SELECT SID FROM STUDENT GROUP BY SID HAVING sum(SID) > 3",
                         "SELECT SID FROM STUDENT GROUP BY SID HAVING sum(SID) > 3"),
                 Arguments.arguments("SELECT SID FROM STUDENT GROUP BY SID HAVING SUM(SID) > 1",
                         "SELECT SID FROM STUDENT GROUP BY SID HAVING SUM(SID) > 1"),
@@ -224,7 +228,52 @@ public class RandomTest {
                 Arguments.arguments("SELECT SID, SUM(SID * ROK_NAROZENI) FROM STUDENT GROUP BY SID",
                         "SELECT SID, SID * ROK_NAROZENI FROM STUDENT"),
                 Arguments.arguments("SELECT SID, CAST('ROK_NAROZENI' as numeric(9,2)) as [ROK_NAROZENI] FROM STUDENT GROUP BY SID",
-                        "SELECT SID, CAST('ROK_NAROZENI' as numeric(9,2)) as [ROK_NAROZENI] FROM STUDENT")
+                        "SELECT SID, CAST('ROK_NAROZENI' as numeric(9,2)) as [ROK_NAROZENI] FROM STUDENT")*/
+
+
+
+                // union + union all
+                // any
+                // all
+                // select into
+                // case
+
+                Arguments.arguments("SELECT COUNT(DISTINCT JMENO) FROM STUDENT",
+                        "SELECT COUNT(DISTINCT JMENO) FROM STUDENT"),
+                Arguments.arguments("SELECT SID * SID + SID FROM STUDENT",
+                        "SELECT SID * SID + SID FROM STUDENT"),
+                Arguments.arguments("SELECT SID * (SID + ISNULL(SID, 0)) FROM STUDENT",
+                        "SELECT SID * (SID + ISNULL(SID, 0)) FROM STUDENT"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO LIKE 'Ahoj'",
+                        "SELECT 'Ahoj' as JMENO FROM STUDENT WHERE JMENO LIKE 'Ahoj'"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO IN ('Ahoj')",
+                        "SELECT JMENO FROM STUDENT WHERE JMENO IN ('Ahoj')"),
+                Arguments.arguments("SELECT SID FROM STUDENT WHERE SID BETWEEN #07/01/1996# AND #07/31/1996#",
+                        "SELECT SID FROM STUDENT WHERE SID BETWEEN #07/01/1996# AND #07/31/1996#"),
+                Arguments.arguments("SELECT SID FROM STUDENT WHERE #07/01/1996# BETWEEN #07/01/1996# AND #07/31/1996#",
+                        "SELECT SID FROM STUDENT"),
+                Arguments.arguments("SELECT SID FROM STUDENT WHERE 1 NOT BETWEEN 1 AND 2",
+                        "SELECT SID FROM STUDENT WHERE 1 NOT BETWEEN 1 AND 2"),
+                Arguments.arguments("SELECT SID FROM STUDENT WHERE 1 NOT BETWEEN 3 AND 4",
+                        "SELECT SID FROM STUDENT"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO NOT LIKE 'Ahoj'",
+                        "SELECT JMENO FROM STUDENT WHERE JMENO NOT LIKE 'Ahoj'"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO IS NULL",
+                        "SELECT NULL AS JMENO FROM STUDENT WHERE JMENO IS NULL"),
+                Arguments.arguments("SELECT TOP 100 JMENO FROM STUDENT",
+                        "SELECT TOP 100 JMENO FROM STUDENT"),
+                Arguments.arguments("SELECT TOP 100 PERCENT JMENO FROM STUDENT",
+                        "SELECT TOP 100 PERCENT JMENO FROM STUDENT"),
+                Arguments.arguments("SELECT MAX(SID) FROM STUDENT",
+                        "SELECT MAX(SID) FROM STUDENT"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO IS NOT NULL",
+                        "SELECT JMENO FROM STUDENT WHERE JMENO IS NOT NULL"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE NOT JMENO = 'ADAM'",
+                        "SELECT JMENO FROM STUDENT WHERE NOT JMENO = 'ADAM'"),
+                Arguments.arguments("INSERT INTO STUDENT (SID, JMENO) VALUES (1, 'Adam')",
+                        "INSERT INTO STUDENT (SID, JMENO) VALUES (1, 'Adam')"),
+                Arguments.arguments("SELECT COUNT(*) AS DISTINCT_JMENO FROM (SELECT DISTINCT JMENO FROM STUDENT)",
+                        "SELECT COUNT(*) AS DISTINCT_JMENO FROM (SELECT DISTINCT JMENO FROM STUDENT)")
         );
     }
 }

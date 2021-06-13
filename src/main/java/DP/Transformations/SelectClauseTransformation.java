@@ -18,7 +18,7 @@ public class SelectClauseTransformation extends QueryHandler {
 
     @Override
     public boolean shouldTransform(Query query) {
-        return true;
+        return query.getCurrentQuery().contains("SELECT");
     }
 
     @Override

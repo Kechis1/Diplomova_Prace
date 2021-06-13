@@ -114,6 +114,9 @@ public class Query {
     }
 
     public Boolean isQueryChangedByRun(int numberOfRuns) {
+        if (this.getQueryTransforms() == null || this.getQueryTransforms().isEmpty()) {
+            return false;
+        }
         List<Transformation> transformationsByRun = this.getQueryTransforms().get(numberOfRuns);
         if (transformationsByRun == null) {
             return false;

@@ -6,12 +6,8 @@ import DP.Database.DatabaseTable;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.TSqlParseWalker;
 import DP.antlr4.tsql.parser.TSqlParser;
-import DP.antlr4.tsql.parser.TSqlParserBaseListener;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class GroupByTransformation extends QueryHandler {
@@ -29,45 +25,10 @@ public class GroupByTransformation extends QueryHandler {
         TSqlParser parser = parseQuery(query.getCurrentQuery());
         ParseTree select = parser.select_statement();
 
-        final ArrayList<AggregateItem> allAggregateFunctions = new ArrayList<>();
+        final List<AggregateItem> allAggregateFunctions = TSqlParseWalker.findAllAggregateFunctions(select);
         final List<AggregateItem> aggregateFunctionsInSelect = TSqlParseWalker.findAggregateFunctionsInSelect(select);
-        final ArrayList<String> columnsInGroupBy = new ArrayList<>();
-        final ArrayList<DatabaseTable> joinTables = new ArrayList<>();
-
-        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
-            @Override
-            public void enterGroup_by_item(@NotNull TSqlParser.Group_by_itemContext ctx) {
-                if (ctx.expression().full_column_name() != null) {
-                    columnsInGroupBy.add(ctx.expression().full_column_name().column_name.getText());
-                }
-            }
-
-            @Override
-            public void exitTable_source_item(@NotNull TSqlParser.Table_source_itemContext ctx) {
-                joinTables.add(DatabaseTable.create(metadata, ctx));
-            }
-
-            @Override
-            public void enterAggregate_windowed_function(@NotNull TSqlParser.Aggregate_windowed_functionContext ctx) {
-                if (ctx.STAR() != null || ctx.all_distinct_expression().expression().case_expression() == null) {
-                    String columnName;
-                    if (ctx.STAR() != null) {
-                        columnName = "*";
-                    } else if (ctx.all_distinct_expression().expression().full_column_name() == null) {
-                        columnName = ctx.all_distinct_expression().expression().primitive_expression().constant().getText();
-                    } else {
-                        columnName = ctx.all_distinct_expression().expression().full_column_name().column_name.getText();
-                    }
-                    allAggregateFunctions.add(new AggregateItem(ctx.getStart().getStartIndex(),
-                            ctx.getStop().getStopIndex() + 1,
-                            ctx.getChild(2).getText(),
-                            ctx.STAR() != null
-                                    ? "*"
-                                    : columnName,
-                            ctx.getChild(0).getText()));
-                }
-            }
-        }, select);
+        final List<String> columnsInGroupBy = TSqlParseWalker.findAllColumnsInGroupBy(select);
+        final List<DatabaseTable> joinTables = TSqlParseWalker.findTablesList(metadata, select);
 
         DatabaseMetadata newMetadata = metadata.withTables(joinTables);
 
@@ -97,7 +58,7 @@ public class GroupByTransformation extends QueryHandler {
                 Transformation transform;
                 if (item.getFunctionName().equals("COUNT")) {
                     transform = new Transformation(query.getCurrentQuery(),
-                            (query.getCurrentQuery().substring(0, item.getStartAt()) + "1" + query.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
+                            (query.getCurrentQuery().substring(0, item.getStartAt()) + "1" + query.getCurrentQuery().substring(item.getStopAt())).trim(),
                             item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " 1",
                             Action.GroupByTransformation,
                             true,
@@ -105,7 +66,7 @@ public class GroupByTransformation extends QueryHandler {
                     );
                 } else {
                     transform = new Transformation(query.getCurrentQuery(),
-                            (query.getCurrentQuery().substring(0, item.getStartAt()) + item.getFullColumnName() + query.getCurrentQuery().substring(item.getStopAt() + 1)).trim(),
+                            (query.getCurrentQuery().substring(0, item.getStartAt()) + item.getFullColumnName() + query.getCurrentQuery().substring(item.getStopAt())).trim(),
                             item.getFullFunctionName() + " " + UnnecessaryStatementException.messageCanBeRewrittenTo + " " + item.getFullColumnName(),
                             Action.GroupByTransformation,
                             true,

@@ -11,30 +11,64 @@ import java.util.*;
 
 public class TSqlParseWalker {
     public static List<AggregateItem> findAggregateFunctionsInSelect(ParseTree select) {
-        final List<AggregateItem> aggregateFunctionsInSelect = new ArrayList<>();
+        final List<AggregateItem> items = new ArrayList<>();
+        TSqlParser.Select_listContext firstSelectListCtx = findFirstSelectList(select);
+        if (firstSelectListCtx == null) {
+            return items;
+        }
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
-            public void enterSelect_list_elem(@NotNull TSqlParser.Select_list_elemContext ctx) {
-                if (ctx.expression_elem() != null && ctx.expression_elem().expression().function_call() != null) {
-                    TSqlParser.AGGREGATE_WINDOWED_FUNCContext aggCtx =
-                            (TSqlParser.AGGREGATE_WINDOWED_FUNCContext) ctx.expression_elem().expression().function_call().getRuleContext();
-                    String columnName;
-                    if (aggCtx.aggregate_windowed_function().STAR() != null) {
-                        columnName = "*";
-                    } else if (aggCtx.aggregate_windowed_function().all_distinct_expression().expression().full_column_name() == null) {
-                        columnName = aggCtx.aggregate_windowed_function().all_distinct_expression().expression().primitive_expression().constant().getText();
-                    } else {
-                        columnName = aggCtx.aggregate_windowed_function().all_distinct_expression().expression().full_column_name().column_name.getText();
-                    }
-                    aggregateFunctionsInSelect.add(new AggregateItem(ctx.expression_elem().expression().function_call().getStart().getStartIndex(),
-                            ctx.expression_elem().expression().function_call().getStop().getStopIndex(),
-                            ctx.expression_elem().expression().function_call().getChild(0).getChild(2).getText(),
-                            columnName,
-                            ctx.expression_elem().expression().function_call().getChild(0).getChild(0).getText()));
+            public void enterAggregate_windowed_function(@NotNull TSqlParser.Aggregate_windowed_functionContext ctx) {
+                if (firstSelectListCtx.getStop().getStopIndex() > ctx.getStart().getStartIndex()) {
+                    items.add(buildAggregateFunction(ctx));
                 }
             }
         }, select);
-        return aggregateFunctionsInSelect;
+        return items;
+    }
+
+    public static List<AggregateItem> findAllAggregateFunctions(ParseTree select) {
+        List<AggregateItem> items = new ArrayList<>();
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            @Override
+            public void enterAggregate_windowed_function(@NotNull TSqlParser.Aggregate_windowed_functionContext ctx) {
+                items.add(buildAggregateFunction(ctx));
+            }
+        }, select);
+        return items;
+    }
+
+    private static AggregateItem buildAggregateFunction(TSqlParser.Aggregate_windowed_functionContext ctx) {
+        String columnName;
+        if (ctx.STAR() != null) {
+            columnName = "*";
+        } else {
+            columnName = ctx.expression() != null && ctx.expression().full_column_name() != null && ctx.expression().full_column_name().column_name != null ?
+                    ctx.expression().full_column_name().column_name.getText() :
+                    ctx.all_distinct_expression().getText();
+        }
+        return new AggregateItem(ctx.getStart().getStartIndex(),
+                ctx.getStop().getStopIndex() + 1,
+                ctx.getChild(2).getText(),
+                columnName,
+                ctx.getChild(0).getText());
+    }
+
+    public static TSqlParser.Select_listContext findFirstSelectList(ParseTree select) {
+        List<TSqlParser.Select_listContext> returnCtx = new ArrayList<>();
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            int index = 0;
+
+            @Override
+            public void enterSelect_statement(@NotNull TSqlParser.Select_statementContext ctx) {
+                if (index == 0 && ctx.query_expression() != null && ctx.query_expression().query_specification() != null && ctx.query_expression().query_specification().select_list() != null) {
+                    returnCtx.add(ctx.query_expression().query_specification().select_list());
+                }
+                index++;
+            }
+        }, select);
+        if (returnCtx.size() == 0) return null;
+        return returnCtx.get(0);
     }
 
     public static List<DatabaseTable> findTablesList(final DatabaseMetadata metadata, ParseTree select) {
@@ -118,6 +152,7 @@ public class TSqlParseWalker {
         List<ConditionItem> conditions = new ArrayList<>();
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             int index = 0;
+
             @Override
             public void enterSelect_statement(TSqlParser.Select_statementContext ctx) {
                 if (index == 0 && ctx.query_expression() != null &&
@@ -372,6 +407,7 @@ public class TSqlParseWalker {
         final List<ColumnItem> columns = new ArrayList<>();
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             int index = 0;
+
             @Override
             public void enterSelect_statement(TSqlParser.Select_statementContext mCtx) {
                 try {
@@ -465,5 +501,18 @@ public class TSqlParseWalker {
             }
         }, select);
         return joins;
+    }
+
+    public static List<String> findAllColumnsInGroupBy(ParseTree select) {
+        List<String> columnsInGroupBy = new ArrayList<>();
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            @Override
+            public void enterGroup_by_item(@NotNull TSqlParser.Group_by_itemContext ctx) {
+                if (ctx.expression().full_column_name() != null) {
+                    columnsInGroupBy.add(ctx.expression().full_column_name().column_name.getText());
+                }
+            }
+        }, select);
+        return columnsInGroupBy;
     }
 }

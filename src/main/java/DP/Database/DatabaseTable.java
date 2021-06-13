@@ -154,10 +154,10 @@ public class DatabaseTable {
         return newItem;
     }
 
-    public static boolean redundantJoinExists(Query query, String typeOfJoin, List<JoinTable> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides, DatabaseTable fromTable) {
-        for (JoinTable joinTable : joins) {
+    public static boolean redundantJoinExists(Query query, JoinType typeOfJoin, List<JoinItem> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides, DatabaseTable fromTable) {
+        for (JoinItem join : joins) {
             boolean found = false;
-            DatabaseTable table = joinTable.getDatabaseTable();
+            DatabaseTable table = join.getDatabaseTable();
             for (ColumnItem cItem : allColumnsInSelect) {
                 if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || !cItem.getTable().getTableAlias().equals(tableAlias == null ? table.getTableAlias() : tableAlias)))
                         || (!cItem.getName().equals("*") && !(databaseTable == null ? table : databaseTable).columnExists(cItem))) {
@@ -167,16 +167,16 @@ public class DatabaseTable {
             }
             if ((!checkNullable && !found) || (checkNullable && !found && !ConditionItem.isConditionColumnNullable(newConditions, table, checkBothSides))) {
                 String currentQuery;
-                if (typeOfJoin.equals("RIGHT") || typeOfJoin.equals("INNER")) {
-                    currentQuery = (query.getCurrentQuery().substring(0, fromTable.getFromTableStartAt()) + joinTable.getDatabaseTable().getQueryName() +
-                            query.getCurrentQuery().substring(fromTable.getFromTableStopAt() + 1, joinTable.getStartAt()).trim() + query.getCurrentQuery().substring(joinTable.getStopAt() + 1).trim()).trim();
+                if (typeOfJoin.equals(JoinType.RIGHT) || typeOfJoin.equals(JoinType.INNER)) {
+                    currentQuery = (query.getCurrentQuery().substring(0, fromTable.getFromTableStartAt()) + join.getDatabaseTable().getQueryName() +
+                            query.getCurrentQuery().substring(fromTable.getFromTableStopAt() + 1, join.getStartAt()).trim() + query.getCurrentQuery().substring(join.getStopAt() + 1).trim()).trim();
                 } else {
-                    currentQuery = (query.getCurrentQuery().substring(0, joinTable.getStartAt()) + query.getCurrentQuery().substring(joinTable.getStopAt() + 1).trim()).trim();
+                    currentQuery = (query.getCurrentQuery().substring(0, join.getStartAt()) + query.getCurrentQuery().substring(join.getStopAt() + 1).trim()).trim();
                 }
 
                 query.addTransformation(new Transformation(query.getCurrentQuery(),
                         currentQuery,
-                        UnnecessaryStatementException.messageUnnecessaryStatement + " " + typeOfJoin + " JOIN",
+                        UnnecessaryStatementException.messageUnnecessaryStatement + " " + JoinType.print(typeOfJoin) + " JOIN",
                         Action.JoinTableTransformation,
                         true,
                         null

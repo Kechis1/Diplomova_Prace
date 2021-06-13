@@ -3,9 +3,7 @@ package DP.Transformations;
 import DP.Database.*;
 import DP.antlr4.tsql.TSqlParseWalker;
 import DP.antlr4.tsql.parser.TSqlParser;
-import DP.antlr4.tsql.parser.TSqlParserBaseListener;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,21 +25,17 @@ public class JoinTableTransformation extends QueryHandler {
         ParseTree select = parser.select_statement();
         final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadata, select);
         final List<Boolean> isDistinctInSelect = TSqlParseWalker.findDistinctInSelect(select);
-        final Map<String, List<JoinTable>> joinTables = TSqlParseWalker.findJoinTablesList(metadata, select);
+        final Map<JoinType, List<JoinItem>> joins = TSqlParseWalker.findJoinsList(metadata, select);
         final List<ConditionItem> fullOuterJoinConditions = new ArrayList<>();
         final List<ConditionItem> innerConditions = new ArrayList<>();
         final List<DatabaseTable> fromTable = TSqlParseWalker.findFromTable(metadata, select);
 
-        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
-            @Override
-            public void enterJoin_part(TSqlParser.Join_partContext ctx) {
-                if (ctx.FULL() != null && ctx.OUTER() != null) {
-                    fullOuterJoinConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
-                } else if (ctx.LEFT() == null && ctx.RIGHT() == null) {
-                    innerConditions.addAll(TSqlParseWalker.findConditionsFromSearchCtx(metadata, ctx.search_condition()));
-                }
-            }
-        }, select);
+        for (JoinItem join : joins.get(JoinType.FULL_OUTER)) {
+            fullOuterJoinConditions.addAll(join.getConditions());
+        }
+        for (JoinItem join : joins.get(JoinType.INNER)) {
+            innerConditions.addAll(join.getConditions());
+        }
 
         if (isDistinctInSelect.isEmpty()) {
             query.addTransformation(new Transformation(query.getCurrentQuery(),
@@ -54,13 +48,13 @@ public class JoinTableTransformation extends QueryHandler {
             return query;
         }
 
-        boolean foundRedundantJoin = DatabaseTable.redundantJoinExists(query, "LEFT", joinTables.get("leftJoin"),
+        boolean foundRedundantJoin = DatabaseTable.redundantJoinExists(query, JoinType.LEFT, joins.get(JoinType.LEFT),
                 fromTable.get(0).getTableAlias(), fromTable.get(0), allColumnsInSelect, false, null, false, null);
-        foundRedundantJoin |= DatabaseTable.redundantJoinExists(query, "RIGHT", joinTables.get("rightJoin"),
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists(query, JoinType.RIGHT, joins.get(JoinType.RIGHT),
                 null, null, allColumnsInSelect, false, null, false, fromTable.get(0));
-        foundRedundantJoin |= DatabaseTable.redundantJoinExists(query, "FULL OUTER", joinTables.get("fullOuterJoin"), fromTable.get(0).getTableAlias(),
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists(query, JoinType.FULL_OUTER, joins.get(JoinType.FULL_OUTER), fromTable.get(0).getTableAlias(),
                 fromTable.get(0), allColumnsInSelect, true, metadata.setNullableColumns(fullOuterJoinConditions), true, null);
-        foundRedundantJoin |= DatabaseTable.redundantJoinExists(query, "INNER", joinTables.get("innerJoin"), null, null,
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists(query, JoinType.INNER, joins.get(JoinType.INNER), null, null,
                 allColumnsInSelect, true, metadata.setNullableColumns(innerConditions), true, fromTable.get(0));
 
         if (!foundRedundantJoin) {

@@ -10,6 +10,41 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 public class TSqlParseWalker {
+    public static boolean findUnion(ParseTree select) {
+        List<Boolean> union = new ArrayList<>();
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            @Override
+            public void enterSql_union(TSqlParser.Sql_unionContext ctx) {
+                union.add(true);
+            }
+        }, select);
+        return !union.isEmpty();
+    }
+
+    public static List<ExistsItem> findExistsNotConstant(ParseTree select) {
+        List<ExistsItem> foundExistsNotConstant = new ArrayList<>();
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            @Override
+            public void enterSearch_condition_and(TSqlParser.Search_condition_andContext ctx) {
+                for (int i = 0; i < ctx.search_condition_not().size(); i++) {
+                    try {
+                        if (ctx.search_condition_not(i).predicate() != null && ctx.search_condition_not(i).predicate().EXISTS() != null && ctx.search_condition_not(i).predicate().subquery() != null &&
+                                (ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().select_list_elem().size() > 1 ||
+                                        ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().select_list_elem().get(0).expression_elem() == null ||
+                                        ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().select_list_elem().get(0).expression_elem().expression().primitive_expression().constant() == null)) {
+                            foundExistsNotConstant.add(new ExistsItem(ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().getStart().getStartIndex(),
+                                    ctx.search_condition_not(i).predicate().subquery().select_statement().query_expression().query_specification().select_list().getStop().getStopIndex()
+                            ));
+                        }
+                    } catch (RuntimeException ignored) {
+
+                    }
+                }
+            }
+        }, select);
+        return foundExistsNotConstant;
+    }
+
     public static List<AggregateItem> findAggregateFunctionsInSelect(ParseTree select) {
         final List<AggregateItem> items = new ArrayList<>();
         TSqlParser.Select_listContext firstSelectListCtx = findFirstSelectList(select);
@@ -19,8 +54,12 @@ public class TSqlParseWalker {
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterAggregate_windowed_function(@NotNull TSqlParser.Aggregate_windowed_functionContext ctx) {
-                if (firstSelectListCtx.getStop().getStopIndex() > ctx.getStart().getStartIndex()) {
-                    items.add(buildAggregateFunction(ctx));
+                try {
+                    if (firstSelectListCtx.getStop().getStopIndex() > ctx.getStart().getStartIndex()) {
+                        items.add(buildAggregateFunction(ctx));
+                    }
+                } catch (RuntimeException ignored) {
+
                 }
             }
         }, select);
@@ -32,7 +71,11 @@ public class TSqlParseWalker {
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterAggregate_windowed_function(@NotNull TSqlParser.Aggregate_windowed_functionContext ctx) {
-                items.add(buildAggregateFunction(ctx));
+                try {
+                    items.add(buildAggregateFunction(ctx));
+                } catch (RuntimeException ignored) {
+
+                }
             }
         }, select);
         return items;
@@ -61,8 +104,12 @@ public class TSqlParseWalker {
 
             @Override
             public void enterSelect_statement(@NotNull TSqlParser.Select_statementContext ctx) {
-                if (index == 0 && ctx.query_expression() != null && ctx.query_expression().query_specification() != null && ctx.query_expression().query_specification().select_list() != null) {
-                    returnCtx.add(ctx.query_expression().query_specification().select_list());
+                try {
+                    if (index == 0 && ctx.query_expression() != null && ctx.query_expression().query_specification() != null && ctx.query_expression().query_specification().select_list() != null) {
+                        returnCtx.add(ctx.query_expression().query_specification().select_list());
+                    }
+                } catch (RuntimeException ignored) {
+
                 }
                 index++;
             }
@@ -76,53 +123,59 @@ public class TSqlParseWalker {
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void exitTable_source_item(@NotNull TSqlParser.Table_source_itemContext ctx) {
-                allTables.add(DatabaseTable.create(metadata, ctx));
+                try {
+                    allTables.add(DatabaseTable.create(metadata, ctx));
+                } catch (RuntimeException ignored) {
+
+                }
             }
         }, select);
         return allTables;
     }
 
-    public static Map<String, List<JoinTable>> findJoinTablesList(final DatabaseMetadata metadata, ParseTree select) {
-        final List<JoinTable> outerJoinTables = new ArrayList<>();
-        final List<JoinTable> innerJoinTables = new ArrayList<>();
-        final List<JoinTable> leftJoinTables = new ArrayList<>();
-        final List<JoinTable> rightJoinTables = new ArrayList<>();
-        final List<JoinTable> fullOuterJoinTables = new ArrayList<>();
+    public static Map<JoinType, List<JoinItem>> findJoinsList(final DatabaseMetadata metadata, ParseTree select) {
+        final List<JoinItem> outerJoinTables = new ArrayList<>();
+        final List<JoinItem> innerJoinTables = new ArrayList<>();
+        final List<JoinItem> leftJoinTables = new ArrayList<>();
+        final List<JoinItem> rightJoinTables = new ArrayList<>();
+        final List<JoinItem> fullOuterJoinTables = new ArrayList<>();
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterTable_source_item_joined(TSqlParser.Table_source_item_joinedContext ctx) {
                 for (int i = 0; i < ctx.join_part().size(); i++) {
-                    if (ctx.join_part().get(i).OUTER() != null || ctx.join_part().get(i).LEFT() != null || ctx.join_part().get(i).RIGHT() != null) {
-                        outerJoinTables.add(new JoinTable(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()),
+                    try {
+                        JoinItem item = new JoinItem(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()),
                                 ctx.join_part().get(i).getStart().getStartIndex(),
-                                ctx.join_part().get(i).getStop().getStopIndex()));
-                        if (ctx.join_part().get(i).LEFT() != null) {
-                            leftJoinTables.add(new JoinTable(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()),
-                                    ctx.join_part().get(i).getStart().getStartIndex(),
-                                    ctx.join_part().get(i).getStop().getStopIndex()));
-                        } else if (ctx.join_part().get(i).RIGHT() != null) {
-                            rightJoinTables.add(new JoinTable(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()),
-                                    ctx.join_part().get(i).getStart().getStartIndex(),
-                                    ctx.join_part().get(i).getStop().getStopIndex()));
+                                ctx.join_part().get(i).getStop().getStopIndex());
+                        item.setConditions((List<ConditionItem>) findConditionsFromSearchCtx(metadata, ctx.join_part().get(i).search_condition()));
+                        if (ctx.join_part().get(i).OUTER() != null || ctx.join_part().get(i).LEFT() != null || ctx.join_part().get(i).RIGHT() != null) {
+                            if (ctx.join_part().get(i).LEFT() != null) {
+                                item.setType(JoinType.LEFT);
+                                leftJoinTables.add(item);
+                            } else if (ctx.join_part().get(i).RIGHT() != null) {
+                                item.setType(JoinType.RIGHT);
+                                rightJoinTables.add(item);
+                            } else {
+                                item.setType(JoinType.FULL_OUTER);
+                                fullOuterJoinTables.add(item);
+                            }
+                            outerJoinTables.add(item);
                         } else {
-                            fullOuterJoinTables.add(new JoinTable(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()),
-                                    ctx.join_part().get(i).getStart().getStartIndex(),
-                                    ctx.join_part().get(i).getStop().getStopIndex()));
+                            item.setType(JoinType.INNER);
+                            innerJoinTables.add(item);
                         }
-                    } else {
-                        innerJoinTables.add(new JoinTable(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()),
-                                ctx.join_part().get(i).getStart().getStartIndex(),
-                                ctx.join_part().get(i).getStop().getStopIndex()));
+                    } catch (RuntimeException ignored) {
+
                     }
                 }
             }
         }, select);
-        Map<String, List<JoinTable>> map = new HashMap<>();
-        map.put("outerJoin", outerJoinTables);
-        map.put("innerJoin", innerJoinTables);
-        map.put("leftJoin", leftJoinTables);
-        map.put("rightJoin", rightJoinTables);
-        map.put("fullOuterJoin", fullOuterJoinTables);
+        Map<JoinType, List<JoinItem>> map = new HashMap<>();
+        map.put(JoinType.OUTER, outerJoinTables);
+        map.put(JoinType.INNER, innerJoinTables);
+        map.put(JoinType.LEFT, leftJoinTables);
+        map.put(JoinType.RIGHT, rightJoinTables);
+        map.put(JoinType.FULL_OUTER, fullOuterJoinTables);
         return map;
     }
 
@@ -132,7 +185,11 @@ public class TSqlParseWalker {
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void exitSearch_condition(TSqlParser.Search_conditionContext ctx) {
-                conditions.addAll(findConditions(metadata, ctx, havingGroupStartsAt[0], havingGroupStartsAt[1]));
+                try {
+                    conditions.addAll(findConditions(metadata, ctx, havingGroupStartsAt[0], havingGroupStartsAt[1]));
+                } catch (RuntimeException ignored) {
+
+                }
             }
 
             @Override
@@ -155,10 +212,14 @@ public class TSqlParseWalker {
 
             @Override
             public void enterSelect_statement(TSqlParser.Select_statementContext ctx) {
-                if (index == 0 && ctx.query_expression() != null &&
-                        ctx.query_expression().query_specification() != null &&
-                        ctx.query_expression().query_specification().WHERE() != null) {
-                    conditions.addAll(findConditions(metadata, ctx.query_expression().query_specification().where, ctx.query_expression().query_specification().HAVING() == null ? -1 : ctx.query_expression().query_specification().HAVING().getSymbol().getStartIndex(), ctx.query_expression().query_specification().GROUP() == null ? -1 : ctx.query_expression().query_specification().GROUP().getSymbol().getStartIndex()));
+                try {
+                    if (index == 0 && ctx.query_expression() != null &&
+                            ctx.query_expression().query_specification() != null &&
+                            ctx.query_expression().query_specification().WHERE() != null) {
+                        conditions.addAll(findConditions(metadata, ctx.query_expression().query_specification().where, ctx.query_expression().query_specification().HAVING() == null ? -1 : ctx.query_expression().query_specification().HAVING().getSymbol().getStartIndex(), ctx.query_expression().query_specification().GROUP() == null ? -1 : ctx.query_expression().query_specification().GROUP().getSymbol().getStartIndex()));
+                    }
+                } catch (RuntimeException ignored) {
+
                 }
                 index++;
             }
@@ -375,14 +436,18 @@ public class TSqlParseWalker {
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterQuery_specification(TSqlParser.Query_specificationContext ctx) {
-                if (ctx.table_sources() != null && ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().table_name_with_hint() != null) {
-                    DatabaseTable found = metadata.findTable(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText(), null);
-                    if (ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias() != null) {
-                        found.setTableAlias(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias().getText());
+                try {
+                    if (ctx.table_sources() != null && ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().table_name_with_hint() != null) {
+                        DatabaseTable found = metadata.findTable(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().table_name_with_hint().table_name().table.getText(), null);
+                        if (ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias() != null) {
+                            found.setTableAlias(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().as_table_alias().getText());
+                        }
+                        found.setFromTableStartAt(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().getStart().getStartIndex());
+                        found.setFromTableStopAt(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().getStop().getStopIndex());
+                        fromTable.add(found);
                     }
-                    found.setFromTableStartAt(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().getStart().getStartIndex());
-                    found.setFromTableStopAt(ctx.table_sources().table_source(0).table_source_item_joined().table_source_item().getStop().getStopIndex());
-                    fromTable.add(found);
+                } catch (RuntimeException ignored) {
+
                 }
             }
         }, select);
@@ -508,8 +573,12 @@ public class TSqlParseWalker {
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterGroup_by_item(@NotNull TSqlParser.Group_by_itemContext ctx) {
-                if (ctx.expression().full_column_name() != null) {
-                    columnsInGroupBy.add(ctx.expression().full_column_name().column_name.getText());
+                try {
+                    if (ctx.expression().full_column_name() != null) {
+                        columnsInGroupBy.add(ctx.expression().full_column_name().column_name.getText());
+                    }
+                } catch (RuntimeException ignored) {
+
                 }
             }
         }, select);

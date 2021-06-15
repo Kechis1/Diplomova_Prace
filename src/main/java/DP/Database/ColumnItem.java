@@ -4,6 +4,7 @@ import DP.antlr4.tsql.parser.TSqlParser;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class ColumnItem {
@@ -286,6 +287,14 @@ public class ColumnItem {
 
     public void setValue(String value) {
         this.value = value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ColumnItem that = (ColumnItem) o;
+        return Objects.equals(database, that.database) && Objects.equals(schema, that.schema) && Objects.equals(table, that.table) && Objects.equals(name, that.name);
     }
 
     @Override

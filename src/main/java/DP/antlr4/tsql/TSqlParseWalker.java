@@ -584,4 +584,22 @@ public class TSqlParseWalker {
         }, select);
         return columnsInGroupBy;
     }
+
+    public static Set<ColumnItem> findAllColumns(DatabaseMetadata metadata, ParseTree select) {
+        Set<ColumnItem> items = new HashSet<>();
+
+        ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
+            @Override
+            public void enterColumn_elem(TSqlParser.Column_elemContext ctx) {
+                items.add(ColumnItem.findOrCreate(metadata, ctx));
+            }
+
+            @Override
+            public void enterFull_column_name(TSqlParser.Full_column_nameContext ctx) {
+                items.add(ColumnItem.findOrCreate(metadata, ctx));
+            }
+        }, select);
+
+        return items;
+    }
 }

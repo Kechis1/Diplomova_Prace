@@ -5,9 +5,11 @@ import DP.antlr4.tsql.TSqlParseWalker;
 import DP.antlr4.tsql.parser.TSqlParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class JoinTableTransformation extends QueryHandler {
     public JoinTableTransformation(QueryHandler handler, DatabaseMetadata databaseMetadata) {
@@ -29,6 +31,7 @@ public class JoinTableTransformation extends QueryHandler {
         final List<ConditionItem> fullOuterJoinConditions = new ArrayList<>();
         final List<ConditionItem> innerConditions = new ArrayList<>();
         final List<DatabaseTable> fromTable = TSqlParseWalker.findFromTable(metadata, select);
+        final Set<ColumnItem> columnItems = TSqlParseWalker.findAllColumns(metadata, select);
 
         for (JoinItem join : joins.get(JoinType.FULL_OUTER)) {
             fullOuterJoinConditions.addAll(join.getConditions());
@@ -48,13 +51,18 @@ public class JoinTableTransformation extends QueryHandler {
             return query;
         }
 
-        boolean foundRedundantJoin = DatabaseTable.redundantJoinExists(query, JoinType.LEFT, joins.get(JoinType.LEFT),
+        // pokud se jiz v dotazu neodkazuje cokoliv na tabulku ktera se ma odstranit (jeji sloupec napriklad v GROUP BY nebo kdekoliv mimo ten spojovaci usek)
+        // 1.
+        // pokud je join v zavorce
+
+
+        boolean foundRedundantJoin = DatabaseTable.redundantJoinExists(columnItems, query, JoinType.LEFT, joins.get(JoinType.LEFT),
                 fromTable.get(0).getTableAlias(), fromTable.get(0), allColumnsInSelect, false, null, false, null);
-        foundRedundantJoin |= DatabaseTable.redundantJoinExists(query, JoinType.RIGHT, joins.get(JoinType.RIGHT),
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists(columnItems, query, JoinType.RIGHT, joins.get(JoinType.RIGHT),
                 null, null, allColumnsInSelect, false, null, false, fromTable.get(0));
-        foundRedundantJoin |= DatabaseTable.redundantJoinExists(query, JoinType.FULL_OUTER, joins.get(JoinType.FULL_OUTER), fromTable.get(0).getTableAlias(),
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists(columnItems, query, JoinType.FULL_OUTER, joins.get(JoinType.FULL_OUTER), fromTable.get(0).getTableAlias(),
                 fromTable.get(0), allColumnsInSelect, true, metadata.setNullableColumns(fullOuterJoinConditions), true, null);
-        foundRedundantJoin |= DatabaseTable.redundantJoinExists(query, JoinType.INNER, joins.get(JoinType.INNER), null, null,
+        foundRedundantJoin |= DatabaseTable.redundantJoinExists(columnItems, query, JoinType.INNER, joins.get(JoinType.INNER), null, null,
                 allColumnsInSelect, true, metadata.setNullableColumns(innerConditions), true, fromTable.get(0));
 
         if (!foundRedundantJoin) {

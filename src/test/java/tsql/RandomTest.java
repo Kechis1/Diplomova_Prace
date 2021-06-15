@@ -129,17 +129,21 @@ public class RandomTest {
                         "SELECT 1 FROM DBO.STUDENT HAVING sum(SID) > 3 ORDER BY SID"),
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'Petr' HAVING sum(SID) > 3 ORDER BY SID",
                         "SELECT 'Petr' as jmeno FROM STUDENT WHERE jmeno = 'Petr' HAVING sum(SID) > 3 ORDER BY SID"),
-
+*/
 
 
                 //  JoinTableTransformation
-                Arguments.arguments("SELECT DISTINCT predmet.jmeno FROM student JOIN (predmet LEFT JOIN studuje ON predmet.pID = studuje.pID) ON student.sID = studuje.sID",
+               /*Arguments.arguments("SELECT DISTINCT predmet.jmeno FROM student JOIN (predmet LEFT JOIN studuje ON predmet.pID = studuje.pID) ON student.sID = studuje.sID",
                         "SELECT DISTINCT predmet.jmeno FROM student JOIN (predmet LEFT JOIN studuje ON predmet.pID = studuje.pID) ON student.sID = studuje.sID"),
-                        /*SELECT Orders.OrderID, Customers.CustomerName, Shippers.ShipperName
-                FROM ((Orders
-                        INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID)
-                INNER JOIN Shippers ON Orders.ShipperID = Shippers.ShipperID);*/
+                    Arguments.arguments("SELECT DISTINCT STUDENT.SID FROM (STUDENT LEFT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID) INNER JOIN PREDMET ON STUDUJE.PID = PREDMET.PID",
+                        "SELECT DISTINCT STUDENT.SID FROM (STUDENT LEFT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID) INNER JOIN PREDMET ON STUDUJE.PID = PREDMET.PID"),*/
+                /*Arguments.arguments("SELECT DISTINCT STUDENT.SID FROM STUDENT LEFT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID INNER JOIN PREDMET ON STUDUJE.PID = PREDMET.PID",
+                        "SELECT DISTINCT STUDENT.SID FROM STUDENT LEFT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID INNER JOIN PREDMET ON STUDUJE.PID = PREDMET.PID"),*/
+                Arguments.arguments("SELECT DISTINCT STUDENT.SID FROM STUDENT LEFT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID INNER JOIN PREDMET ON STUDENT.SID = PREDMET.PID",
+                        "SELECT DISTINCT STUDENT.SID FROM STUDENT INNER JOIN PREDMET ON STUDENT.SID = PREDMET.PID")
 
+
+/*
                 // ExistsTransformation
                 /*Arguments.arguments("SELECT * FROM DBO.STUDUJE SDT WHERE EXISTS (SELECT * FROM DBO.PREDMET PDT WHERE SDT.PID = PDT.PID) ORDER BY SDT.SID",
                         "SELECT * FROM DBO.STUDUJE SDT ORDER BY SDT.SID"),
@@ -238,6 +242,8 @@ public class RandomTest {
                 // select into
                 // case
 
+              /*  Arguments.arguments("SELECT COUNT(DISTINCT JMENO) FROM STUDENT",
+                        "SELECT COUNT(DISTINCT JMENO) FROM STUDENT"),
                 Arguments.arguments("SELECT COUNT(DISTINCT JMENO) FROM STUDENT",
                         "SELECT COUNT(DISTINCT JMENO) FROM STUDENT"),
                 Arguments.arguments("SELECT SID * SID + SID FROM STUDENT",
@@ -273,7 +279,7 @@ public class RandomTest {
                 Arguments.arguments("INSERT INTO STUDENT (SID, JMENO) VALUES (1, 'Adam')",
                         "INSERT INTO STUDENT (SID, JMENO) VALUES (1, 'Adam')"),
                 Arguments.arguments("SELECT COUNT(*) AS DISTINCT_JMENO FROM (SELECT DISTINCT JMENO FROM STUDENT)",
-                        "SELECT COUNT(*) AS DISTINCT_JMENO FROM (SELECT DISTINCT JMENO FROM STUDENT)")
+                        "SELECT COUNT(*) AS DISTINCT_JMENO FROM (SELECT DISTINCT JMENO FROM STUDENT)")*/
         );
     }
 }

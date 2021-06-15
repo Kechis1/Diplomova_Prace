@@ -129,6 +129,7 @@ public class DatabaseMetadata {
 
     private ColumnItem findColumn(ColumnItem columnItem) {
         DatabaseTable table = findTable(columnItem.getTable().getTableName(), columnItem.getTable().getTableAlias());
+        if (table.getColumns() == null) return null;
         for (ColumnItem item : table.getColumns()) {
             if (item.getName().equalsIgnoreCase(columnItem.getName())) {
                 return item;
@@ -208,10 +209,10 @@ public class DatabaseMetadata {
     public List<ConditionItem> setNullableColumns(List<ConditionItem> conditions) {
         for (ConditionItem conItem : conditions) {
             ColumnItem colItem = findColumn(conItem.getLeftSideColumnItem());
-            assert colItem != null;
+            if (colItem == null) continue;
             conItem.getLeftSideColumnItem().setNullable(colItem.isNullable());
             colItem = findColumn(conItem.getRightSideColumnItem());
-            assert colItem != null;
+            if (colItem == null) continue;
             conItem.getRightSideColumnItem().setNullable(colItem.isNullable());
         }
         return conditions;

@@ -3,6 +3,7 @@ package DP.Database;
 import DP.antlr4.tsql.parser.TSqlParser;
 
 import java.util.List;
+import java.util.Set;
 
 public class ColumnItem {
     String database;
@@ -101,107 +102,90 @@ public class ColumnItem {
         this.fullName = fullName;
     }
 
+    public static boolean isTablesColumnsReferencedOutsideOfJoin(JoinItem join, Set<ColumnItem> columnItems) {
+        for (ColumnItem columnItem: columnItems) {
+            if (columnItem.getTable().equals(join.getDatabaseTable()) && !(join.getStartAt() < columnItem.getStartAt() && join.getStopAt() > columnItem.getStopAt())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static ColumnItem findOrCreate(DatabaseMetadata metadata, TSqlParser.Search_condition_notContext ctx, int index) {
-        if (ctx.predicate().expression().get(index).full_column_name().table_name() != null) {
-            int tableIndex = DatabaseTable.exists(metadata,
-                    null,
-                    ctx.predicate().expression().get(index).full_column_name().table_name().table != null
-                            ? ctx.predicate().expression().get(index).full_column_name().table_name().table.getText()
-                            : null);
-            DatabaseTable table;
-            if (tableIndex == -1) {
-                table = new DatabaseTable();
-                table.setTableAlias(ctx.predicate().expression().get(index).full_column_name().table_name().table != null
-                        ? ctx.predicate().expression().get(index).full_column_name().table_name().table.getText()
-                        : null);
-            } else {
-                table = metadata.getTables().get(tableIndex);
-            }
-
-            if (tableIndex == -1) {
-                return new ColumnItem(ctx.predicate().expression().get(index).full_column_name().table_name().database != null
-                        ? ctx.predicate().expression().get(index).full_column_name().table_name().database.getText()
-                        : null,
-                        ctx.predicate().expression().get(index).full_column_name().table_name().schema != null
-                                ? ctx.predicate().expression().get(index).full_column_name().table_name().schema.getText()
-                                : null,
-                        table,
-                        ctx.predicate().expression().get(index).full_column_name().column_name.getText(),
-                        ctx.predicate().expression().get(index).full_column_name().getText());
-            }
-            ColumnItem c = table.findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
-            c.setFullName(ctx.predicate().expression().get(index).full_column_name().getText());
-            return c;
-        }
-        for (DatabaseTable t: metadata.getTables()) {
-            ColumnItem c = t.findColumn(ctx.predicate().expression().get(index).full_column_name().column_name.getText());
-            if (c.getTable() != null) {
-                c.setFullName(ctx.predicate().expression().get(index).full_column_name().getText());
-                return c;
-            }
-        }
-
-        return new ColumnItem(
-                null,
-                null,
-                null,
-                ctx.predicate().expression().get(index).full_column_name().column_name.getText(),
-                ctx.predicate().expression().get(index).full_column_name().getText()
-        );
+        return build(metadata, ctx.predicate().expression().get(index).full_column_name().getText(), ctx.predicate().expression().get(index).full_column_name().table_name(), ctx.predicate().expression().get(index).full_column_name().column_name, -1, -1);
     }
 
     public static ColumnItem findOrCreate(DatabaseMetadata metadata, TSqlParser.Select_list_elemContext ctx) {
-        if (ctx.column_elem().table_name() != null) {
+        return build(metadata, ctx.column_elem().getText(), ctx.column_elem().table_name(), ctx.column_elem().column_name, ctx.column_elem().getStart().getStartIndex(), ctx.column_elem().getStop().getStopIndex());
+    }
+
+    public static ColumnItem findOrCreate(DatabaseMetadata metadata, TSqlParser.Full_column_nameContext ctx) {
+        return build(metadata, ctx.getText(), ctx.table_name(), ctx.column_name, ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
+    }
+
+    public static ColumnItem findOrCreate(DatabaseMetadata metadata, TSqlParser.Column_elemContext ctx) {
+        return build(metadata, ctx.getText(), ctx.table_name(), ctx.column_name, ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
+    }
+
+    private static ColumnItem build(DatabaseMetadata metadata, String fullColumn, TSqlParser.Table_nameContext tableName, TSqlParser.IdContext columnName, int startIndex, int stopIndex) {
+        if (tableName != null) {
             int tableIndex = DatabaseTable.exists(metadata,
                     null,
-                    ctx.column_elem().table_name().table != null
-                            ? ctx.column_elem().table_name().table.getText()
+                    tableName.table != null
+                            ? tableName.table.getText()
                             : null);
             DatabaseTable table;
             if (tableIndex == -1) {
                 table = new DatabaseTable();
-                table.setTableAlias(ctx.column_elem().table_name().table != null
-                        ? ctx.column_elem().table_name().table.getText()
+                table.setTableAlias(tableName.table != null
+                        ? tableName.table.getText()
                         : null);
             } else {
                 table = metadata.getTables().get(tableIndex);
             }
 
             if (tableIndex == -1) {
-                ColumnItem it = new ColumnItem(ctx.column_elem().table_name().database != null
-                        ? ctx.column_elem().table_name().database.getText()
+                ColumnItem it = new ColumnItem(tableName.database != null
+                        ? tableName.database.getText()
                         : null,
-                        ctx.column_elem().table_name().schema != null
-                                ? ctx.column_elem().table_name().schema.getText()
+                        tableName.schema != null
+                                ? tableName.schema.getText()
                                 : null,
                         table,
-                        ctx.column_elem().column_name.getText(),
-                        ctx.column_elem().getText());
-                it.setStartAt(ctx.column_elem().getStart().getStartIndex());
-                it.setStopAt(ctx.column_elem().getStop().getStopIndex());
+                        columnName.getText(),
+                        fullColumn);
+                if (startIndex != -1 && stopIndex != -1) {
+                    it.setStartAt(startIndex);
+                    it.setStopAt(stopIndex);
+                }
                 return it;
             }
-            ColumnItem it = table.findColumn(ctx.column_elem().column_name.getText());
+            ColumnItem it = table.findColumn(columnName.getText());
             if (it == null) {
                 it = new ColumnItem(
                         null,
                         null,
                         null,
-                        ctx.column_elem().column_name.getText(),
-                        ctx.column_elem().getText()
+                        columnName.getText(),
+                        fullColumn
                 );
             }
-            it.setStartAt(ctx.column_elem().getStart().getStartIndex());
-            it.setStopAt(ctx.column_elem().getStop().getStopIndex());
+            it.setFullName(fullColumn);
+            if (startIndex != -1 && stopIndex != -1) {
+                it.setStartAt(startIndex);
+                it.setStopAt(stopIndex);
+            }
             return it;
         }
 
         for (DatabaseTable t: metadata.getTables()) {
-            ColumnItem c = t.findColumn(ctx.column_elem().column_name.getText());
+            ColumnItem c = t.findColumn(columnName.getText());
             if (c.getTable() != null) {
-                c.setFullName(ctx.column_elem().getText());
-                c.setStartAt(ctx.column_elem().getStart().getStartIndex());
-                c.setStopAt(ctx.column_elem().getStop().getStopIndex());
+                c.setFullName(fullColumn);
+                if (startIndex != -1 && stopIndex != -1) {
+                    c.setStartAt(startIndex);
+                    c.setStopAt(stopIndex);
+                }
                 return c;
             }
         }
@@ -210,11 +194,13 @@ public class ColumnItem {
                 null,
                 null,
                 null,
-                ctx.column_elem().column_name.getText(),
-                ctx.column_elem().getText()
+                columnName.getText(),
+                fullColumn
         );
-        c.setStartAt(ctx.column_elem().getStart().getStartIndex());
-        c.setStopAt(ctx.column_elem().getStop().getStopIndex());
+        if (startIndex != -1 && stopIndex != -1) {
+            c.setStartAt(startIndex);
+            c.setStopAt(stopIndex);
+        }
         return c;
     }
 

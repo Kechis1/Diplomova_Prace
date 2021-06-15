@@ -7,10 +7,7 @@ import DP.Transformations.Transformation;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.antlr4.tsql.parser.TSqlParser;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class DatabaseTable {
     private String queryName;
@@ -155,7 +152,7 @@ public class DatabaseTable {
         return newItem;
     }
 
-    public static boolean redundantJoinExists(List<ColumnItem> columnItems, Query query, JoinType typeOfJoin, List<JoinItem> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides, DatabaseTable fromTable) {
+    public static boolean redundantJoinExists(Map<String, ColumnItem> columnItems, Query query, JoinType typeOfJoin, List<JoinItem> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides, DatabaseTable fromTable) {
         for (JoinItem join : joins) {
             boolean found = false;
             DatabaseTable table = join.getDatabaseTable();

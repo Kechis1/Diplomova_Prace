@@ -3,6 +3,7 @@ package DP.Database;
 import DP.antlr4.tsql.parser.TSqlParser;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class ColumnItem {
@@ -74,6 +75,24 @@ public class ColumnItem {
 
     }
 
+    public ColumnItem(ColumnItem original) {
+        this.database = original.database;
+        this.schema = original.schema;
+        this.table = original.table;
+        this.name = original.name;
+        this.fullName = original.fullName;
+        this.isForeignKey = original.isForeignKey;
+        this.referencesTableName = original.referencesTableName;
+        this.referencesColumnName = original.referencesColumnName;
+        this.referencesTable = original.referencesTable;
+        this.referencesColumn = original.referencesColumn;
+        this.isNullable = original.isNullable;
+        this.isConstant = original.isConstant;
+        this.value = original.value;
+        this.startAt = original.startAt;
+        this.stopAt = original.stopAt;
+    }
+
     public int getStartAt() {
         return startAt;
     }
@@ -102,9 +121,9 @@ public class ColumnItem {
         this.fullName = fullName;
     }
 
-    public static boolean isTablesColumnsReferencedOutsideOfJoin(JoinItem join, DatabaseTable table, List<ColumnItem> columnItems) {
-        for (ColumnItem columnItem: columnItems) {
-            if (columnItem.getTable().equals(table) && !(join.getStartAt() < columnItem.getStartAt() && join.getStopAt() >= columnItem.getStopAt())) {
+    public static boolean isTablesColumnsReferencedOutsideOfJoin(JoinItem join, DatabaseTable table, Map<String, ColumnItem> columnItems) {
+        for (String key: columnItems.keySet()) {
+            if (columnItems.get(key).getTable().equals(table) && !(join.getStartAt() < columnItems.get(key).getStartAt() && join.getStopAt() >= columnItems.get(key).getStopAt())) {
                 return true;
             }
         }
@@ -140,11 +159,6 @@ public class ColumnItem {
                 table.setTableAlias(tableName.table != null
                         ? tableName.table.getText()
                         : null);
-            } else {
-                table = metadata.getTables().get(tableIndex);
-            }
-
-            if (tableIndex == -1) {
                 ColumnItem it = new ColumnItem(tableName.database != null
                         ? tableName.database.getText()
                         : null,
@@ -159,9 +173,13 @@ public class ColumnItem {
                     it.setStopAt(stopIndex);
                 }
                 return it;
+            } else {
+                table = metadata.getTables().get(tableIndex);
             }
-            ColumnItem it = table.findColumn(columnName.getText());
-            if (it == null) {
+
+            ColumnItem original = table.findColumn(columnName.getText());
+            ColumnItem it;
+            if (original == null) {
                 it = new ColumnItem(
                         null,
                         null,
@@ -169,6 +187,8 @@ public class ColumnItem {
                         columnName.getText(),
                         fullColumn
                 );
+            } else {
+                it = new ColumnItem(original);
             }
             it.setFullName(fullColumn);
             if (startIndex != -1 && stopIndex != -1) {
@@ -179,7 +199,8 @@ public class ColumnItem {
         }
 
         for (DatabaseTable t: metadata.getTables()) {
-            ColumnItem c = t.findColumn(columnName.getText());
+            ColumnItem original = t.findColumn(columnName.getText());
+            ColumnItem c = new ColumnItem(original);
             if (c.getTable() != null) {
                 c.setFullName(fullColumn);
                 if (startIndex != -1 && stopIndex != -1) {

@@ -586,18 +586,22 @@ public class TSqlParseWalker {
         return columnsInGroupBy;
     }
 
-    public static List<ColumnItem> findAllColumns(DatabaseMetadata metadata, ParseTree select) {
-        List<ColumnItem> items = new ArrayList<>();
+    public static Map<String, ColumnItem> findAllColumns(DatabaseMetadata metadata, ParseTree select) {
+        Map<String, ColumnItem> items = new HashMap<>();
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
             public void enterColumn_elem(TSqlParser.Column_elemContext ctx) {
-                items.add(ColumnItem.findOrCreate(metadata, ctx));
+                if (ctx.getStart().getStartIndex() != -1 && ctx.getStop().getStopIndex() != 1) {
+                    items.put(ctx.getStart().getStartIndex() + "." + ctx.getStop().getStopIndex(), ColumnItem.findOrCreate(metadata, ctx));
+                }
             }
 
             @Override
             public void enterFull_column_name(TSqlParser.Full_column_nameContext ctx) {
-                items.add(ColumnItem.findOrCreate(metadata, ctx));
+                if (ctx.getStart().getStartIndex() != -1 && ctx.getStop().getStopIndex() != 1) {
+                    items.put(ctx.getStart().getStartIndex() + "." + ctx.getStop().getStopIndex(), ColumnItem.findOrCreate(metadata, ctx));
+                }
             }
         }, select);
 

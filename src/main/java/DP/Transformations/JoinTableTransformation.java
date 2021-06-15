@@ -29,9 +29,7 @@ public class JoinTableTransformation extends QueryHandler {
         final List<ConditionItem> fullOuterJoinConditions = new ArrayList<>();
         final List<ConditionItem> innerConditions = new ArrayList<>();
         final List<DatabaseTable> fromTable = TSqlParseWalker.findFromTable(metadata, select);
-        final List<ColumnItem> columnItems = TSqlParseWalker.findAllColumns(metadata, select);
-
-       // System.out.println(columnItems);
+        final Map<String, ColumnItem> columnItems = TSqlParseWalker.findAllColumns(metadata, select);
 
         for (JoinItem join : joins.get(JoinType.FULL_OUTER)) {
             fullOuterJoinConditions.addAll(join.getConditions());

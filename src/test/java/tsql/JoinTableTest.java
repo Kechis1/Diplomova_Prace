@@ -6,6 +6,7 @@ import DP.Database.DatabaseTable;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.Transformations.JoinTableTransformation;
 import DP.Transformations.Query;
+import DP.Transformations.Transformation;
 import DP.Transformations.TransformationBuilder;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,6 +72,18 @@ public class JoinTableTest {
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
+        for (int i = 1; i <= query.getCurrentRunNumber(); i++) {
+            System.out.println("Run (" + i + "): ");
+            if (query.getQueryTransforms().get(i) != null) {
+                for (Transformation r : query.getQueryTransforms().get(i)) {
+                    System.out.println(r);
+                }
+            } else {
+                System.out.println("--");
+            }
+        }
+
+
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
         assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
@@ -83,6 +96,17 @@ public class JoinTableTest {
     void doFindUnnecessaryJoinTableFullRunTest(String requestQuery, String resultQuery, String message) {
         Query query = new Query(requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
+        for (int i = 1; i <= query.getCurrentRunNumber(); i++) {
+            System.out.println("Run (" + i + "): ");
+            if (query.getQueryTransforms().get(i) != null) {
+                for (Transformation r : query.getQueryTransforms().get(i)) {
+                    System.out.println(r);
+                }
+            } else {
+                System.out.println("--");
+            }
+        }
+
         assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
         assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
         assertEquals(query.getCurrentRunNumber(), 2);

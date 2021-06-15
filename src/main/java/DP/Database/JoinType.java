@@ -13,4 +13,9 @@ public enum JoinType {
         }
         return joinType.toString();
     }
+
+    public static boolean isInnerOrRight(JoinType typeOfJoin) {
+        return typeOfJoin.equals(JoinType.RIGHT) || typeOfJoin.equals(JoinType.INNER);
+    }
+
 }

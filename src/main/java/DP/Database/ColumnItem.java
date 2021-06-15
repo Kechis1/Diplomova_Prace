@@ -102,9 +102,9 @@ public class ColumnItem {
         this.fullName = fullName;
     }
 
-    public static boolean isTablesColumnsReferencedOutsideOfJoin(JoinItem join, Set<ColumnItem> columnItems) {
+    public static boolean isTablesColumnsReferencedOutsideOfJoin(JoinItem join, DatabaseTable table, List<ColumnItem> columnItems) {
         for (ColumnItem columnItem: columnItems) {
-            if (columnItem.getTable().equals(join.getDatabaseTable()) && !(join.getStartAt() < columnItem.getStartAt() && join.getStopAt() > columnItem.getStopAt())) {
+            if (columnItem.getTable().equals(table) && !(join.getStartAt() < columnItem.getStartAt() && join.getStopAt() >= columnItem.getStopAt())) {
                 return true;
             }
         }
@@ -276,17 +276,19 @@ public class ColumnItem {
             tableString = "null";
         }
         return "ColumnItem{" +
-                "database='" + database + '\'' +
-                ", schema='" + schema + '\'' +
-                ", table=" + tableString +
-                ", name='" + name + '\'' +
-                ", fullName='" + fullName + '\'' +
-                ", isForeignKey=" + isForeignKey +
-                ", referencesTableName='" + referencesTableName + '\'' +
-                ", referencesColumnName='" + referencesColumnName + '\'' +
-                ", isNullable=" + isNullable +
-                ", isConstant=" + isConstant +
-                ", value='" + value + '\'' +
-                '}';
+                "\n\tdatabase='" + database + '\'' +
+                "\n\t, schema='" + schema + '\'' +
+                "\n\t, table=" + tableString +
+                "\n\t, name='" + name + '\'' +
+                "\n\t, fullName='" + fullName + '\'' +
+                "\n\t, startAt='" + startAt + '\'' +
+                "\n\t, stopAt='" + stopAt + '\'' +
+                "\n\t, isForeignKey=" + isForeignKey +
+                "\n\t, referencesTableName='" + referencesTableName + '\'' +
+                "\n\t, referencesColumnName='" + referencesColumnName + '\'' +
+                "\n\t, isNullable=" + isNullable +
+                "\n\t, isConstant=" + isConstant +
+                "\n\t, value='" + value + '\'' +
+                "\n}";
     }
 }

@@ -144,6 +144,7 @@ public class TSqlParseWalker {
             public void enterTable_source_item_joined(TSqlParser.Table_source_item_joinedContext ctx) {
                 for (int i = 0; i < ctx.join_part().size(); i++) {
                     try {
+                        if (ctx.join_part().get(i).table_source().LR_BRACKET() != null) continue;
                         JoinItem item = new JoinItem(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()),
                                 ctx.join_part().get(i).getStart().getStartIndex(),
                                 ctx.join_part().get(i).getStop().getStopIndex());
@@ -585,8 +586,8 @@ public class TSqlParseWalker {
         return columnsInGroupBy;
     }
 
-    public static Set<ColumnItem> findAllColumns(DatabaseMetadata metadata, ParseTree select) {
-        Set<ColumnItem> items = new HashSet<>();
+    public static List<ColumnItem> findAllColumns(DatabaseMetadata metadata, ParseTree select) {
+        List<ColumnItem> items = new ArrayList<>();
 
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override

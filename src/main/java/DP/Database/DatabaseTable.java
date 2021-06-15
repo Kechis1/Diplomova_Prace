@@ -155,7 +155,7 @@ public class DatabaseTable {
         return newItem;
     }
 
-    public static boolean redundantJoinExists(Set<ColumnItem> columnItems, Query query, JoinType typeOfJoin, List<JoinItem> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides, DatabaseTable fromTable) {
+    public static boolean redundantJoinExists(List<ColumnItem> columnItems, Query query, JoinType typeOfJoin, List<JoinItem> joins, String tableAlias, DatabaseTable databaseTable, List<ColumnItem> allColumnsInSelect, boolean checkNullable, List<ConditionItem> newConditions, boolean checkBothSides, DatabaseTable fromTable) {
         for (JoinItem join : joins) {
             boolean found = false;
             DatabaseTable table = join.getDatabaseTable();
@@ -166,9 +166,10 @@ public class DatabaseTable {
                     break;
                 }
             }
-            if (!ColumnItem.isTablesColumnsReferencedOutsideOfJoin(join, columnItems) && ((!checkNullable && !found) || (checkNullable && !found && !ConditionItem.isConditionColumnNullable(newConditions, table, checkBothSides)))) {
+
+            if (!ColumnItem.isTablesColumnsReferencedOutsideOfJoin(join, JoinType.isInnerOrRight(typeOfJoin) ? fromTable : join.getDatabaseTable(), columnItems) && ((!checkNullable && !found) || (checkNullable && !found && !ConditionItem.isConditionColumnNullable(newConditions, table, checkBothSides)))) {
                 String currentQuery;
-                if (typeOfJoin.equals(JoinType.RIGHT) || typeOfJoin.equals(JoinType.INNER)) {
+                if (JoinType.isInnerOrRight(typeOfJoin)) {
                     currentQuery = (query.getCurrentQuery().substring(0, fromTable.getFromTableStartAt()) + join.getDatabaseTable().getQueryName() +
                             query.getCurrentQuery().substring(fromTable.getFromTableStopAt() + 1, join.getStartAt()).trim() + query.getCurrentQuery().substring(join.getStopAt() + 1).trim()).trim();
                 } else {

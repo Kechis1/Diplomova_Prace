@@ -157,6 +157,7 @@ public class DatabaseTable {
             boolean found = false;
             DatabaseTable table = join.getDatabaseTable();
             for (ColumnItem cItem : allColumnsInSelect) {
+                if (cItem.getName() == null) continue;
                 if ((cItem.getName().equals("*") && (cItem.getTable().getTableAlias() == null || !cItem.getTable().getTableAlias().equals(tableAlias == null ? table.getTableAlias() : tableAlias)))
                         || (!cItem.getName().equals("*") && !(databaseTable == null ? table : databaseTable).columnExists(cItem))) {
                     found = true;

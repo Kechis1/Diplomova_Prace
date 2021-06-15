@@ -141,32 +141,37 @@ public class TSqlParseWalker {
         final List<JoinItem> fullOuterJoinTables = new ArrayList<>();
         ParseTreeWalker.DEFAULT.walk(new TSqlParserBaseListener() {
             @Override
-            public void enterTable_source_item_joined(TSqlParser.Table_source_item_joinedContext ctx) {
-                for (int i = 0; i < ctx.join_part().size(); i++) {
-                    try {
-                        if (ctx.join_part().get(i).table_source().LR_BRACKET() != null) continue;
-                        JoinItem item = new JoinItem(DatabaseTable.create(metadata, ctx.join_part().get(i).table_source().table_source_item_joined().table_source_item()),
-                                ctx.join_part().get(i).getStart().getStartIndex(),
-                                ctx.join_part().get(i).getStop().getStopIndex());
-                        item.setConditions((List<ConditionItem>) findConditionsFromSearchCtx(metadata, ctx.join_part().get(i).search_condition()));
-                        if (ctx.join_part().get(i).OUTER() != null || ctx.join_part().get(i).LEFT() != null || ctx.join_part().get(i).RIGHT() != null) {
-                            if (ctx.join_part().get(i).LEFT() != null) {
-                                item.setType(JoinType.LEFT);
-                                leftJoinTables.add(item);
-                            } else if (ctx.join_part().get(i).RIGHT() != null) {
-                                item.setType(JoinType.RIGHT);
-                                rightJoinTables.add(item);
-                            } else {
-                                item.setType(JoinType.FULL_OUTER);
-                                fullOuterJoinTables.add(item);
-                            }
-                            outerJoinTables.add(item);
-                        } else {
-                            item.setType(JoinType.INNER);
-                            innerJoinTables.add(item);
-                        }
-                    } catch (RuntimeException ignored) {
+            public void enterTable_sources(TSqlParser.Table_sourcesContext ctx) {
+                for (int j = 0; j < ctx.table_source().size(); j++) {
+                    if (ctx.table_source().get(j).LR_BRACKET() == null) {
+                        List<TSqlParser.Join_partContext> joinParts = ctx.table_source().get(j).table_source_item_joined().join_part();
+                        for (int i = 0; i < joinParts.size(); i++) {
+                            if (joinParts.get(i).table_source().LR_BRACKET() != null) continue;
+                            try {
+                                JoinItem item = new JoinItem(DatabaseTable.create(metadata, joinParts.get(i).table_source().table_source_item_joined().table_source_item()),
+                                        joinParts.get(i).getStart().getStartIndex(),
+                                        joinParts.get(i).getStop().getStopIndex());
+                                item.setConditions((List<ConditionItem>) findConditionsFromSearchCtx(metadata, joinParts.get(i).search_condition()));
+                                if (joinParts.get(i).OUTER() != null || joinParts.get(i).LEFT() != null || joinParts.get(i).RIGHT() != null) {
+                                    if (joinParts.get(i).LEFT() != null) {
+                                        item.setType(JoinType.LEFT);
+                                        leftJoinTables.add(item);
+                                    } else if (joinParts.get(i).RIGHT() != null) {
+                                        item.setType(JoinType.RIGHT);
+                                        rightJoinTables.add(item);
+                                    } else {
+                                        item.setType(JoinType.FULL_OUTER);
+                                        fullOuterJoinTables.add(item);
+                                    }
+                                    outerJoinTables.add(item);
+                                } else {
+                                    item.setType(JoinType.INNER);
+                                    innerJoinTables.add(item);
+                                }
+                            } catch (RuntimeException ignored) {
 
+                            }
+                        }
                     }
                 }
             }

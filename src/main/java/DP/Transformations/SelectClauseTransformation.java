@@ -47,7 +47,7 @@ public class SelectClauseTransformation extends QueryHandler {
         final List<ConditionItem> uniqueAttributesConditions = ConditionItem.removeMultipleAttributeConditions(conditions);
 
         for (ConditionItem item : conditions) {
-            if (item.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
+            if (item.isNot() || item.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
             if (item.getOperator().equals("=") && item.getLeftSideDataType() == ConditionDataType.COLUMN && item.getRightSideDataType() == ConditionDataType.COLUMN) {
                 int bothInSelect = -1;
                 List<ColumnItem> inSelect = new ArrayList<>();
@@ -106,7 +106,7 @@ public class SelectClauseTransformation extends QueryHandler {
 
         if (!isOrUsed) {
             for (ConditionItem item : uniqueAttributesConditions) {
-                if (item.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
+                if (item.isNot() || item.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
                 if (item.getOperator().equals("=") && (item.getLeftSideDataType() == ConditionDataType.COLUMN || item.getRightSideDataType() == ConditionDataType.COLUMN)) {
                     for (ColumnItem column : allColumnsInSelect) {
                         if ((item.getLeftSideDataType() == ConditionDataType.COLUMN && column.equals(item.getLeftSideColumnItem()) && item.getRightSideDataType() != ConditionDataType.COLUMN) ||

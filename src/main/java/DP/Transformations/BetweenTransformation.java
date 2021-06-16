@@ -34,7 +34,7 @@ public class BetweenTransformation extends QueryHandler {
         boolean currentNecessary;
         boolean currentColumn;
         for (ConditionItem condition: betweenConditions) {
-            if (condition.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
+            if (condition.isNot() || condition.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
             currentNecessary = false;
             currentColumn = false;
             for (ConditionItem betweenCondition: Arrays.asList(condition.getBetweenLeftCondition(), condition.getBetweenRightCondition())) {

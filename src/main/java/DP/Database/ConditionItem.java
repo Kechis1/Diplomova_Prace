@@ -35,8 +35,9 @@ public class ConditionItem {
     private ConditionItem betweenLeftCondition;
     private ConditionItem betweenRightCondition;
     private ExistsItem existsItem;
+    private boolean not;
 
-    public ConditionItem(int startAt, int stopAt, ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator, ConditionOperator operatorType, String fullCondition, String leftSideFullCondition, String rightSideFullCondition) {
+    public ConditionItem(int startAt, int stopAt, ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator, ConditionOperator operatorType, String fullCondition, String leftSideFullCondition, String rightSideFullCondition, boolean not) {
         this.startAt = startAt;
         this.stopAt = stopAt;
         this.operatorType = operatorType;
@@ -48,10 +49,11 @@ public class ConditionItem {
         this.fullCondition = fullCondition;
         this.leftSideFullCondition = leftSideFullCondition;
         this.rightSideFullCondition = rightSideFullCondition;
+        this.not = not;
         initNumberValues();
     }
 
-    public ConditionItem(ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator, String fullCondition, String leftSideFullCondition, String rightSideFullCondition) {
+    public ConditionItem(ConditionDataType leftSideDataType, String leftSideValue, ConditionDataType rightSideDataType, String rightSideValue, String operator, String fullCondition, String leftSideFullCondition, String rightSideFullCondition, boolean not) {
         this.leftSideDataType = leftSideDataType;
         this.leftSideValue = leftSideValue;
         this.rightSideDataType = rightSideDataType;
@@ -60,6 +62,7 @@ public class ConditionItem {
         this.fullCondition = fullCondition;
         this.leftSideFullCondition = leftSideFullCondition;
         this.rightSideFullCondition = rightSideFullCondition;
+        this.not = not;
         initNumberValues();
     }
 
@@ -67,9 +70,17 @@ public class ConditionItem {
 
     }
 
+    public boolean isNot() {
+        return not;
+    }
+
+    public void setNot(boolean not) {
+        this.not = not;
+    }
+
     public static boolean findAndProcessErrorInConditions(String message, Action action, List<ConditionItem> filteredConditions, List<ConditionItem> allConditions, final DatabaseMetadata metadata, Query query, List<DatabaseTable> tables) {
         for (ConditionItem condition : filteredConditions) {
-            if (condition.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
+            if (condition.isNot() || condition.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
             boolean isConditionNecessary = true;
             if ((condition.getLeftSideDataType() == ConditionDataType.BINARY && Arrays.asList(ConditionDataType.BINARY, ConditionDataType.DECIMAL).contains(condition.getRightSideDataType())) ||
                     (condition.getLeftSideDataType() == ConditionDataType.DECIMAL && (condition.getRightSideDataType().isNumeric || condition.getRightSideDataType() == ConditionDataType.STRING_DECIMAL)) ||
@@ -170,9 +181,9 @@ public class ConditionItem {
     public static boolean duplicatesExists(Query query, DatabaseMetadata metadata, List<ConditionItem> conditions) {
         int whereStartsAt = query.getCurrentQuery().indexOf("WHERE");
         for (int i = 0; i < conditions.size() - 1; i++) {
-            if (conditions.get(i).getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
+            if (conditions.get(i).isNot() || conditions.get(i).getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
             for (int j = i + 1; j < conditions.size(); j++) {
-                if (conditions.get(i).getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
+                if (conditions.get(i).isNot() || conditions.get(i).getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
                 if (conditions.get(i).compareToCondition(metadata, conditions.get(j))) {
                     String newQueryString;
 
@@ -209,7 +220,7 @@ public class ConditionItem {
     public static boolean isConditionColumnNullable(List<ConditionItem> conditions, DatabaseTable table, boolean checkBothSides) {
         if (checkBothSides) {
             for (ConditionItem currItem : conditions) {
-                if (currItem.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
+                if (currItem.isNot() || currItem.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
                 if ((currItem.getLeftSideDataType() == ConditionDataType.COLUMN && currItem.getLeftSideColumnItem().isNullable) ||
                         (currItem.getRightSideDataType() == ConditionDataType.COLUMN && currItem.getRightSideColumnItem().isNullable)) {
                     return true;
@@ -218,7 +229,7 @@ public class ConditionItem {
             return false;
         }
         for (ConditionItem currItem : conditions) {
-            if (currItem.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
+            if (currItem.isNot() || currItem.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
             if ((currItem.getLeftSideDataType() == ConditionDataType.COLUMN && currItem.getLeftSideColumnItem().isNullable() && ColumnItem.exists(table.getColumns(), currItem.getLeftSideColumnItem())) ||
                     (currItem.getRightSideDataType() == ConditionDataType.COLUMN && currItem.getRightSideColumnItem().isNullable() && ColumnItem.exists(table.getColumns(), currItem.getRightSideColumnItem()))) {
                 return true;
@@ -571,6 +582,7 @@ public class ConditionItem {
                 "\n\t, rightLogicalOperator='" + rightLogicalOperator + '\'' +
                 "\n\t, betweenLeftCondition='" + betweenLeftCondition + '\'' +
                 "\n\t, betweenRightCondition='" + betweenRightCondition + '\'' +
+                "\n\t, not='" + not + '\'' +
                 "\n}";
     }
 }

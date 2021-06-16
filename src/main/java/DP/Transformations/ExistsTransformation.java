@@ -31,7 +31,7 @@ public class ExistsTransformation extends QueryHandler {
         final List<ConditionItem> existConditions = ConditionItem.filterByOperator(conditions, ConditionOperator.EXISTS);
 
         for (ConditionItem condition : existConditions) {
-            if (condition.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
+            if (condition.isNot() || condition.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
             if ((condition.getExistsItem().isNot() && condition.getExistsItem().getTable() != null && condition.getExistsItem().getTable().isEmpty()) ||
                     (!condition.getExistsItem().isNot() && (condition.getExistsItem().getTable() == null ||
                             (!condition.getExistsItem().getTable().isEmpty() &&

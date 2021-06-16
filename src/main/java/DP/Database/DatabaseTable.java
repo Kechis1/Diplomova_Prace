@@ -168,8 +168,8 @@ public class DatabaseTable {
             if (!ColumnItem.isTablesColumnsReferencedOutsideOfJoin(join, JoinType.isInnerOrRight(typeOfJoin) ? fromTable : join.getDatabaseTable(), columnItems) && ((!checkNullable && !found) || (checkNullable && !found && !ConditionItem.isConditionColumnNullable(newConditions, table, checkBothSides)))) {
                 String currentQuery;
                 if (JoinType.isInnerOrRight(typeOfJoin)) {
-                    currentQuery = (query.getCurrentQuery().substring(0, fromTable.getFromTableStartAt()) + join.getDatabaseTable().getQueryName() +
-                            query.getCurrentQuery().substring(fromTable.getFromTableStopAt() + 1, join.getStartAt()).trim() + query.getCurrentQuery().substring(join.getStopAt() + 1).trim()).trim();
+                    currentQuery = (query.getOutputQuery().substring(0, fromTable.getFromTableStartAt()) + join.getDatabaseTable().getQueryName() +
+                            query.getOutputQuery().substring(fromTable.getFromTableStopAt() + 1, join.getStartAt()).trim() + query.getOutputQuery().substring(join.getStopAt() + 1).trim()).trim();
                 } else {
                     currentQuery = (query.getCurrentQuery().substring(0, join.getStartAt()) + query.getCurrentQuery().substring(join.getStopAt() + 1).trim()).trim();
                 }

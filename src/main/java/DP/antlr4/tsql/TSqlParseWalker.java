@@ -318,22 +318,31 @@ public class TSqlParseWalker {
         item.setStopAt(ctxAnd.search_condition_not().get(i).predicate().getStop().getStopIndex() + 1);
         item.setFullCondition(ctxAnd.search_condition_not().get(i).predicate().getText());
         item.setOperatorType(ConditionOperator.SAMPLE);
+        item.setNot(ctxAnd.search_condition_not().get(i).NOT() != null || ctxAnd.search_condition_not().get(i).predicate().NOT() != null);
         setConditionLogicalOperators(ors, ctx, ctxAnd, i, item);
         return item;
     }
 
+    private static String findOperatorString(TSqlParser.PredicateContext ctx) {
+        return ctx.getChild(1).getText().equalsIgnoreCase("NOT")
+                ? ctx.getChild(2).getText()
+                : ctx.getChild(1).getText();
+    }
+
     private static ConditionItem buildNotExistsCondition(List<Integer> ors, TSqlParser.Search_conditionContext ctx, TSqlParser.Search_condition_andContext ctxAnd, int i, final DatabaseMetadata metadata) {
+        String operator = findOperatorString(ctxAnd.search_condition_not().get(i).predicate());
         ConditionItem item = new ConditionItem(ctxAnd.search_condition_not().get(i).predicate().getStart().getStartIndex(),
                 ctxAnd.search_condition_not().get(i).predicate().getStop().getStopIndex() + 1,
                 ConditionItem.findDataType(ctxAnd.search_condition_not().get(i).predicate().expression().get(0)),
                 ConditionItem.findSideValue(ctxAnd.search_condition_not().get(i).predicate().expression().get(0)),
                 ConditionItem.findDataType(ctxAnd.search_condition_not().get(i).predicate().expression().get(1)),
                 ConditionItem.findSideValue(ctxAnd.search_condition_not().get(i).predicate().expression().get(1)),
-                ctxAnd.search_condition_not().get(i).predicate().getChild(1).getText(),
-                ConditionOperator.findOperatorFromString(ctxAnd.search_condition_not().get(i).predicate().getChild(1).getText()),
+                operator,
+                ConditionOperator.findOperatorFromString(operator),
                 ctxAnd.search_condition_not().get(i).predicate().getText(),
                 ctxAnd.search_condition_not().get(i).predicate().expression().get(0).getText(),
-                ctxAnd.search_condition_not().get(i).predicate().expression().get(1).getText()
+                ctxAnd.search_condition_not().get(i).predicate().expression().get(1).getText(),
+                ctxAnd.search_condition_not().get(i).NOT() != null || ctxAnd.search_condition_not().get(i).predicate().NOT() != null
         );
         if (item.getLeftSideDataType() == ConditionDataType.COLUMN) {
             item.setLeftSideColumnItem(ColumnItem.findOrCreate(metadata, ctxAnd.search_condition_not().get(i), 0));
@@ -357,6 +366,7 @@ public class TSqlParseWalker {
         item.setOperator("EXISTS");
         item.setOperatorType(ConditionOperator.EXISTS);
         item.setFullCondition(ctxAnd.search_condition_not().get(i).getText());
+        item.setNot(ctxAnd.search_condition_not().get(i).NOT() != null || ctxAnd.search_condition_not().get(i).predicate().NOT() != null);
         setExistsCondition(item, i, metadata, ctxAnd);
         setConditionLogicalOperators(ors, ctx, ctxAnd, i, item);
         return item;
@@ -406,7 +416,8 @@ public class TSqlParseWalker {
                 ">=",
                 ctxAnd.search_condition_not().get(i).predicate().getText(),
                 ctxAnd.search_condition_not().get(i).predicate().expression().get(0).getText(),
-                ctxAnd.search_condition_not().get(i).predicate().expression().get(1).getText()
+                ctxAnd.search_condition_not().get(i).predicate().expression().get(1).getText(),
+                ctxAnd.search_condition_not().get(i).NOT() != null || ctxAnd.search_condition_not().get(i).predicate().NOT() != null
         );
 
         if (betweenCondition.getLeftSideDataType() == ConditionDataType.COLUMN && betweenCondition.getRightSideDataType() == ConditionDataType.COLUMN) {
@@ -423,7 +434,8 @@ public class TSqlParseWalker {
                 "<=",
                 ctxAnd.search_condition_not().get(i).predicate().getText(),
                 ctxAnd.search_condition_not().get(i).predicate().expression().get(0).getText(),
-                ctxAnd.search_condition_not().get(i).predicate().expression().get(2).getText()
+                ctxAnd.search_condition_not().get(i).predicate().expression().get(2).getText(),
+                ctxAnd.search_condition_not().get(i).NOT() != null || ctxAnd.search_condition_not().get(i).predicate().NOT() != null
         );
 
         betweenCondition.setStartAt(ctxAnd.search_condition_not().get(i).getStart().getStartIndex());

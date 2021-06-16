@@ -10,6 +10,7 @@ public enum ConditionDataType {
     REAL,
     DECIMAL,
     BINARY,
+    BOOLEAN,
     COLUMN;
 
     public boolean isNumeric;
@@ -25,6 +26,7 @@ public enum ConditionDataType {
         REAL.isNumeric = true;
         DECIMAL.isNumeric = true;
         BINARY.isNumeric = true;
+        BOOLEAN.isNumeric = false;
         COLUMN.isNumeric = false;
 
         STRING.isString = true;
@@ -37,6 +39,7 @@ public enum ConditionDataType {
         DECIMAL.isString = false;
         BINARY.isString = false;
         COLUMN.isString = false;
+        BOOLEAN.isString = false;
     }
 
 }

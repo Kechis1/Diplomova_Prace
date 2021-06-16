@@ -5,7 +5,6 @@ import DP.antlr4.tsql.parser.TSqlParser;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public class ColumnItem {
     String database;

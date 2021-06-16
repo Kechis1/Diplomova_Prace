@@ -113,9 +113,9 @@ public class SelectClauseTransformation extends QueryHandler {
                                 (item.getRightSideDataType() == ConditionDataType.COLUMN && column.equals(item.getRightSideColumnItem()) && item.getLeftSideDataType() != ConditionDataType.COLUMN)) {
                             String value;
                             if (item.getLeftSideDataType() != ConditionDataType.COLUMN) {
-                                value = item.getLeftSideDataType() == ConditionDataType.STRING ? "'" + item.getLeftSideValue() + "'" : item.getLeftSideValue();
+                                value = item.getLeftSideDataType() == ConditionDataType.STRING || item.getLeftSideDataType() == ConditionDataType.BOOLEAN ? "'" + item.getLeftSideValue() + "'" : item.getLeftSideValue();
                             } else {
-                                value = item.getRightSideDataType() == ConditionDataType.STRING ? "'" + item.getRightSideValue() + "'" : item.getRightSideValue();
+                                value = item.getRightSideDataType() == ConditionDataType.STRING || item.getRightSideDataType() == ConditionDataType.BOOLEAN ? "'" + item.getRightSideValue() + "'" : item.getRightSideValue();
                             }
 
                             query.addTransformation(new Transformation(query.getCurrentQuery(),

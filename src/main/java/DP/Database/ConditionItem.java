@@ -406,6 +406,9 @@ public class ConditionItem {
         }
         if (context.primitive_expression().constant().STRING() != null) {
             String value = context.primitive_expression().constant().getText().replaceAll("'", "");
+            if (value.equalsIgnoreCase("FALSE") || value.equalsIgnoreCase("TRUE")) {
+                return ConditionDataType.BOOLEAN;
+            }
             if (value.toLowerCase().startsWith("0x") && value.toLowerCase().replaceFirst("0x", "").matches("-?[0-9a-fA-F]+")) {
                 return ConditionDataType.STRING_BINARY;
             } else if (value.toLowerCase().matches("^(-?|\\+?)\\d+(\\.\\d+)?e(-?|\\+?)\\d+$")) {

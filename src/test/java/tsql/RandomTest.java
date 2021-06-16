@@ -53,10 +53,7 @@ public class RandomTest {
         return Stream.of(
                 // WhereTransformation
 
-                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = TRUE",
-                        "SELECT TRUE as jmeno FROM STUDENT where jmeno = TRUE"),
-
-                Arguments.arguments("SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE stt.sID = stt.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID",
+         /*       Arguments.arguments("SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE stt.sID = stt.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID",
                         "SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID"),
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'adam' AND 1 = 1 HAVING sum(SID) > 3 ORDER BY SID",
                         "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' HAVING sum(SID) > 3 ORDER BY SID"),
@@ -130,10 +127,27 @@ public class RandomTest {
                 Arguments.arguments("SELECT 1 FROM DBO.STUDENT HAVING sum(SID) > 3 ORDER BY SID",
                         "SELECT 1 FROM DBO.STUDENT HAVING sum(SID) > 3 ORDER BY SID"),
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'Petr' HAVING sum(SID) > 3 ORDER BY SID",
-                        "SELECT 'Petr' as jmeno FROM STUDENT WHERE jmeno = 'Petr' HAVING sum(SID) > 3 ORDER BY SID"),
+                        "SELECT 'Petr' as jmeno FROM STUDENT WHERE jmeno = 'Petr' HAVING sum(SID) > 3 ORDER BY SID"),*/
+
+               /* Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'TRUE'",
+                        "SELECT 'TRUE' as jmeno FROM STUDENT where jmeno = 'TRUE'"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'FALSE'",
+                        "SELECT 'FALSE' as jmeno FROM STUDENT where jmeno = 'FALSE'"),*/
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO IS NOT NULL",
+                        "SELECT jmeno FROM STUDENT where jmeno IS NOT NULL"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO IS NULL",
+                        "SELECT NULL AS jmeno FROM STUDENT where jmeno IS NULL")/*,
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO LIKE 'ADAM'",
+                        "SELECT 'ADAM' as jmeno FROM STUDENT where jmeno LIKE 'ADAM'"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO NOT LIKE 'ADAM'",
+                        "SELECT jmeno FROM STUDENT where jmeno NOT LIKE 'ADAM'"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO BETWEEN 'ADAM' AND 'ADAM'",
+                        "SELECT 'ADAM' as jmeno FROM STUDENT where jmeno BETWEEN 'ADAM' AND 'ADAM'"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO NOT BETWEEN 'ADAM' AND 'ADAM'",
+                        "SELECT jmeno FROM STUDENT where jmeno NOT BETWEEN 'ADAM' AND 'ADAM'")*/);
 
 
-
+/*
                 //  JoinTableTransformation
                Arguments.arguments("SELECT DISTINCT predmet.jmeno FROM student JOIN (predmet LEFT JOIN studuje ON predmet.pID = studuje.pID) ON student.sID = studuje.sID",
                         "SELECT DISTINCT predmet.jmeno FROM student JOIN (predmet LEFT JOIN studuje ON predmet.pID = studuje.pID) ON student.sID = studuje.sID"),
@@ -294,6 +308,6 @@ public class RandomTest {
                         "INSERT INTO STUDENT (SID, JMENO) VALUES (1, 'Adam')"),
                 Arguments.arguments("SELECT COUNT(*) AS DISTINCT_JMENO FROM (SELECT DISTINCT JMENO FROM STUDENT)",
                         "SELECT COUNT(*) AS DISTINCT_JMENO FROM (SELECT DISTINCT JMENO FROM STUDENT)")
-        );
+        );*/
     }
 }

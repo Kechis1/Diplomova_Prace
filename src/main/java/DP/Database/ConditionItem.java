@@ -103,9 +103,9 @@ public class ConditionItem {
                 Transformation.addNewTransformationBasedOnLogicalOperator(query, condition, allConditions.size(), action, message);
                 return true;
             } else if (condition.getLeftSideDataType() != ConditionDataType.COLUMN && condition.getRightSideDataType() != ConditionDataType.COLUMN) {
-                query.addTransformation(new Transformation(query.getCurrentQuery(),
-                        query.getCurrentQuery(),
-                        QueryHandler.restoreSpaces(query.getCurrentQuery().substring(condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt()), condition.getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
+                query.addTransformation(new Transformation(query.getOutputQuery(),
+                        query.getOutputQuery(),
+                        QueryHandler.restoreSpaces(query.getOutputQuery().substring(condition.getStartAt()) + query.getOutputQuery().substring(condition.getStopAt()), condition.getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
                         action,
                         false,
                         null
@@ -156,14 +156,14 @@ public class ConditionItem {
                         String newQueryString;
 
                         if (conditions.get(x).get(j).getLeftLogicalOperatorStartAt() != -1) {
-                            newQueryString = (query.getCurrentQuery().substring(0, conditions.get(x).get(j).getLeftLogicalOperatorStartAt()) + query.getCurrentQuery().substring(conditions.get(x).get(j).getStopAt())).trim();
+                            newQueryString = (query.getOutputQuery().substring(0, conditions.get(x).get(j).getLeftLogicalOperatorStartAt()) + query.getOutputQuery().substring(conditions.get(x).get(j).getStopAt())).trim();
                         } else if (conditions.get(x).get(j).getRightLogicalOperatorStartAt() != -1) {
-                            newQueryString = (query.getCurrentQuery().substring(0, conditions.get(x).get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(x).get(j).getRightLogicalOperatorStopAt() + 1)).trim();
+                            newQueryString = (query.getOutputQuery().substring(0, conditions.get(x).get(j).getStartAt()) + query.getOutputQuery().substring(conditions.get(x).get(j).getRightLogicalOperatorStopAt() + 1)).trim();
                         } else {
-                            newQueryString = (query.getCurrentQuery().substring(0, conditions.get(x).get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(x).get(j).getStopAt())).trim();
+                            newQueryString = (query.getOutputQuery().substring(0, conditions.get(x).get(j).getStartAt()) + query.getOutputQuery().substring(conditions.get(x).get(j).getStopAt())).trim();
                         }
 
-                        query.addTransformation(new Transformation(query.getCurrentQuery(),
+                        query.addTransformation(new Transformation(query.getOutputQuery(),
                                 newQueryString,
                                 UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION",
                                 Action.JoinConditionTransformation,
@@ -179,7 +179,7 @@ public class ConditionItem {
     }
 
     public static boolean duplicatesExists(Query query, DatabaseMetadata metadata, List<ConditionItem> conditions) {
-        int whereStartsAt = query.getCurrentQuery().indexOf("WHERE");
+        int whereStartsAt = query.getOutputQuery().indexOf("WHERE");
         for (int i = 0; i < conditions.size() - 1; i++) {
             if (conditions.get(i).isNot() || conditions.get(i).getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
             for (int j = i + 1; j < conditions.size(); j++) {
@@ -194,16 +194,16 @@ public class ConditionItem {
                                 whereConditionSize++;
                             }
                         }
-                        newQueryString = whereConditionSize == 1 ? (query.getCurrentQuery().substring(0, whereStartsAt) + query.getCurrentQuery().substring(conditions.get(j).getStopAt()).trim()).trim() :
-                                (query.getCurrentQuery().substring(0, conditions.get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(j).getStopAt())).trim();
+                        newQueryString = whereConditionSize == 1 ? (query.getOutputQuery().substring(0, whereStartsAt) + query.getOutputQuery().substring(conditions.get(j).getStopAt()).trim()).trim() :
+                                (query.getOutputQuery().substring(0, conditions.get(j).getStartAt()) + query.getOutputQuery().substring(conditions.get(j).getStopAt())).trim();
                     } else if (conditions.get(j).getLeftLogicalOperatorStartAt() != -1) {
-                        newQueryString = (query.getCurrentQuery().substring(0, conditions.get(j).getLeftLogicalOperatorStartAt()) + query.getCurrentQuery().substring(conditions.get(j).getStopAt())).trim();
+                        newQueryString = (query.getOutputQuery().substring(0, conditions.get(j).getLeftLogicalOperatorStartAt()) + query.getOutputQuery().substring(conditions.get(j).getStopAt())).trim();
                     } else if (conditions.get(j).getRightLogicalOperatorStartAt() != -1) {
-                        newQueryString = (query.getCurrentQuery().substring(0, conditions.get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(j).getRightLogicalOperatorStopAt() + 1)).trim();
+                        newQueryString = (query.getOutputQuery().substring(0, conditions.get(j).getStartAt()) + query.getOutputQuery().substring(conditions.get(j).getRightLogicalOperatorStopAt() + 1)).trim();
                     } else {
-                        newQueryString = (query.getCurrentQuery().substring(0, conditions.get(j).getStartAt()) + query.getCurrentQuery().substring(conditions.get(j).getStopAt())).trim();
+                        newQueryString = (query.getOutputQuery().substring(0, conditions.get(j).getStartAt()) + query.getOutputQuery().substring(conditions.get(j).getStopAt())).trim();
                     }
-                    query.addTransformation(new Transformation(query.getCurrentQuery(),
+                    query.addTransformation(new Transformation(query.getOutputQuery(),
                             newQueryString,
                             UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION",
                             Action.JoinConditionTransformation,

@@ -18,12 +18,12 @@ public class JoinConditionTransformation extends QueryHandler {
 
     @Override
     public boolean shouldTransform(Query query) {
-        return query.getCurrentQuery().contains("JOIN");
+        return query.getOutputQuery().contains("JOIN");
     }
 
     @Override
     public Query transformQuery(final DatabaseMetadata metadata, Query query) {
-        TSqlParser parser = parseQuery(query.getCurrentQuery());
+        TSqlParser parser = parseQuery(query.getOutputQuery());
         ParseTree select = parser.select_statement();
         final List<ConditionItem> leftJoinConditions = new ArrayList<>();
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
@@ -77,8 +77,8 @@ public class JoinConditionTransformation extends QueryHandler {
         }
 
         if (!foundDuplicateCondition) {
-            query.addTransformation(new Transformation(query.getCurrentQuery(),
-                    query.getCurrentQuery(),
+            query.addTransformation(new Transformation(query.getOutputQuery(),
+                    query.getOutputQuery(),
                     "OK",
                     Action.JoinConditionTransformation,
                     false,

@@ -37,12 +37,12 @@ public class GroupByTest {
     @ParameterizedTest(name = "doFindNecessaryGroupByOneRunTest {index} query = {0}")
     @MethodSource("doFindNecessaryGroupBySource")
     void doFindNecessaryGroupByOneRunTest(String requestQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
         assertFalse(query.isChanged());
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
     }
@@ -50,24 +50,24 @@ public class GroupByTest {
     @ParameterizedTest(name = "doFindUnnecessaryGroupByOneRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryGroupBySource")
     void doFindUnnecessaryGroupByOneRunTest(String requestQuery, String resultQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
         assertTrue(query.isChanged());
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " GROUP BY", query.getQueryTransforms().get(1).get(0).getMessage());
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
     }
 
     @ParameterizedTest(name = "doFindUnnecessaryGroupByFullRunTest {index} query = {0}, resultQuery = {2}, transformationsInFirstRun = {3}, transformationsSecondInRun = {4}")
     @MethodSource("doFindUnnecessaryGroupBySource")
     void doFindUnnecessaryGroupByFullRunTest(String requestQuery, String oneRunResultQuery, String fullRunResultQuery, int transformationsInFirstRun, int transformationsInSecondRun) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
         assertEquals(query.getCurrentRunNumber(), 2);
         assertNotNull(query.getQueryTransforms());
         assertEquals(query.getQueryTransforms().get(1).size(), transformationsInFirstRun);
@@ -79,14 +79,14 @@ public class GroupByTest {
     @ParameterizedTest(name = "doFindRewritableAggregateFunctionsTest {index} query = {0}, resultQuery = {1}, message = {2}")
     @MethodSource("doFindRewritableAggregateFunctionsSource")
     void doFindRewrittenableAggregateFunctionsTest(String requestQuery, String resultQuery, String message) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
         assertTrue(query.isChanged());
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
         assertEquals(query.getQueryTransforms().get(1).get(0).getMessage(), message);
     }
 

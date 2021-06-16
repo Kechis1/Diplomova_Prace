@@ -25,8 +25,8 @@ public class Transformation {
 
     public static Query addNewTransformationBasedOnLogicalOperator(Query query, ConditionItem condition, int conditionSize, Action action, String message) {
         if ((condition.getLeftLogicalOperator() != null && condition.getLeftLogicalOperator().equals("OR")) || (condition.getRightLogicalOperator() != null && condition.getRightLogicalOperator().equals("OR"))) {
-            query.addTransformation(new Transformation(query.getCurrentQuery(),
-                    query.getCurrentQuery(),
+            query.addTransformation(new Transformation(query.getOutputQuery(),
+                    query.getOutputQuery(),
                     message + " " + UnnecessaryStatementException.messageConditionIsAlwaysTrue,
                     action,
                     false,
@@ -38,17 +38,17 @@ public class Transformation {
         String newQuery;
 
         if (conditionSize == 1) {
-            newQuery = (query.getCurrentQuery().substring(0, (query.getCurrentQuery().substring(0, condition.getStartAt()).lastIndexOf("WHERE"))) + query.getCurrentQuery().substring(condition.getStopAt()).trim()).trim();
+            newQuery = (query.getOutputQuery().substring(0, (query.getOutputQuery().substring(0, condition.getStartAt()).lastIndexOf("WHERE"))) + query.getOutputQuery().substring(condition.getStopAt()).trim()).trim();
         } else {
             if (condition.getRightLogicalOperator() != null) {
-                newQuery = (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getRightLogicalOperatorStopAt() + 2)).trim();
+                newQuery = (query.getOutputQuery().substring(0, condition.getStartAt()) + query.getOutputQuery().substring(condition.getRightLogicalOperatorStopAt() + 2)).trim();
             } else if (condition.getLeftLogicalOperator() != null) {
-                newQuery = (query.getCurrentQuery().substring(0, condition.getLeftLogicalOperatorStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim();
+                newQuery = (query.getOutputQuery().substring(0, condition.getLeftLogicalOperatorStartAt()) + query.getOutputQuery().substring(condition.getStopAt())).trim();
             } else {
-                newQuery = (query.getCurrentQuery().substring(0, condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt())).trim();
+                newQuery = (query.getOutputQuery().substring(0, condition.getStartAt()) + query.getOutputQuery().substring(condition.getStopAt())).trim();
             }
         }
-        query.addTransformation(new Transformation(query.getCurrentQuery(),
+        query.addTransformation(new Transformation(query.getOutputQuery(),
                 newQuery,
                 UnnecessaryStatementException.messageUnnecessaryStatement + " " + message + " CONDITION",
                 action,

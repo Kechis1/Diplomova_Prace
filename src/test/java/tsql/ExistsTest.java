@@ -38,12 +38,12 @@ public class ExistsTest {
     @ParameterizedTest(name = "doFindNecessaryExistsTest {index} query = {0}")
     @MethodSource("doFindNecessaryExistsSource")
     void doFindNecessaryExistsTest(String requestQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
         assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertFalse(query.isChanged());
     }
@@ -51,12 +51,12 @@ public class ExistsTest {
     @ParameterizedTest(name = "doFindUnnecessaryExistsOneRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryExistsSource")
     void doFindUnnecessaryExistsOneRunTest(String requestQuery, String resultQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS CONDITION", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
@@ -65,10 +65,10 @@ public class ExistsTest {
     @ParameterizedTest(name = "doFindUnnecessaryExistsFullRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryExistsSource")
     void doFindUnnecessaryExistsFullRunTest(String requestQuery, String resultQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
         assertEquals(query.getCurrentRunNumber(), 2);
         assertNotNull(query.getQueryTransforms());
         assertEquals(query.getQueryTransforms().get(1).size(), 3);
@@ -81,13 +81,13 @@ public class ExistsTest {
     @MethodSource("doFindUnnecessaryExistsBasedOnRecordsCountSource")
     void doFindUnnecessaryExistsBasedOnRecordsCountTest(String requestQuery, int recordsCount, String resultQuery) {
         DatabaseTable table = metadata.findTable("STUDUJE", "SDT");
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         table.setRecordsCount(recordsCount);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " EXISTS CONDITION", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
@@ -99,11 +99,11 @@ public class ExistsTest {
         DatabaseTable table = metadata.findTable("STUDUJE", "SDT");
         ColumnItem column = table.findColumn("PID");
         column.setNullable(true);
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
         assertFalse(query.isChanged());
@@ -112,12 +112,12 @@ public class ExistsTest {
     @ParameterizedTest(name = "doExistsWhereResultIsEmptySetTest {index} query = {0}, condition = {1}")
     @MethodSource("doExistsWhereResultIsEmptySetSource")
     void doExistsWhereResultIsEmptySetTest(String requestQuery, String condition) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
         assertEquals(condition + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet, query.getQueryTransforms().get(1).get(0).getMessage());
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertFalse(query.isChanged());
     }

@@ -14,12 +14,12 @@ public class WhereComparisonTransformation extends QueryHandler {
 
     @Override
     public boolean shouldTransform(Query query) {
-        return query.getCurrentQuery().contains("WHERE");
+        return query.getOutputQuery().contains("WHERE");
     }
 
     @Override
     public Query transformQuery(final DatabaseMetadata metadata, Query query) {
-        TSqlParser parser = parseQuery(query.getCurrentQuery());
+        TSqlParser parser = parseQuery(query.getOutputQuery());
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = TSqlParseWalker.findWhereConditions(metadata, select);
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
@@ -29,8 +29,8 @@ public class WhereComparisonTransformation extends QueryHandler {
         if (foundError) {
             return query;
         }
-        query.addTransformation(new Transformation(query.getCurrentQuery(),
-                query.getCurrentQuery(),
+        query.addTransformation(new Transformation(query.getOutputQuery(),
+                query.getOutputQuery(),
                 "OK",
                 Action.WhereComparisonTransformation,
                 false,

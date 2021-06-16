@@ -36,11 +36,11 @@ public class SelectClauseTest {
     @ParameterizedTest(name = "doFindNecessarySelectClauseTest {index} query = {0}")
     @MethodSource("doFindNecessarySelectClauseSource")
     void doFindNecessarySelectClauseTest(String requestQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
         assertFalse(query.isChanged());
@@ -49,13 +49,13 @@ public class SelectClauseTest {
     @ParameterizedTest(name = "doFindConstantsInSelectClauseOneRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindConstantsInSelectClauseSource")
     void doFindConstantsInSelectClauseOneRunTest(String requestQuery, String resultQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
         assertTrue(query.getQueryTransforms().get(1).get(0).getMessage().contains(UnnecessaryStatementException.messageConstant));
         assertFalse(query.isChanged());
     }
@@ -63,13 +63,13 @@ public class SelectClauseTest {
     @ParameterizedTest(name = "doFindDuplicatesInSelectClauseOneRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindDuplicatesInSelectClauseSource")
     void doFindDuplicatesInSelectClauseOneRunTest(String requestQuery, String resultQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
         assertTrue(query.getQueryTransforms().get(1).get(0).getMessage().contains(UnnecessaryStatementException.messageDuplicateAttribute));
         assertFalse(query.isChanged());
     }
@@ -77,12 +77,12 @@ public class SelectClauseTest {
     @ParameterizedTest(name = "doFindUnnecessaryAttributeInSelectThatCanBeRewrittenTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryAttributeInSelectThatCanBeRewrittenSource")
     void doFindUnnecessaryAttributeInSelectThatCanBeRewrittenTest(String requestQuery, String resultQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals(UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                 query.getQueryTransforms().get(1).get(0).getMessage());

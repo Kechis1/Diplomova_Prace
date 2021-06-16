@@ -36,11 +36,11 @@ public class JoinConditionTest {
     @ParameterizedTest(name = "doFindNecessaryJoinConditionOneRunTest {index} query = {0}")
     @MethodSource("doFindNecessaryJoinConditionSource")
     void doFindNecessaryJoinConditionOneRunTest(String requestQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
         assertFalse(query.isChanged());
@@ -49,12 +49,12 @@ public class JoinConditionTest {
     @ParameterizedTest(name = "doFindUnnecessaryJoinConditionOneRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryJoinConditionSource")
     void doFindUnnecessaryJoinConditionOneRunTest(String requestQuery, String resultQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " DUPLICATE CONDITION", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
@@ -63,10 +63,10 @@ public class JoinConditionTest {
     @ParameterizedTest(name = "doFindUnnecessaryJoinConditionFullRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryJoinConditionSource")
     void doFindUnnecessaryJoinConditionFullRunTest(String requestQuery, String resultQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
         assertEquals(query.getCurrentRunNumber(), 2);
         assertNotNull(query.getQueryTransforms());
         assertEquals(query.getQueryTransforms().get(1).size(), 4);

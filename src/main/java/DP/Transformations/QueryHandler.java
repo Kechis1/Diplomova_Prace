@@ -9,6 +9,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,13 +35,25 @@ public abstract class QueryHandler implements ITransformation {
     }
 
     private void normalizeQuery(Query query) {
-        String validatedQuery = getRidOfInvalidCommas(query.getCurrentQuery());
+        String validatedQuery = getRidOfInvalidCommas(query.getOutputQuery());
         TSqlParser parser = parseQuery(validatedQuery);
         ParseTree select = parser.select_statement();
         String parsedQuery = select.getText();
+        parsedQuery = restoreConstants(query.getOriginalQuery(), parsedQuery);
         parsedQuery = restoreSpaces(validatedQuery, parsedQuery);
-        query.setCurrentQuery(parsedQuery);
+        query.setOutputQuery(parsedQuery);
         query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).setOutputQuery(parsedQuery);
+    }
+
+    public static String restoreConstants(String from, String to) {
+        String output = "";
+        Pattern p = Pattern.compile("'([^']*)'");
+        Matcher m = p.matcher(from);
+        while (m.find()) {
+            output = to.replaceAll("'" + m.group(1).toUpperCase() + "'", "'" + m.group(1) + "'");
+        }
+        if (output.equals("")) return to;
+        return output;
     }
 
     public static String restoreSpaces(String withSpaces, String withoutSpaces) {

@@ -36,11 +36,11 @@ public class BetweenTest {
     @ParameterizedTest(name = "doFindNecessaryBetweenOneRunTest {index} query = {0}")
     @MethodSource("doFindNecessaryBetweenSource")
     void doFindNecessaryBetweenOneRunTest(String requestQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
         assertFalse(query.isChanged());
@@ -49,11 +49,11 @@ public class BetweenTest {
     @ParameterizedTest(name = "doBetweenWhereResultIsEmptySetTest {index} query = {0}, condition = {1}")
     @MethodSource("doBetweenWhereResultIsEmptySetSource")
     void doBetweenWhereResultIsEmptySetTest(String requestQuery, String condition) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals(condition + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet, query.getQueryTransforms().get(1).get(0).getMessage());
         assertFalse(query.isChanged());
@@ -62,12 +62,12 @@ public class BetweenTest {
     @ParameterizedTest(name = "doFindUnnecessaryBetweenOneRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryBetweenSource")
     void doFindUnnecessaryBetweenOneRunTest(String requestQuery, String resultQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " BETWEEN CONDITION", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
@@ -76,10 +76,10 @@ public class BetweenTest {
     @ParameterizedTest(name = "doFindUnnecessaryBetweenFullRunTest {index} query = {0}, resultQuery = {2}")
     @MethodSource("doFindUnnecessaryBetweenSource")
     void doFindUnnecessaryBetweenFullRunTest(String requestQuery, String oneRunResultQuery, String fullRunResultQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
         assertEquals(query.getCurrentRunNumber(), 2);
         assertNotNull(query.getQueryTransforms());
         assertEquals(query.getQueryTransforms().get(1).size(), 3);

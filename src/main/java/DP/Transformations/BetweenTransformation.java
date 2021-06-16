@@ -20,12 +20,12 @@ public class BetweenTransformation extends QueryHandler {
 
     @Override
     public boolean shouldTransform(Query query) {
-        return query.getCurrentQuery().contains("BETWEEN");
+        return query.getOutputQuery().contains("BETWEEN");
     }
 
     @Override
     public Query transformQuery(final DatabaseMetadata metadata, Query query) {
-        TSqlParser parser = parseQuery(query.getCurrentQuery());
+        TSqlParser parser = parseQuery(query.getOutputQuery());
         ParseTree select = parser.select_statement();
         final List<ConditionItem> conditions = TSqlParseWalker.findWhereConditions(metadata, select);
         final List<ConditionItem> betweenConditions = ConditionItem.filterByOperator(conditions, ConditionOperator.BETWEEN);
@@ -60,9 +60,9 @@ public class BetweenTransformation extends QueryHandler {
             }
 
             if (currentNecessary && currentColumn) {
-                query.addTransformation(new Transformation(query.getCurrentQuery(),
-                        query.getCurrentQuery(),
-                        QueryHandler.restoreSpaces(query.getCurrentQuery().substring(condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt()), condition.getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
+                query.addTransformation(new Transformation(query.getOutputQuery(),
+                        query.getOutputQuery(),
+                        QueryHandler.restoreSpaces(query.getOutputQuery().substring(condition.getStartAt()) + query.getOutputQuery().substring(condition.getStopAt()), condition.getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
                         Action.BetweenTransformation,
                         false,
                         null
@@ -73,8 +73,8 @@ public class BetweenTransformation extends QueryHandler {
             }
         }
 
-        query.addTransformation(new Transformation(query.getCurrentQuery(),
-                query.getCurrentQuery(),
+        query.addTransformation(new Transformation(query.getOutputQuery(),
+                query.getOutputQuery(),
                 "OK",
                 Action.BetweenTransformation,
                 false,

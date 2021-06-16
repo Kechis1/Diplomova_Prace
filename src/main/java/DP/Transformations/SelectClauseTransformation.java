@@ -18,12 +18,12 @@ public class SelectClauseTransformation extends QueryHandler {
 
     @Override
     public boolean shouldTransform(Query query) {
-        return query.getCurrentQuery().contains("SELECT");
+        return query.getOutputQuery().contains("SELECT");
     }
 
     @Override
     public Query transformQuery(final DatabaseMetadata metadata, Query query) {
-        TSqlParser parser = parseQuery(query.getCurrentQuery());
+        TSqlParser parser = parseQuery(query.getOutputQuery());
         ParseTree select = parser.select_statement();
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
         final List<ExistsItem> foundExistsNotConstant = TSqlParseWalker.findExistsNotConstant(select);
@@ -31,8 +31,8 @@ public class SelectClauseTransformation extends QueryHandler {
         DatabaseMetadata metadataWithTables = metadata.withTables(allTables);
 
         if (!foundExistsNotConstant.isEmpty()) {
-            query.addTransformation(new Transformation(query.getCurrentQuery(),
-                    (query.getCurrentQuery().substring(0, foundExistsNotConstant.get(0).getSelectListStartAt()) + "1" + query.getCurrentQuery().substring(foundExistsNotConstant.get(0).getSelectListStopAt() + 1)).trim(),
+            query.addTransformation(new Transformation(query.getOutputQuery(),
+                    (query.getOutputQuery().substring(0, foundExistsNotConstant.get(0).getSelectListStartAt()) + "1" + query.getOutputQuery().substring(foundExistsNotConstant.get(0).getSelectListStopAt() + 1)).trim(),
                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                     Action.SelectClauseTransformation,
                     true,
@@ -63,8 +63,8 @@ public class SelectClauseTransformation extends QueryHandler {
                         bothInSelect++;
                     }
                     if (bothInSelect == 1) {
-                        query.addTransformation(new Transformation(query.getCurrentQuery(),
-                                query.getCurrentQuery(),
+                        query.addTransformation(new Transformation(query.getOutputQuery(),
+                                query.getOutputQuery(),
                                 UnnecessaryStatementException.messageDuplicateAttribute,
                                 Action.SelectClauseTransformation,
                                 false,
@@ -81,14 +81,14 @@ public class SelectClauseTransformation extends QueryHandler {
                             String value = condition.getLeftSideDataType() != ConditionDataType.COLUMN ? condition.getLeftSideValue() : condition.getRightSideValue();
                             String newCurrentQuery;
                             if (item.getLeftSideColumnItem().equals(inSelect.get(0))) {
-                                newCurrentQuery = (query.getCurrentQuery().substring(0, columnInSelect.getStartAt()) + value + " AS " + columnInSelect.getName() + query.getCurrentQuery().substring(columnInSelect.getStopAt() + 1, item.getStartAt())
-                                    + item.getRightSideFullCondition() + " " + item.getOperator() + " " + value + query.getCurrentQuery().substring(item.getStopAt())).trim();
+                                newCurrentQuery = (query.getOutputQuery().substring(0, columnInSelect.getStartAt()) + value + " AS " + columnInSelect.getName() + query.getOutputQuery().substring(columnInSelect.getStopAt() + 1, item.getStartAt())
+                                    + item.getRightSideFullCondition() + " " + item.getOperator() + " " + value + query.getOutputQuery().substring(item.getStopAt())).trim();
                             } else {
-                                newCurrentQuery = (query.getCurrentQuery().substring(0, columnInSelect.getStartAt()) + value + " AS " + columnInSelect.getName() + query.getCurrentQuery().substring(columnInSelect.getStopAt() + 1, item.getStartAt())
-                                        + item.getLeftSideFullCondition() + " " + item.getOperator() + " " + value + query.getCurrentQuery().substring(item.getStopAt())).trim();
+                                newCurrentQuery = (query.getOutputQuery().substring(0, columnInSelect.getStartAt()) + value + " AS " + columnInSelect.getName() + query.getOutputQuery().substring(columnInSelect.getStopAt() + 1, item.getStartAt())
+                                        + item.getLeftSideFullCondition() + " " + item.getOperator() + " " + value + query.getOutputQuery().substring(item.getStopAt())).trim();
                             }
 
-                            query.addTransformation(new Transformation(query.getCurrentQuery(),
+                            query.addTransformation(new Transformation(query.getOutputQuery(),
                                     newCurrentQuery,
                                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                                     Action.SelectClauseTransformation,
@@ -118,8 +118,8 @@ public class SelectClauseTransformation extends QueryHandler {
                                 value = item.getRightSideDataType() == ConditionDataType.STRING || item.getRightSideDataType() == ConditionDataType.BOOLEAN ? "'" + item.getRightSideValue() + "'" : item.getRightSideValue();
                             }
 
-                            query.addTransformation(new Transformation(query.getCurrentQuery(),
-                                    (query.getCurrentQuery().substring(0, column.getStartAt()) + value + " AS " + column.getName() + query.getCurrentQuery().substring(column.getStopAt() + 1)).trim(),
+                            query.addTransformation(new Transformation(query.getOutputQuery(),
+                                    (query.getOutputQuery().substring(0, column.getStartAt()) + value + " AS " + column.getName() + query.getOutputQuery().substring(column.getStopAt() + 1)).trim(),
                                     UnnecessaryStatementException.messageUnnecessarySelectClause + " ATTRIBUTE " + UnnecessaryStatementException.messageCanBeRewrittenTo + " CONSTANT",
                                     Action.SelectClauseTransformation,
                                     true,
@@ -134,8 +134,8 @@ public class SelectClauseTransformation extends QueryHandler {
 
         ColumnItem equals = ColumnItem.duplicatesExists(allColumnsInSelect);
         if (equals != null) {
-            query.addTransformation(new Transformation(query.getCurrentQuery(),
-                    query.getCurrentQuery(),
+            query.addTransformation(new Transformation(query.getOutputQuery(),
+                    query.getOutputQuery(),
                     UnnecessaryStatementException.messageDuplicateAttribute,
                     Action.SelectClauseTransformation,
                     false,
@@ -145,8 +145,8 @@ public class SelectClauseTransformation extends QueryHandler {
         }
         for (ColumnItem item : allColumnsInSelect) {
             if (item.isConstant() && !foundUnion && !query.IgnoredOperatorExists(Action.SelectClauseTransformation, item.getValue() + " AS " + item.getName())) {
-                query.addTransformation(new Transformation(query.getCurrentQuery(),
-                        query.getCurrentQuery(),
+                query.addTransformation(new Transformation(query.getOutputQuery(),
+                        query.getOutputQuery(),
                         UnnecessaryStatementException.messageConstant + " " + (item.getValue() + (item.getName() == null ? "" : " AS " + item.getName())),
                         Action.SelectClauseTransformation,
                         false,
@@ -156,8 +156,8 @@ public class SelectClauseTransformation extends QueryHandler {
             }
         }
 
-        query.addTransformation(new Transformation(query.getCurrentQuery(),
-                query.getCurrentQuery(),
+        query.addTransformation(new Transformation(query.getOutputQuery(),
+                query.getOutputQuery(),
                 "OK",
                 Action.SelectClauseTransformation,
                 false,

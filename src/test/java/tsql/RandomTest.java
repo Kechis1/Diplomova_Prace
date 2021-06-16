@@ -34,7 +34,7 @@ public class RandomTest {
     @ParameterizedTest(name = "doFindUnnecessaryBetweenFullRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryBetweenSource")
     void doFindUnnecessaryBetweenFullRunTest(String requestQuery, String fullRunResultQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
         for (int i = 1; i <= query.getCurrentRunNumber(); i++) {
             System.out.println("Run (" + i + "): ");
@@ -46,7 +46,7 @@ public class RandomTest {
                 System.out.println("--");
             }
         }
-        assertEquals(query.getCurrentQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
     }
 
     public static Stream<Arguments> doFindUnnecessaryBetweenSource() {
@@ -129,22 +129,8 @@ public class RandomTest {
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'Petr' HAVING sum(SID) > 3 ORDER BY SID",
                         "SELECT 'Petr' as jmeno FROM STUDENT WHERE jmeno = 'Petr' HAVING sum(SID) > 3 ORDER BY SID"),*/
 
-               /* Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'TRUE'",
-                        "SELECT 'TRUE' as jmeno FROM STUDENT where jmeno = 'TRUE'"),
-                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'FALSE'",
-                        "SELECT 'FALSE' as jmeno FROM STUDENT where jmeno = 'FALSE'"),*/
-                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO IS NOT NULL",
-                        "SELECT jmeno FROM STUDENT where jmeno IS NOT NULL"),
-                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO IS NULL",
-                        "SELECT NULL AS jmeno FROM STUDENT where jmeno IS NULL")/*,
-                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO LIKE 'ADAM'",
-                        "SELECT 'ADAM' as jmeno FROM STUDENT where jmeno LIKE 'ADAM'"),
-                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO NOT LIKE 'ADAM'",
-                        "SELECT jmeno FROM STUDENT where jmeno NOT LIKE 'ADAM'"),
-                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO BETWEEN 'ADAM' AND 'ADAM'",
-                        "SELECT 'ADAM' as jmeno FROM STUDENT where jmeno BETWEEN 'ADAM' AND 'ADAM'"),
-                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO NOT BETWEEN 'ADAM' AND 'ADAM'",
-                        "SELECT jmeno FROM STUDENT where jmeno NOT BETWEEN 'ADAM' AND 'ADAM'")*/);
+                Arguments.arguments("SELECT * FROM STUDENT WHERE JMENO = 'Adam'",
+                        "SELECT * FROM STUDENT WHERE JMENO = 'Adam'"));
 
 
 /*

@@ -18,12 +18,12 @@ public class ExistsTransformation extends QueryHandler {
 
     @Override
     public boolean shouldTransform(Query query) {
-        return query.getCurrentQuery().contains("EXISTS");
+        return query.getOutputQuery().contains("EXISTS");
     }
 
     @Override
     public Query transformQuery(final DatabaseMetadata metadata, Query query) {
-        TSqlParser parser = parseQuery(query.getCurrentQuery());
+        TSqlParser parser = parseQuery(query.getOutputQuery());
         ParseTree select = parser.select_statement();
         DatabaseTable fromTable = TSqlParseWalker.findFromTable(metadata, select).get(0);
         TSqlParseWalker.findTablesList(metadata, select);
@@ -40,9 +40,9 @@ public class ExistsTransformation extends QueryHandler {
 
                 return Transformation.addNewTransformationBasedOnLogicalOperator(query, condition, conditions.size(), Action.ExistsTransformation, "EXISTS");
             } else if (condition.getExistsItem().isNot() && condition.getExistsItem().getTable() == null) {
-                query.addTransformation(new Transformation(query.getCurrentQuery(),
-                        query.getCurrentQuery(),
-                        QueryHandler.restoreSpaces(query.getCurrentQuery().substring(condition.getStartAt()) + query.getCurrentQuery().substring(condition.getStopAt()), condition.getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
+                query.addTransformation(new Transformation(query.getOutputQuery(),
+                        query.getOutputQuery(),
+                        QueryHandler.restoreSpaces(query.getOutputQuery().substring(condition.getStartAt()) + query.getOutputQuery().substring(condition.getStopAt()), condition.getFullCondition()) + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet,
                         Action.ExistsTransformation,
                         false,
                         null
@@ -50,8 +50,8 @@ public class ExistsTransformation extends QueryHandler {
                 return query;
             }
         }
-        query.addTransformation(new Transformation(query.getCurrentQuery(),
-                query.getCurrentQuery(),
+        query.addTransformation(new Transformation(query.getOutputQuery(),
+                query.getOutputQuery(),
                 "OK",
                 Action.ExistsTransformation,
                 false,

@@ -5,14 +5,18 @@ import DP.Transformations.*;
 import DP.antlr4.tsql.parser.TSqlParser;
 
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Main {
     private static final String pathToMetadata = "databases/db_student_studuje_predmet.json";
 
     public static void main(String[] args) {
         Scanner in = new Scanner(System.in);
-        String inQuery;
+        String inOriginalQuery;
+        String inTransformedQuery;
         String inPathToMetadata;
         boolean repeat;
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
@@ -20,11 +24,12 @@ public class Main {
 
         do {
             System.out.println("Enter query");
-            inQuery = in.nextLine().toUpperCase().trim();
-            if (inQuery.isEmpty()) {
+            inOriginalQuery = in.nextLine().trim();
+            inTransformedQuery = inOriginalQuery.toUpperCase();
+            if (inTransformedQuery.isEmpty()) {
                 repeat = true;
             } else {
-                TSqlParser parser = QueryHandler.parseQuery(inQuery);
+                TSqlParser parser = QueryHandler.parseQuery(inTransformedQuery);
                 parser.select_statement();
                 repeat = parser.getErrorHandler().inErrorRecoveryMode(parser);
             }
@@ -37,15 +42,15 @@ public class Main {
         } while (!inPathToMetadata.isEmpty() && is == null);
 
         if (inPathToMetadata.isEmpty()) {
-            runExample(inQuery, pathToMetadata);
+            runExample(inOriginalQuery, inTransformedQuery, pathToMetadata);
         } else {
-            runExample(inQuery, inPathToMetadata);
+            runExample(inOriginalQuery, inTransformedQuery, inPathToMetadata);
         }
     }
 
-    private static void runExample(String requestQuery, String requestMetadata) {
+    private static void runExample(String originalQuery, String requestQuery, String requestMetadata) {
         DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson(requestMetadata);
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(originalQuery, requestQuery, requestQuery);
 
         runChain(metadata, query);
     }
@@ -57,7 +62,7 @@ public class Main {
         printRuns(query);
 
         System.out.println("---");
-        System.out.println("Result query: " + query.getCurrentQuery());
+        System.out.println("Result query: " + query.getOutputQuery());
     }
 
     private static void runChain(Query query, QueryHandler chain) {
@@ -67,7 +72,7 @@ public class Main {
         printRuns(query);
 
         System.out.println("---");
-        System.out.println("Result query: " + query.getCurrentQuery());
+        System.out.println("Result query: " + query.getOutputQuery());
     }
 
     private static void printRuns(Query query) {

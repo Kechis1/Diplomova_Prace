@@ -32,7 +32,7 @@ public class PerformanceTestMain {
         for (int i = 0; i < queries.length; i++) {
             String queryText = queries[i].replaceAll("\\s", " ").trim().toUpperCase();
 
-            Query query = new Query(queryText, queryText);
+            Query query = new Query(queryText, queryText, queryText);
 
             TransformationBuilder builder = new TransformationBuilder(metadata);
 

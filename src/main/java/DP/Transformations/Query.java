@@ -4,15 +4,17 @@ import java.util.*;
 
 public class Query {
     String originalQuery;
-    String currentQuery;
+    String inputQuery;
+    String outputQuery;
     HashMap<Integer, List<Transformation>> queryTransformations;
     HashMap<Integer, Boolean> runs;
     int currentRunNumber;
     boolean changed = false;
 
-    public Query(String originalQuery, String currentQuery) {
+    public Query(String originalQuery, String inputQuery, String outputQuery) {
         this.originalQuery = originalQuery;
-        this.currentQuery = currentQuery;
+        this.inputQuery = QueryHandler.restoreConstants(originalQuery, inputQuery);
+        this.outputQuery = outputQuery;
     }
 
     public List<OperatorTransformation> getOperators() {
@@ -38,6 +40,14 @@ public class Query {
             }
         }
         return false;
+    }
+
+    public String getInputQuery() {
+        return inputQuery;
+    }
+
+    public void setInputQuery(String inputQuery) {
+        this.inputQuery = inputQuery;
     }
 
     public int getCurrentRunNumber() {
@@ -71,12 +81,12 @@ public class Query {
         this.originalQuery = originalQuery;
     }
 
-    public String getCurrentQuery() {
-        return currentQuery;
+    public String getOutputQuery() {
+        return outputQuery;
     }
 
-    public void setCurrentQuery(String currentQuery) {
-        this.currentQuery = currentQuery;
+    public void setOutputQuery(String outputQuery) {
+        this.outputQuery = outputQuery;
     }
 
     public HashMap<Integer, List<Transformation>> getQueryTransforms() {
@@ -105,9 +115,11 @@ public class Query {
         } else {
             transformations = new ArrayList<>();
         }
+        transformation.setInputQuery(QueryHandler.restoreConstants(getOriginalQuery(), transformation.getInputQuery()));
+        transformation.setOutputQuery(QueryHandler.restoreConstants(getOriginalQuery(), transformation.getOutputQuery()));
         transformations.add(transformation);
         this.queryTransformations.put(getCurrentRunNumber(), transformations);
-        setCurrentQuery(getQueryTransforms().get(getCurrentRunNumber()).get(getQueryTransforms().get(getCurrentRunNumber()).size() - 1).getOutputQuery());
+        setOutputQuery(getQueryTransforms().get(getCurrentRunNumber()).get(getQueryTransforms().get(getCurrentRunNumber()).size() - 1).getOutputQuery());
         if (transformation.isChanged()) {
             setChanged(true);
         }
@@ -133,7 +145,8 @@ public class Query {
     public String toString() {
         return "Query{" +
                 "originalQuery='" + originalQuery + '\'' +
-                ", currentQuery='" + currentQuery + '\'' +
+                ", inputQuery='" + inputQuery + '\'' +
+                ", outputQuery='" + outputQuery + '\'' +
                 ", runs=" + runs +
                 ", currentRunNumber=" + currentRunNumber +
                 ", changed=" + changed +

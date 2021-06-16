@@ -37,11 +37,11 @@ public class LikeTest {
     @ParameterizedTest(name = "doFindNecessaryLikeTest {index} query = {0}")
     @MethodSource("doFindNecessaryLikeSource")
     void doFindNecessaryLikeTest(String requestQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
         assertFalse(query.isChanged());
@@ -50,11 +50,11 @@ public class LikeTest {
     @ParameterizedTest(name = "doLikeWhereResultIsEmptySetTest {index} query = {0}, condition = {1}")
     @MethodSource("doLikeWhereResultIsEmptySetSource")
     void doExistsWhereResultIsEmptySetTest(String requestQuery, String condition) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals(condition + ": " + UnnecessaryStatementException.messageAlwaysReturnsEmptySet, query.getQueryTransforms().get(1).get(0).getMessage());
         assertFalse(query.isChanged());
@@ -63,13 +63,13 @@ public class LikeTest {
     @ParameterizedTest(name = "doFindUnnecessaryLikeOneRunTest {index} query = {0}, resultQuery = {1}")
     @MethodSource("doFindUnnecessaryLikeSource")
     void doFindUnnecessaryLikeOneRunTest(String requestQuery, String resultQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " LIKE CONDITION", query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
     }
@@ -77,10 +77,10 @@ public class LikeTest {
     @ParameterizedTest(name = "doFindUnnecessaryLikeFullRunTest {index} query = {0}, resultQuery = {1}, transformationsInFirstRun = {2}, transformationsSecondInRun = {3}")
     @MethodSource("doFindUnnecessaryLikeSource")
     void doFindUnnecessaryLikeFullRunTest(String requestQuery, String resultQuery, int transformationsInFirstRun, int transformationsInSecondRun) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
         assertEquals(query.getCurrentRunNumber(), 2);
         assertNotNull(query.getQueryTransforms());
         assertEquals(query.getQueryTransforms().get(1).size(), transformationsInFirstRun);

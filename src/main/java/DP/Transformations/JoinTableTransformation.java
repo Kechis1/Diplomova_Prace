@@ -16,12 +16,12 @@ public class JoinTableTransformation extends QueryHandler {
 
     @Override
     public boolean shouldTransform(Query query) {
-        return query.getCurrentQuery().contains("JOIN");
+        return query.getOutputQuery().contains("JOIN");
     }
 
     @Override
     public Query transformQuery(final DatabaseMetadata metadata, Query query) {
-        TSqlParser parser = parseQuery(query.getCurrentQuery());
+        TSqlParser parser = parseQuery(query.getOutputQuery());
         ParseTree select = parser.select_statement();
         final List<ColumnItem> allColumnsInSelect = TSqlParseWalker.findColumnsInSelect(metadata, select);
         final List<Boolean> isDistinctInSelect = TSqlParseWalker.findDistinctInSelect(select);
@@ -39,8 +39,8 @@ public class JoinTableTransformation extends QueryHandler {
         }
 
         if (isDistinctInSelect.isEmpty()) {
-            query.addTransformation(new Transformation(query.getCurrentQuery(),
-                    query.getCurrentQuery(),
+            query.addTransformation(new Transformation(query.getOutputQuery(),
+                    query.getOutputQuery(),
                     "OK",
                     Action.JoinTableTransformation,
                     false,
@@ -59,8 +59,8 @@ public class JoinTableTransformation extends QueryHandler {
                 allColumnsInSelect, true, metadata.setNullableColumns(innerConditions), true, fromTable.get(0));
 
         if (!foundRedundantJoin) {
-            query.addTransformation(new Transformation(query.getCurrentQuery(),
-                    query.getCurrentQuery(),
+            query.addTransformation(new Transformation(query.getOutputQuery(),
+                    query.getOutputQuery(),
                     "OK",
                     Action.JoinTableTransformation,
                     false,

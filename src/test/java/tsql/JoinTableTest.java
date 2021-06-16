@@ -42,11 +42,11 @@ public class JoinTableTest {
         DatabaseTable table = metadata.findTable("STUDENT", null);
         ColumnItem sId = table.findColumn("SID");
         sId.setNullable(true);
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
         assertFalse(query.isChanged());
@@ -55,11 +55,11 @@ public class JoinTableTest {
     @ParameterizedTest(name = "doFindNecessaryJoinTableOneRunTest {index} query = {0}")
     @MethodSource("doFindNecessaryJoinTableSource")
     void doFindNecessaryJoinTableOneRunTest(String requestQuery) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
-        assertEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals("OK", query.getQueryTransforms().get(1).get(0).getMessage());
         assertFalse(query.isChanged());
@@ -68,7 +68,7 @@ public class JoinTableTest {
     @ParameterizedTest(name = "doFindUnnecessaryJoinTableOneRunTest {index} query = {0}, resultQuery = {1}, message = {2}")
     @MethodSource("doFindUnnecessaryJoinTableSource")
     void doFindUnnecessaryJoinTableOneRunTest(String requestQuery, String resultQuery, String message) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         query.addRun(1, false);
         query.setCurrentRunNumber(1);
         transformation.transformQuery(metadata, query);
@@ -84,8 +84,8 @@ public class JoinTableTest {
         }
 
 
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
         assertTrue(query.getQueryTransforms() != null && query.getQueryTransforms().get(1).size() == 1);
         assertEquals(UnnecessaryStatementException.messageUnnecessaryStatement + " " + message, query.getQueryTransforms().get(1).get(0).getMessage());
         assertTrue(query.isChanged());
@@ -94,7 +94,7 @@ public class JoinTableTest {
     @ParameterizedTest(name = "doFindUnnecessaryJoinTableFullRunTest {index} query = {0}, resultQuery = {1}, message = {2}")
     @MethodSource("doFindUnnecessaryJoinTableSource")
     void doFindUnnecessaryJoinTableFullRunTest(String requestQuery, String resultQuery, String message) {
-        Query query = new Query(requestQuery, requestQuery);
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
         for (int i = 1; i <= query.getCurrentRunNumber(); i++) {
             System.out.println("Run (" + i + "): ");
@@ -107,8 +107,8 @@ public class JoinTableTest {
             }
         }
 
-        assertNotEquals(query.getCurrentQuery().toUpperCase(), query.getOriginalQuery().toUpperCase());
-        assertEquals(query.getCurrentQuery().toUpperCase(), resultQuery.toUpperCase());
+        assertNotEquals(query.getOutputQuery().toUpperCase(), query.getInputQuery().toUpperCase());
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
         assertEquals(query.getCurrentRunNumber(), 2);
         assertNotNull(query.getQueryTransforms());
         assertEquals(query.getQueryTransforms().get(1).size(), 3);

@@ -89,6 +89,37 @@ public class SelectClauseTest {
         assertTrue(query.isChanged());
     }
 
+    @ParameterizedTest(name = "doSelectClauseRandomTest {index} query = {0}, resultQuery = {1}")
+    @MethodSource("doSelectClauseRandomSource")
+    void doSelectClauseRandomTest(String requestQuery, String resultQuery) {
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
+        transformationBuilder.makeQuery(query);
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
+    }
+
+    public static Stream<Arguments> doSelectClauseRandomSource() {
+        return Stream.of(
+                Arguments.arguments("SELECT PDT.PID, STE.PID, PDT.JMENO FROM PREDMET PDT INNER JOIN STUDUJE STE ON PDT.PID = STE.PID WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS' HAVING sum(STE.SID) > 3 ORDER BY STE.SID",
+                        "SELECT PDT.PID, STE.PID, PDT.JMENO FROM PREDMET PDT INNER JOIN STUDUJE STE ON PDT.PID = STE.PID WHERE PDT.JMENO = 'DAIS' OR PDT.JMENO = 'UDBS' HAVING sum(STE.SID) > 3 ORDER BY STE.SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' AND JMENO = 'PETR' HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' AND JMENO = 'PETR' HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO, JMENO FROM STUDENT WHERE JMENO = 'ADAM' HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 'adam' as jmeno, 'adam' as jmeno FROM STUDENT where jmeno = 'adam' HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO, JMENO FROM STUDENT HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT jmeno, jmeno FROM STUDENT HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT 'AHOJ' FROM STUDENT HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 'ahoj' FROM STUDENT HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT 1 AS A FROM DBO.STUDENT HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 1 AS a FROM DBO.STUDENT HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT 1 FROM DBO.STUDENT HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 1 FROM DBO.STUDENT HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'Petr' HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 'Petr' as jmeno FROM STUDENT WHERE jmeno = 'Petr' HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT * FROM STUDENT WHERE JMENO = 'Adam'",
+                        "SELECT * FROM STUDENT WHERE JMENO = 'Adam'")
+        );
+    }
+
     public static Stream<Arguments> doFindDuplicatesInSelectClauseSource() {
         return Stream.of(
                 Arguments.arguments("SELECT PID, JMENO, JMENO FROM DBO.PREDMET",

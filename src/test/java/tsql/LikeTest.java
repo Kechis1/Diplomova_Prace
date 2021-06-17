@@ -89,6 +89,34 @@ public class LikeTest {
         assertTrue(query.isChanged());
     }
 
+    @ParameterizedTest(name = "doLikeRandomTest {index} query = {0}, resultQuery = {1}")
+    @MethodSource("doLikeRandomSource")
+    void doLikeRandomTest(String requestQuery, String resultQuery) {
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
+        transformationBuilder.makeQuery(query);
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
+    }
+
+    public static Stream<Arguments> doLikeRandomSource() {
+        return Stream.of(
+                Arguments.arguments("SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE stt.sID LIKE stt.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID",
+                        "SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'adam' AND 1 LIKE 1 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam'  HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 LIKE 1 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' AND 1 LIKE 1 AND ROK_NAROZENI = 2000 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' and ROK_NAROZENI = 2000 HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' OR JMENO = 'Emil' AND 1 LIKE 1 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT where jmeno = 'adam' OR JMENO = 'Emil'  HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' OR 1 LIKE 1 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT where jmeno = 'adam' or 1 like 1 HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 LIKE 1 AND JMENO = 'ADAM' HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 LIKE 1 OR JMENO = 'ADAM' HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT jmeno FROM STUDENT where 1 LIKE 1 or jmeno = 'adam' HAVING sum(SID) > 3 ORDER BY SID")
+        );
+    }
 
     public static Stream<Arguments> doFindUnnecessaryLikeSource() {
         return Stream.of(Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 LIKE 1",

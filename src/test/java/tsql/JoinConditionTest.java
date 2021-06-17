@@ -75,6 +75,40 @@ public class JoinConditionTest {
         assertTrue(query.isChanged());
     }
 
+    @ParameterizedTest(name = "doJoinConditionRandomTest {index} query = {0}, resultQuery = {1}")
+    @MethodSource("doJoinConditionRandomSource")
+    void doJoinConditionRandomTest(String requestQuery, String resultQuery) {
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
+        transformationBuilder.makeQuery(query);
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
+    }
+
+    public static Stream<Arguments> doJoinConditionRandomSource() {
+        return Stream.of(
+                Arguments.arguments("SELECT * FROM student JOIN STUDUJE ON 1 = DATEADD(DAY, 1, ROK_NAROZENI) HAVING sum(SID) > 3 ORDER BY STUDENT.SID",
+                    "SELECT * FROM student JOIN STUDUJE ON 1 = DATEADD(DAY, 1, ROK_NAROZENI) HAVING sum(SID) > 3 ORDER BY STUDENT.SID"),
+                Arguments.arguments("SELECT * FROM student JOIN STUDUJE ON 1 = DATEADD(DAY, 1, ROK_NAROZENI) OR 1 = 1 HAVING sum(STUDENT.SID) > 3 ORDER BY STUDENT.SID",
+                        "SELECT * FROM student JOIN STUDUJE ON 1 = DATEADD(DAY, 1, ROK_NAROZENI) OR 1 = 1 HAVING sum(STUDENT.SID) > 3 ORDER BY STUDENT.SID"),
+                Arguments.arguments("SELECT * FROM student x JOIN studuje y ON x.sID + 1 = y.sID + 1 HAVING sum(x.SID) > 3 ORDER BY x.SID",
+                        "SELECT * FROM student x JOIN studuje y ON x.sID + 1 = y.sID + 1 HAVING sum(x.SID) > 3 ORDER BY x.SID"),
+                Arguments.arguments("SELECT STT.SID FROM STUDENT STT JOIN STUDUJE SDE ON 1 = 1 WHERE ROK_NAROZENI = JMENO GROUP BY STT.SID HAVING SUM(STT.SID) > 3 ORDER BY STT.SID",
+                        "SELECT stt.sid FROM student stt JOIN studuje sde ON 1 = 1 WHERE ROK_NAROZENI = JMENO GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID AND 1 = 1 WHERE JMENO = 'adam' ORDER BY STUDUJE.SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID  where jmeno = 'adam' ORDER BY STUDUJE.SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'adam' ORDER BY STUDENT.SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' ORDER BY STUDENT.SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID AND 1 = 1 AND ROK_NAROZENI = '33' WHERE JMENO = 'ADAM' AND ROK_NAROZENI = 2000 ORDER BY STUDUJE.SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID AND ROK_NAROZENI = '33' where jmeno = 'adam' and ROK_NAROZENI = 2000 ORDER BY STUDUJE.SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT JOIN STUDUJE ON STUDENT.JMENO = 'ADAM' OR STUDENT.JMENO = 'Emil' AND 1 = 1 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT JOIN STUDUJE ON STUDENT.JMENO = 'ADAM' OR STUDENT.JMENO = 'Emil'  ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT JOIN STUDUJE ON STUDENT.JMENO = 'ADAM' OR 1 = 1 HAVING sum(STUDENT.SID) > 3 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT JOIN STUDUJE ON STUDENT.JMENO = 'ADAM' OR 1 = 1 HAVING sum(STUDENT.SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT JOIN STUDUJE ON 1 = 1 AND JMENO = 'ADAM' ORDER BY SID",
+                        "SELECT 'ADAM' as jmeno FROM STUDENT JOIN STUDUJE ON JMENO = 'ADAM' ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT JOIN STUDUJE ON 1 = 1 OR JMENO = 'ADAM' HAVING sum(STUDENT.SID) > 3 ORDER BY STUDENT.SID",
+                        "SELECT jmeno FROM STUDENT JOIN STUDUJE ON 1 = 1 OR JMENO = 'ADAM' HAVING sum(STUDENT.SID) > 3 ORDER BY STUDENT.SID")
+        );
+    }
 
     public static Stream<Arguments> doFindUnnecessaryJoinConditionSource() {
         return Stream.of(

@@ -89,6 +89,36 @@ public class WhereComparisonTest {
         assertFalse(query.isChanged());
     }
 
+    @ParameterizedTest(name = "doWhereComparisonWhereRandomTest {index} query = {0}, resultQuery = {1}")
+    @MethodSource("doWhereComparisonWhereRandomSource")
+    void doWhereComparisonWhereRandomTest(String requestQuery, String resultQuery) {
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
+        transformationBuilder.makeQuery(query);
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
+    }
+
+    public static Stream<Arguments> doWhereComparisonWhereRandomSource() {
+        return Stream.of(Arguments.arguments("SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE stt.sID = stt.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID",
+                "SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'adam' AND 1 = 1 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam'  HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 = 1 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' AND 1 = 1 AND ROK_NAROZENI = 2000 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' and ROK_NAROZENI = 2000 HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' OR JMENO = 'Emil' AND 1 = 1 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT where jmeno = 'adam' OR JMENO = 'Emil'  HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' OR 1 = 1 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT where jmeno = 'adam' or 1 = 1 HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 = 1 AND JMENO = 'ADAM' HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 = 1 OR JMENO = 'ADAM' HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT jmeno FROM STUDENT where 1 = 1 or jmeno = 'adam' HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT * FROM STUDENT STT JOIN STUDUJE SDE ON STT.SID = STT.SID WHERE SDE.SID LIKE STT.SID AND 1 = 1 HAVING sum(SID) > 3 ORDER BY STT.SID",
+                        "SELECT * FROM STUDENT STT JOIN STUDUJE SDE ON STT.SID = STT.SID WHERE SDE.SID LIKE STT.SID  HAVING sum(SID) > 3 ORDER BY STT.SID")
+                );
+    }
+
     public static Stream<Arguments> doFindUnnecessaryWhereComparisonSource() {
         return Stream.of(Arguments.arguments("SELECT * FROM DBO.PREDMET WHERE 1 = 1 GROUP BY PID HAVING SUM(PID) > 3 ORDER BY PID",
                 "SELECT * FROM DBO.PREDMET GROUP BY PID HAVING SUM(PID) > 3 ORDER BY PID",

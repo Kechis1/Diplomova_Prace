@@ -94,6 +94,33 @@ public class JoinTableTest {
         assertTrue(query.isChanged());
     }
 
+    @ParameterizedTest(name = "doJoinTableRandomTest {index} query = {0}, resultQuery = {1}")
+    @MethodSource("doJoinTableRandomSource")
+    void doJoinTableRandomTest(String requestQuery, String resultQuery) {
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
+        transformationBuilder.makeQuery(query);
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
+    }
+
+    public static Stream<Arguments> doJoinTableRandomSource() {
+        return Stream.of(
+                Arguments.arguments("SELECT DISTINCT predmet.jmeno FROM student JOIN (predmet LEFT JOIN studuje ON predmet.pID = studuje.pID) ON student.sID = studuje.sID",
+                        "SELECT DISTINCT predmet.jmeno FROM student JOIN (predmet LEFT JOIN studuje ON predmet.pID = studuje.pID) ON student.sID = studuje.sID"),
+                Arguments.arguments("SELECT DISTINCT STUDENT.SID FROM (STUDENT LEFT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID) INNER JOIN PREDMET ON STUDUJE.PID = PREDMET.PID",
+                        "SELECT DISTINCT STUDENT.SID FROM (STUDENT LEFT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID) INNER JOIN PREDMET ON STUDUJE.PID = PREDMET.PID"),
+                Arguments.arguments("SELECT DISTINCT PREDMET.JMENO, SUM(PREDMET.PID) FROM STUDENT JOIN PREDMET ON STUDENT.SID = PREDMET.PID WHERE PREDMET.PID > 3 AND STUDENT.SID > 3 OR STUDENT.JMENO = 'ADAM' GROUP BY PREDMET.PID HAVING MIN(STUDENT.SID) > 3 ORDER BY PREDMET.PID, STUDENT.SID",
+                        "SELECT DISTINCT PREDMET.JMENO, SUM(PREDMET.PID) FROM STUDENT JOIN PREDMET ON STUDENT.SID = PREDMET.PID WHERE PREDMET.PID > 3 AND STUDENT.SID > 3 OR STUDENT.JMENO = 'ADAM' GROUP BY PREDMET.PID HAVING MIN(STUDENT.SID) > 3 ORDER BY PREDMET.PID, STUDENT.SID"),
+                Arguments.arguments("SELECT DISTINCT STUDENT.SID FROM (STUDENT LEFT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID) INNER JOIN PREDMET ON STUDENT.SID = PREDMET.PID",
+                        "SELECT DISTINCT STUDENT.SID FROM (STUDENT LEFT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID) INNER JOIN PREDMET ON STUDENT.SID = PREDMET.PID"),
+                Arguments.arguments("SELECT DISTINCT STUDENT.SID FROM STUDENT LEFT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID INNER JOIN PREDMET ON STUDUJE.PID = PREDMET.PID",
+                        "SELECT DISTINCT STUDENT.SID FROM STUDENT LEFT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID INNER JOIN PREDMET ON STUDUJE.PID = PREDMET.PID"),
+                Arguments.arguments("SELECT DISTINCT STUDENT.SID FROM STUDENT LEFT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID INNER JOIN PREDMET ON STUDENT.SID = PREDMET.PID",
+                        "SELECT DISTINCT STUDENT.SID FROM STUDENT INNER JOIN PREDMET ON STUDENT.SID = PREDMET.PID"),
+                Arguments.arguments("SELECT DISTINCT STUDENT.* FROM STUDENT LEFT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID INNER JOIN PREDMET ON STUDENT.SID = PREDMET.PID LEFT JOIN STUDUJE s1 ON STUDENT.SID = 3",
+                        "SELECT DISTINCT STUDENT.* FROM STUDENT INNER JOIN PREDMET ON STUDENT.SID = PREDMET.PID")
+        );
+    }
+
     public static Stream<Arguments> doFindNecessaryJoinTableWithNullableSource() {
         return Stream.of(
                 Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO " +

@@ -90,6 +90,54 @@ public class GroupByTest {
         assertEquals(query.getQueryTransforms().get(1).get(0).getMessage(), message);
     }
 
+    @ParameterizedTest(name = "doGroupByRandomTest {index} query = {0}, resultQuery = {1}")
+    @MethodSource("doGroupByRandomSource")
+    void doGroupByRandomTest(String requestQuery, String resultQuery) {
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
+        transformationBuilder.makeQuery(query);
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
+    }
+
+    public static Stream<Arguments> doGroupByRandomSource() {
+        return Stream.of(
+                Arguments.arguments("SELECT SID FROM STUDENT GROUP BY SID HAVING sum(SID) > 3",
+                "SELECT SID FROM STUDENT GROUP BY SID HAVING sum(SID) > 3"),
+                Arguments.arguments("SELECT SID FROM STUDENT GROUP BY SID HAVING SUM(SID) > 1",
+                        "SELECT SID FROM STUDENT GROUP BY SID HAVING SUM(SID) > 1"),
+                Arguments.arguments("SELECT * FROM STUDENT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID GROUP BY STUDENT.SID, STUDUJE.SID, STUDUJE.ROK, STUDUJE.PID",
+                        "SELECT * FROM STUDENT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID"),
+                Arguments.arguments("SELECT SID, (SELECT 1 FROM STUDUJE WHERE 1 = 0) FROM STUDENT GROUP BY SID",
+                        "SELECT SID, (SELECT 1 FROM STUDUJE WHERE 1 = 0) FROM STUDENT GROUP BY SID"),
+                Arguments.arguments("SELECT SID, SUM(1 + 1) FROM STUDENT GROUP BY SID",
+                        "SELECT SID, 1+1 FROM STUDENT"),
+                Arguments.arguments("SELECT SID, (SELECT SUM(SID) FROM STUDUJE WHERE 1 = 0 GROUP BY SID) FROM STUDENT GROUP BY SID",
+                        "SELECT SID, (SELECT SUM(SID) FROM STUDUJE WHERE 1 = 0 GROUP BY SID) FROM STUDENT GROUP BY SID"),
+                Arguments.arguments("SELECT SID, 1 + 1 FROM STUDENT",
+                        "SELECT SID, 1 + 1 FROM STUDENT"),
+                Arguments.arguments("SELECT SID, 1 + SUM(1) FROM STUDENT GROUP BY SID",
+                        "SELECT SID, 1 + 1 FROM STUDENT"),
+                Arguments.arguments("SELECT SID, DATEADD(DAY, SUM(SID), SID) FROM STUDENT GROUP BY SID",
+                        "SELECT SID, DATEADD(DAY, SID, SID) FROM STUDENT"),
+                Arguments.arguments("SELECT SID, 1 + SUM(SID) FROM STUDENT GROUP BY SID",
+                        "SELECT SID, 1 + SID FROM STUDENT"),
+                Arguments.arguments("SELECT SID, SUM(SID) + 1 FROM STUDENT GROUP BY SID",
+                        "SELECT SID, SID + 1 FROM STUDENT"),
+                Arguments.arguments("SELECT SID, SUM(1) + SID FROM STUDENT GROUP BY SID",
+                        "SELECT SID, 1 + SID FROM STUDENT"),
+                Arguments.arguments("SELECT SID, AVG(1) + SID FROM STUDENT GROUP BY SID",
+                        "SELECT SID, 1 + SID FROM STUDENT"),
+                Arguments.arguments("SELECT SID, MIN(1) + SID FROM STUDENT GROUP BY SID",
+                        "SELECT SID, 1 + SID FROM STUDENT"),
+                Arguments.arguments("SELECT SID, MAX(1) + SID FROM STUDENT GROUP BY SID",
+                        "SELECT SID, 1 + SID FROM STUDENT"),
+                Arguments.arguments("SELECT SID, COUNT(SID + 1) + SID FROM STUDENT GROUP BY SID",
+                        "SELECT SID, 1 + SID FROM STUDENT"),
+                Arguments.arguments("SELECT SID, SUM(SID * ROK_NAROZENI) FROM STUDENT GROUP BY SID",
+                        "SELECT SID, SID*ROK_NAROZENI FROM STUDENT"),
+                Arguments.arguments("SELECT SID, CAST('ROK_NAROZENI' as numeric(9,2)) as [ROK_NAROZENI] FROM STUDENT GROUP BY SID",
+                        "SELECT SID, CAST('ROK_NAROZENI' as numeric(9,2)) as [ROK_NAROZENI] FROM STUDENT")
+        );
+    }
 
     public static Stream<Arguments> doFindUnnecessaryGroupBySource() {
         return Stream.of(Arguments.arguments("SELECT PID, JMENO FROM DBO.PREDMET GROUP BY PID, JMENO",

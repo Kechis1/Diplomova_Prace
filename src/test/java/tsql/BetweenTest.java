@@ -88,6 +88,35 @@ public class BetweenTest {
         assertTrue(query.isChanged());
     }
 
+    @ParameterizedTest(name = "doBetweenRandomTest {index} query = {0}, resultQuery = {1}")
+    @MethodSource("doBetweenRandomSource")
+    void doBetweenRandomTest(String requestQuery, String resultQuery) {
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
+        transformationBuilder.makeQuery(query);
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
+    }
+
+    public static Stream<Arguments> doBetweenRandomSource() {
+        return Stream.of(Arguments.arguments("SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE stt.sID BETWEEN stt.sID AND stt.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID",
+                "SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'adam' AND 1 BETWEEN 0 AND 2 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam'  HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 BETWEEN 0 AND 2 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' AND 1 BETWEEN 0 AND 2 AND ROK_NAROZENI = 2000 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' and ROK_NAROZENI = 2000 HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' OR JMENO = 'Emil' AND 1 BETWEEN 0 AND 2 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT where jmeno = 'adam' OR JMENO = 'Emil'  HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' OR 1 BETWEEN 0 AND 2 HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT where jmeno = 'adam' or 1 BETWEEN 0 AND 2 HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 BETWEEN 0 AND 2 AND JMENO = 'ADAM' HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE 1 BETWEEN 0 AND 2 OR JMENO = 'ADAM' HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT jmeno FROM STUDENT where 1 BETWEEN 0 AND 2 or jmeno = 'adam' HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID AND 1 BETWEEN 0 AND 2 HAVING sum(STT.SID) > 3 ORDER BY stt.SID",
+                        "SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID  HAVING sum(STT.SID) > 3 ORDER BY stt.SID")
+                );
+    }
 
     public static Stream<Arguments> doFindUnnecessaryBetweenSource() {
         return Stream.of(

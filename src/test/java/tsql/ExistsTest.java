@@ -122,6 +122,43 @@ public class ExistsTest {
         assertFalse(query.isChanged());
     }
 
+    @ParameterizedTest(name = "doExistsRandomTest {index} query = {0}, resultQuery = {1}")
+    @MethodSource("doExistsRandomSource")
+    void doExistsRandomTest(String requestQuery, String resultQuery) {
+        Query query = new Query(requestQuery, requestQuery, requestQuery);
+        transformationBuilder.makeQuery(query);
+        assertEquals(query.getOutputQuery().toUpperCase(), resultQuery.toUpperCase());
+    }
+
+    public static Stream<Arguments> doExistsRandomSource() {
+        return Stream.of(
+                Arguments.arguments("SELECT * FROM DBO.STUDUJE SDT WHERE EXISTS (SELECT * FROM DBO.PREDMET PDT WHERE SDT.PID = PDT.PID) ORDER BY SDT.SID",
+                        "SELECT * FROM DBO.STUDUJE SDT ORDER BY SDT.SID"),
+                Arguments.arguments("SELECT * FROM student WHERE 1 = DATEADD(DAY, 1, ROK_NAROZENI)",
+                        "SELECT * FROM student WHERE 1 = DATEADD(DAY, 1, ROK_NAROZENI)"),
+                Arguments.arguments("SELECT * FROM student x WHERE EXISTS(SELECT * FROM studuje y WHERE x.sID + 1 = y.sID + 1) ORDER BY x.SID",
+                        "SELECT * FROM student x WHERE EXISTS(SELECT 1 FROM studuje y WHERE x.sID + 1 = y.sID + 1) ORDER BY x.SID"),
+                Arguments.arguments("SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE EXISTS(SELECT 1) GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID",
+                        "SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'adam' AND EXISTS(SELECT 1) HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam'  HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE EXISTS(SELECT 1) HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' AND EXISTS(SELECT 1) AND ROK_NAROZENI = 2000 ORDER BY SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' and ROK_NAROZENI = 2000 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' OR JMENO = 'Emil' AND EXISTS(SELECT 1) ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT where jmeno = 'adam' OR JMENO = 'Emil'  ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'ADAM' OR EXISTS(SELECT 1) ORDER BY SID",
+                        "SELECT JMENO FROM STUDENT where jmeno = 'adam' or EXISTS(SELECT 1) ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE EXISTS(SELECT 1) AND JMENO = 'ADAM' HAVING sum(SID) > 3 ORDER BY SID",
+                        "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam' HAVING sum(SID) > 3 ORDER BY SID"),
+                Arguments.arguments("SELECT JMENO FROM STUDENT WHERE EXISTS(SELECT 1) OR JMENO = 'ADAM' ORDER BY STUDENT.SID",
+                        "SELECT jmeno FROM STUDENT where EXISTS(SELECT 1) or jmeno = 'adam' ORDER BY STUDENT.SID"),
+                Arguments.arguments("SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID AND EXISTS(SELECT 1) ORDER BY STT.SID",
+                        "SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID  ORDER BY STT.SID")
+        );
+    }
+
     public static Stream<Arguments> doFindUnnecessaryExistsBasedOnRecordsCountSource() {
         return Stream.of(Arguments.arguments("SELECT * FROM DBO.PREDMET PDT WHERE NOT EXISTS (SELECT * FROM STUDUJE SDT WHERE PDT.PID = SDT.PID)",
                 0,

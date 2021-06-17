@@ -4,6 +4,10 @@ SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LI
 
 SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID;
 
+SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID;
+
+SELECT * FROM student stt JOIN studuje sde ON stt.sID = stt.sID WHERE sde.sID LIKE stt.sID;
+
 SELECT c.ProductCategoryID
      , s.ProductSubcategoryID
      , AVG(ListPrice) AS 'Average'

@@ -40,12 +40,12 @@ public class PerformanceTestMain {
 
             builder.makeQuery(query);
 
-            if (i > 2) {
+            if (i > 4) {
                 long finish = System.nanoTime();
                 long timeElapsed = (finish - start) / 1000000;
                 times.add(timeElapsed);
 
-                System.out.println("#Q" + (i-2) + ": " + queryText);
+                System.out.println("#Q" + (i-4) + ": " + queryText);
                 System.out.println(timeElapsed + " ms");
                 for (int k = 1; k <= query.getCurrentRunNumber(); k++) {
                     System.out.println("Run (" + k + "): ");

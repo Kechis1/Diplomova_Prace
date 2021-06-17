@@ -47,10 +47,10 @@ public abstract class QueryHandler implements ITransformation {
 
     public static String restoreConstants(String from, String to) {
         String output = "";
-        Pattern p = Pattern.compile("'([^']*)'");
+        Pattern p = Pattern.compile("(?:^|\\s)'([^']*?)'(?:$|\\s)");
         Matcher m = p.matcher(from);
         while (m.find()) {
-            output = to.replaceAll("'" + m.group(1).toUpperCase() + "'", "'" + m.group(1) + "'");
+            output = to.replaceAll(Pattern.quote("'" + m.group(1).toUpperCase() + "'"), "'" + m.group(1) + "'");
         }
         if (output.equals("")) return to;
         return output;

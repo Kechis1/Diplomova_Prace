@@ -254,6 +254,7 @@ public class ConditionItem {
 
     public static List<ConditionItem> removeMultipleAttributeConditions(List<ConditionItem> conditions) {
         List<ConditionItem> newConditions = new ArrayList<>(conditions);
+        List<ConditionItem> removeItems = new ArrayList<>();
         boolean found;
         for (int i = 0; i < conditions.size() - 1; i++) {
             found = false;
@@ -271,14 +272,15 @@ public class ConditionItem {
                         (conditions.get(i).getRightSideDataType() == ConditionDataType.COLUMN &&
                                 ((conditions.get(j).getLeftSideDataType() == ConditionDataType.COLUMN && conditions.get(i).getRightSideColumnItem().equals(conditions.get(j).getLeftSideColumnItem())) ||
                                         (conditions.get(j).getRightSideDataType() == ConditionDataType.COLUMN && conditions.get(i).getRightSideColumnItem().equals(conditions.get(j).getRightSideColumnItem()))))) {
-                    newConditions.remove(j);
+                    removeItems.add(conditions.get(j));
                     found = true;
                 }
             }
             if (found) {
-                newConditions.remove(i);
+                removeItems.add(conditions.get(i));
             }
         }
+        newConditions.removeAll(removeItems);
         return newConditions;
     }
 

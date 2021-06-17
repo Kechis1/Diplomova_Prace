@@ -109,6 +109,7 @@ public class SelectClauseTransformation extends QueryHandler {
                 if (item.isNot() || item.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
                 if (item.getOperator().equals("=") && (item.getLeftSideDataType() == ConditionDataType.COLUMN || item.getRightSideDataType() == ConditionDataType.COLUMN)) {
                     for (ColumnItem column : allColumnsInSelect) {
+                        if (column.isUsedAlias()) continue;
                         if ((item.getLeftSideDataType() == ConditionDataType.COLUMN && column.equals(item.getLeftSideColumnItem()) && item.getRightSideDataType() != ConditionDataType.COLUMN) ||
                                 (item.getRightSideDataType() == ConditionDataType.COLUMN && column.equals(item.getRightSideColumnItem()) && item.getLeftSideDataType() != ConditionDataType.COLUMN)) {
                             String value;

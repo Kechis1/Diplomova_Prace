@@ -90,7 +90,8 @@ public class DatabaseMetadata {
                             tableForeignKeys.get(foundIndex).getReferencesColumnName(),
                             tableForeignKeys.get(foundIndex).getReferencesTableObj(),
                             tableForeignKeys.get(foundIndex).getReferencesColumnObj(),
-                            item.getBoolean("is_nullable")));
+                            item.getBoolean("is_nullable"),
+                            false));
                 }
             }
             tableObject.getJSONArray("primary_keys").forEach(x -> tablePrimaryKeys.add(x.toString().toUpperCase()));

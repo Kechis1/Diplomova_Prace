@@ -505,7 +505,8 @@ public class TSqlParseWalker {
                                                         ? ctx.asterisk().table_name().getText()
                                                         : null),
                                         ctx.asterisk().STAR().getText(),
-                                        ctx.asterisk().STAR().getText());
+                                        ctx.asterisk().STAR().getText(),
+                                        false);
                                 it.setStartAt(ctx.getStart().getStartIndex());
                                 it.setStopAt(ctx.getStop().getStopIndex());
                                 columns.add(it);
@@ -527,7 +528,8 @@ public class TSqlParseWalker {
                                             null,
                                             false,
                                             true,
-                                            ctx.expression_elem().expression().primitive_expression().constant().getText()
+                                            ctx.expression_elem().expression().primitive_expression().constant().getText(),
+                                            ctx.expression_elem().as_column_alias() != null
                                     );
                                     it.setStartAt(ctx.expression_elem().expression().primitive_expression().getStart().getStartIndex());
                                     it.setStopAt(ctx.expression_elem().expression().primitive_expression().getStop().getStopIndex());
@@ -541,7 +543,8 @@ public class TSqlParseWalker {
                                                             ? ctx.expression_elem().expression().full_column_name().table_name().table.getText()
                                                             : null),
                                             ctx.expression_elem().expression().full_column_name() != null ? ctx.expression_elem().expression().full_column_name().column_name.getText() : null,
-                                            ctx.expression_elem().getText()
+                                            ctx.expression_elem().getText(),
+                                            ctx.expression_elem().as_column_alias() != null
                                     );
                                     it.setStartAt(ctx.expression_elem().expression().getStart().getStartIndex());
                                     it.setStopAt(ctx.expression_elem().expression().getStop().getStopIndex());

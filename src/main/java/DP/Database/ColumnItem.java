@@ -22,8 +22,9 @@ public class ColumnItem {
     String value;
     int startAt;
     int stopAt;
+    boolean isUsedAlias;
 
-    public ColumnItem(String database, String schema, DatabaseTable table, String name, String fullName, boolean isForeignKey, String referencesTableName, String referencesColumnName, DatabaseTable referencesTable, ColumnItem referencesColumn, boolean isNullable, boolean isConstant, String value) {
+    public ColumnItem(String database, String schema, DatabaseTable table, String name, String fullName, boolean isForeignKey, String referencesTableName, String referencesColumnName, DatabaseTable referencesTable, ColumnItem referencesColumn, boolean isNullable, boolean isConstant, String value, boolean isUsedAlias) {
         this.database = database;
         this.schema = schema;
         this.table = table;
@@ -37,9 +38,10 @@ public class ColumnItem {
         this.isNullable = isNullable;
         this.isConstant = isConstant;
         this.value = value;
+        this.isUsedAlias = isUsedAlias;
     }
 
-    public ColumnItem(String database, String schema, DatabaseTable table, String name, String fullName, boolean isForeignKey, String referencesTableName, String referencesColumnName, DatabaseTable referencesTable, ColumnItem referencesColumn, boolean isNullable) {
+    public ColumnItem(String database, String schema, DatabaseTable table, String name, String fullName, boolean isForeignKey, String referencesTableName, String referencesColumnName, DatabaseTable referencesTable, ColumnItem referencesColumn, boolean isNullable, boolean isUsedAlias) {
         this.database = database;
         this.schema = schema;
         this.table = table;
@@ -51,9 +53,10 @@ public class ColumnItem {
         this.referencesTable = referencesTable;
         this.referencesColumn = referencesColumn;
         this.isNullable = isNullable;
+        this.isUsedAlias = isUsedAlias;
     }
 
-    public ColumnItem(String database, String schema, DatabaseTable table, String name, String fullName, boolean isNullable) {
+    public ColumnItem(String database, String schema, DatabaseTable table, String name, String fullName, boolean isNullable, boolean isUsedAlias) {
         this.database = database;
         this.schema = schema;
         this.table = table;
@@ -61,14 +64,16 @@ public class ColumnItem {
         this.fullName = fullName;
         this.isForeignKey = false;
         this.isNullable = isNullable;
+        this.isUsedAlias = isUsedAlias;
     }
 
-    public ColumnItem(String database, String schema, DatabaseTable table, String name, String fullName) {
+    public ColumnItem(String database, String schema, DatabaseTable table, String name, String fullName, boolean isUsedAlias) {
         this.database = database;
         this.schema = schema;
         this.table = table;
         this.name = name;
         this.fullName = fullName;
+        this.isUsedAlias = isUsedAlias;
     }
 
     public ColumnItem() {
@@ -91,6 +96,7 @@ public class ColumnItem {
         this.value = original.value;
         this.startAt = original.startAt;
         this.stopAt = original.stopAt;
+        this.isUsedAlias = original.isUsedAlias;
     }
 
     public int getStartAt() {
@@ -121,6 +127,14 @@ public class ColumnItem {
         this.fullName = fullName;
     }
 
+    public boolean isUsedAlias() {
+        return isUsedAlias;
+    }
+
+    public void setUsedAlias(boolean usedAlias) {
+        isUsedAlias = usedAlias;
+    }
+
     public static boolean isTablesColumnsReferencedOutsideOfJoin(JoinItem join, DatabaseTable table, Map<String, ColumnItem> columnItems) {
         for (String key: columnItems.keySet()) {
             if (columnItems.get(key).getTable().equals(table) && !(join.getStartAt() < columnItems.get(key).getStartAt() && join.getStopAt() >= columnItems.get(key).getStopAt())) {
@@ -131,22 +145,22 @@ public class ColumnItem {
     }
 
     public static ColumnItem findOrCreate(DatabaseMetadata metadata, TSqlParser.Search_condition_notContext ctx, int index) {
-        return build(metadata, ctx.predicate().expression().get(index).full_column_name().getText(), ctx.predicate().expression().get(index).full_column_name().table_name(), ctx.predicate().expression().get(index).full_column_name().column_name, -1, -1);
+        return build(metadata, false, ctx.predicate().expression().get(index).full_column_name().getText(), ctx.predicate().expression().get(index).full_column_name().table_name(), ctx.predicate().expression().get(index).full_column_name().column_name, -1, -1);
     }
 
     public static ColumnItem findOrCreate(DatabaseMetadata metadata, TSqlParser.Select_list_elemContext ctx) {
-        return build(metadata, ctx.column_elem().getText(), ctx.column_elem().table_name(), ctx.column_elem().column_name, ctx.column_elem().getStart().getStartIndex(), ctx.column_elem().getStop().getStopIndex());
+        return build(metadata, ctx.expression_elem() != null && ctx.expression_elem().as_column_alias() != null, ctx.column_elem().getText(), ctx.column_elem().table_name(), ctx.column_elem().column_name, ctx.column_elem().getStart().getStartIndex(), ctx.column_elem().getStop().getStopIndex());
     }
 
     public static ColumnItem findOrCreate(DatabaseMetadata metadata, TSqlParser.Full_column_nameContext ctx) {
-        return build(metadata, ctx.getText(), ctx.table_name(), ctx.column_name, ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
+        return build(metadata, false, ctx.getText(), ctx.table_name(), ctx.column_name, ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
     }
 
     public static ColumnItem findOrCreate(DatabaseMetadata metadata, TSqlParser.Column_elemContext ctx) {
-        return build(metadata, ctx.getText(), ctx.table_name(), ctx.column_name, ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
+        return build(metadata, ctx.as_column_alias() != null, ctx.getText(), ctx.table_name(), ctx.column_name, ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
     }
 
-    private static ColumnItem build(DatabaseMetadata metadata, String fullColumn, TSqlParser.Table_nameContext tableName, TSqlParser.IdContext columnName, int startIndex, int stopIndex) {
+    private static ColumnItem build(DatabaseMetadata metadata, boolean isUsedAlias, String fullColumn, TSqlParser.Table_nameContext tableName, TSqlParser.IdContext columnName, int startIndex, int stopIndex) {
         if (tableName != null) {
             int tableIndex = DatabaseTable.exists(metadata,
                     null,
@@ -167,7 +181,9 @@ public class ColumnItem {
                                 : null,
                         table,
                         columnName.getText(),
-                        fullColumn);
+                        fullColumn,
+                        isUsedAlias
+                        );
                 if (startIndex != -1 && stopIndex != -1) {
                     it.setStartAt(startIndex);
                     it.setStopAt(stopIndex);
@@ -185,12 +201,14 @@ public class ColumnItem {
                         null,
                         null,
                         columnName.getText(),
-                        fullColumn
+                        fullColumn,
+                        isUsedAlias
                 );
             } else {
                 it = new ColumnItem(original);
             }
             it.setFullName(fullColumn);
+            it.setUsedAlias(isUsedAlias);
             if (startIndex != -1 && stopIndex != -1) {
                 it.setStartAt(startIndex);
                 it.setStopAt(stopIndex);
@@ -201,6 +219,7 @@ public class ColumnItem {
         for (DatabaseTable t: metadata.getTables()) {
             ColumnItem original = t.findColumn(columnName.getText());
             ColumnItem c = new ColumnItem(original);
+            c.setUsedAlias(isUsedAlias);
             if (c.getTable() != null) {
                 c.setFullName(fullColumn);
                 if (startIndex != -1 && stopIndex != -1) {
@@ -216,7 +235,8 @@ public class ColumnItem {
                 null,
                 null,
                 columnName.getText(),
-                fullColumn
+                fullColumn,
+                isUsedAlias
         );
         if (startIndex != -1 && stopIndex != -1) {
             c.setStartAt(startIndex);
@@ -226,6 +246,7 @@ public class ColumnItem {
     }
 
     public static boolean exists(List<ColumnItem> allColumns, ColumnItem columnItem) {
+        if (allColumns == null) return false;
         for (ColumnItem currentItem : allColumns) {
             if (!currentItem.getName().equals(columnItem.getName())) {
                 continue;

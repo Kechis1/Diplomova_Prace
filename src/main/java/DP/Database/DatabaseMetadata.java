@@ -78,7 +78,8 @@ public class DatabaseMetadata {
                             null,
                             item.getString("name").toUpperCase(),
                             item.getString("name").toUpperCase(),
-                            item.getBoolean("is_nullable")));
+                            item.getBoolean("is_nullable"),
+                            false));
                 } else {
                     tableColumns.add(new ColumnItem(object.getString("table_catalog").toUpperCase(),
                             object.getString("table_schema").toUpperCase(),

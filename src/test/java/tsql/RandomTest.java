@@ -55,11 +55,7 @@ public class RandomTest {
         return Stream.of(
                 // WhereTransformation
 
-                Arguments.arguments("SELECT distinct SDT.SID, SDT.JMENO FROM DBO.STUDENT SDT FULL OUTER JOIN DBO.STUDUJE SDE ON SDT.SID = SDE.SID",
-                        "SELECT distinct SDT.SID, SDT.JMENO FROM DBO.STUDENT SDT")
-
-
-              /*  Arguments.arguments("SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE stt.sID = stt.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID",
+                Arguments.arguments("SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID WHERE stt.sID = stt.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID",
                         "SELECT stt.sid FROM student stt JOIN studuje sde ON stt.sID = sde.sID GROUP BY stt.sid HAVING sum(stt.sid) > 3 ORDER BY stt.SID"),
                 Arguments.arguments("SELECT JMENO FROM STUDENT WHERE JMENO = 'adam' AND 1 = 1 HAVING sum(SID) > 3 ORDER BY SID",
                         "SELECT 'adam' as jmeno FROM STUDENT where jmeno = 'adam'  HAVING sum(SID) > 3 ORDER BY SID"),
@@ -270,7 +266,7 @@ public class RandomTest {
                 Arguments.arguments("SELECT JMENO, PID FROM PREDMET WHERE PID = ANY (SELECT 1)",
                         "SELECT JMENO, PID FROM PREDMET WHERE PID = ANY (SELECT 1)"),
                 Arguments.arguments("SELECT JMENO, PID FROM PREDMET WHERE PID = 1 UNION ALL SELECT JMENO, PID FROM PREDMET WHERE 1 = 1",
-                        "SELECT JMENO, 1 AS PID FROM PREDMET WHERE PID = 1 UNION ALL SELECT JMENO, PID FROM PREDMET"),
+                        "SELECT JMENO, PID FROM PREDMET WHERE PID = 1 UNION ALL SELECT JMENO, PID FROM PREDMET WHERE 1 = 1"),
                 Arguments.arguments("SELECT COUNT(DISTINCT JMENO) FROM STUDENT",
                         "SELECT COUNT(DISTINCT JMENO) FROM STUDENT"),
                 Arguments.arguments("SELECT COUNT(DISTINCT JMENO) FROM STUDENT",
@@ -308,7 +304,7 @@ public class RandomTest {
                 Arguments.arguments("INSERT INTO STUDENT (SID, JMENO) VALUES (1, 'Adam')",
                         "INSERT INTO STUDENT (SID, JMENO) VALUES (1, 'Adam')"),
                 Arguments.arguments("SELECT COUNT(*) AS DISTINCT_JMENO FROM (SELECT DISTINCT JMENO FROM STUDENT)",
-                        "SELECT COUNT(*) AS DISTINCT_JMENO FROM (SELECT DISTINCT JMENO FROM STUDENT)")*/
+                        "SELECT COUNT(*) AS DISTINCT_JMENO FROM (SELECT DISTINCT JMENO FROM STUDENT)")
         );
     }
 }

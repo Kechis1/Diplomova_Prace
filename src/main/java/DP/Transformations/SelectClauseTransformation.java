@@ -27,7 +27,7 @@ public class SelectClauseTransformation extends QueryHandler {
         ParseTree select = parser.select_statement();
         final List<DatabaseTable> allTables = TSqlParseWalker.findTablesList(metadata, select);
         final List<ExistsItem> foundExistsNotConstant = TSqlParseWalker.findExistsNotConstant(select);
-        boolean foundUnion = TSqlParseWalker.findUnion(select);
+        boolean isUnionUsed = TSqlParseWalker.findUnion(select);
         DatabaseMetadata metadataWithTables = metadata.withTables(allTables);
 
         if (!foundExistsNotConstant.isEmpty()) {
@@ -73,7 +73,7 @@ public class SelectClauseTransformation extends QueryHandler {
                         return query;
                     }
                 }
-                if (bothInSelect == 0) {
+                if (bothInSelect == 0 && !isUnionUsed) {
                     for (ConditionItem condition : conditions) {
                         if (item.getOperator().equals("=") &&
                                 ((condition.getLeftSideColumnItem() != null && condition.getLeftSideColumnItem().equals(inSelect.get(0)) && condition.getRightSideDataType() != ConditionDataType.COLUMN) ||
@@ -104,7 +104,7 @@ public class SelectClauseTransformation extends QueryHandler {
 
         boolean isOrUsed = ConditionItem.isOrUsed(conditions);
 
-        if (!isOrUsed) {
+        if (!isOrUsed && !isUnionUsed) {
             for (ConditionItem item : uniqueAttributesConditions) {
                 if (item.isNot() || item.getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
                 if (item.getOperator().equals("=") && (item.getLeftSideDataType() == ConditionDataType.COLUMN || item.getRightSideDataType() == ConditionDataType.COLUMN)) {
@@ -145,7 +145,7 @@ public class SelectClauseTransformation extends QueryHandler {
             return query;
         }
         for (ColumnItem item : allColumnsInSelect) {
-            if (item.isConstant() && !foundUnion && !query.IgnoredOperatorExists(Action.SelectClauseTransformation, item.getValue() + " AS " + item.getName())) {
+            if (item.isConstant() && !isUnionUsed && !query.IgnoredOperatorExists(Action.SelectClauseTransformation, item.getValue() + " AS " + item.getName())) {
                 query.addTransformation(new Transformation(query.getOutputQuery(),
                         query.getOutputQuery(),
                         UnnecessaryStatementException.messageConstant + " " + (item.getValue() + (item.getName() == null ? "" : " AS " + item.getName())),

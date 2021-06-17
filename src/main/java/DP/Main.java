@@ -76,6 +76,9 @@ public class Main {
     }
 
     private static void printRuns(Query query) {
+        if (query.getQueryTransforms() == null) {
+            return;
+        }
         for (int i = 1; i <= query.getCurrentRunNumber(); i++) {
             System.out.println("Run (" + i + "): ");
             if (query.getQueryTransforms().get(i) != null) {

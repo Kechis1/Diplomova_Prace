@@ -36,14 +36,16 @@ public class RandomTest {
     void doFindUnnecessaryBetweenFullRunTest(String requestQuery, String fullRunResultQuery) {
         Query query = new Query(requestQuery, requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
-        for (int i = 1; i <= query.getCurrentRunNumber(); i++) {
-            System.out.println("Run (" + i + "): ");
-            if (query.getQueryTransforms().get(i) != null) {
-                for (Transformation r : query.getQueryTransforms().get(i)) {
-                    System.out.println(r);
+        if (query.getQueryTransforms() != null) {
+            for (int i = 1; i <= query.getCurrentRunNumber(); i++) {
+                System.out.println("Run (" + i + "): ");
+                if (query.getQueryTransforms().get(i) != null) {
+                    for (Transformation r : query.getQueryTransforms().get(i)) {
+                        System.out.println(r);
+                    }
+                } else {
+                    System.out.println("--");
                 }
-            } else {
-                System.out.println("--");
             }
         }
         assertEquals(query.getOutputQuery().toUpperCase(), fullRunResultQuery.toUpperCase());

@@ -34,12 +34,16 @@ public class TransformationBuilder {
     }
 
     public void makeQuery(Query query) {
-        int numberOfRuns = 0;
-        do {
-            query.setCurrentRunNumber(++numberOfRuns);
-            query.addRun(numberOfRuns, false);
-            chain.handleQuery(query);
-            query.getRuns().put(numberOfRuns, query.isQueryChangedByRun(numberOfRuns));
-        } while (query.getRuns().get(numberOfRuns));
+        try {
+            int numberOfRuns = 0;
+            do {
+                query.setCurrentRunNumber(++numberOfRuns);
+                query.addRun(numberOfRuns, false);
+                chain.handleQuery(query);
+                query.getRuns().put(numberOfRuns, query.isQueryChangedByRun(numberOfRuns));
+            } while (query.getRuns().get(numberOfRuns));
+        } catch (RuntimeException ignored) {
+            System.out.println(query.getOriginalQuery());
+        }
     }
 }

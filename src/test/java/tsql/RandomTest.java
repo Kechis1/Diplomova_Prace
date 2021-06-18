@@ -31,15 +31,15 @@ public class RandomTest {
         transformationBuilder = new TransformationBuilder(metadata);
     }
 
-    @ParameterizedTest(name = "doFindUnnecessaryBetweenFullRunTest {index} query = {0}, resultQuery = {1}")
-    @MethodSource("doFindUnnecessaryBetweenSource")
-    void doFindUnnecessaryBetweenFullRunTest(String requestQuery, String fullRunResultQuery) {
+    @ParameterizedTest(name = "doRandomTest {index} query = {0}, resultQuery = {1}")
+    @MethodSource("doRandomSource")
+    void doRandomTest(String requestQuery, String fullRunResultQuery) {
         Query query = new Query(requestQuery, requestQuery, requestQuery);
         transformationBuilder.makeQuery(query);
         assertEquals(query.getOutputQuery().toUpperCase(), fullRunResultQuery.toUpperCase());
     }
 
-    public static Stream<Arguments> doFindUnnecessaryBetweenSource() {
+    public static Stream<Arguments> doRandomSource() {
         return Stream.of(
                 Arguments.arguments("SELECT PID FROM PREDMET INTERSECT SELECT PID FROM STUDUJE",
                         "SELECT PID FROM PREDMET INTERSECT SELECT PID FROM STUDUJE"),

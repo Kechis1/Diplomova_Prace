@@ -9,7 +9,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,7 +26,7 @@ public abstract class QueryHandler implements ITransformation {
             do {
                 query = transformQuery(getDatabaseMetadata(), query);
                 normalizeQuery(query);
-            } while (query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).changed);
+            } while (query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).isChanged());
         }
         if (next != null) {
             next.handleQuery(query);

@@ -4,12 +4,12 @@ import DP.Database.ConditionItem;
 import DP.Exceptions.UnnecessaryStatementException;
 
 public class Transformation {
-    String inputQuery;
-    String outputQuery;
-    String message;
-    Action action;
-    boolean changed;
-    OperatorTransformation operatorTransformation;
+    private String inputQuery;
+    private String outputQuery;
+    private String message;
+    private Action action;
+    private boolean changed;
+    private OperatorTransformation operatorTransformation;
 
     public Transformation() {
     }
@@ -57,7 +57,6 @@ public class Transformation {
         ));
         return query;
     }
-
     public boolean isChanged() {
         return changed;
     }
@@ -98,7 +97,7 @@ public class Transformation {
         this.action = action;
     }
 
-    public OperatorTransformation getoperatorTransformation() {
+    public OperatorTransformation getOperatorTransformation() {
         return operatorTransformation;
     }
 

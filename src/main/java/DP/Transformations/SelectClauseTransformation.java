@@ -145,7 +145,7 @@ public class SelectClauseTransformation extends QueryHandler {
             return query;
         }
         for (ColumnItem item : allColumnsInSelect) {
-            if (item.isConstant() && !isUnionUsed && !query.IgnoredOperatorExists(Action.SelectClauseTransformation, item.getValue() + " AS " + item.getName())) {
+            if (item.isConstant() && !isUnionUsed && !query.ignoredOperatorExists(Action.SelectClauseTransformation, item.getValue() + " AS " + item.getName())) {
                 query.addTransformation(new Transformation(query.getOutputQuery(),
                         query.getOutputQuery(),
                         UnnecessaryStatementException.messageConstant + " " + (item.getValue() + (item.getName() == null ? "" : " AS " + item.getName())),

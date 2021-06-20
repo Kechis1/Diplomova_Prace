@@ -1,9 +1,9 @@
 package DP.Transformations;
 
 public class OperatorTransformation {
-    boolean ignored;
-    String from;
-    String to;
+    private boolean ignored;
+    private String from;
+    private String to;
 
     public OperatorTransformation(boolean ignored, String from, String to) {
         this.ignored = ignored;

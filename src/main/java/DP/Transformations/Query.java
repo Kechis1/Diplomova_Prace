@@ -3,13 +3,13 @@ package DP.Transformations;
 import java.util.*;
 
 public class Query {
-    String originalQuery;
-    String inputQuery;
-    String outputQuery;
-    HashMap<Integer, List<Transformation>> queryTransformations;
-    HashMap<Integer, Boolean> runs;
-    int currentRunNumber;
-    boolean changed = false;
+    private String originalQuery;
+    private String inputQuery;
+    private String outputQuery;
+    private HashMap<Integer, List<Transformation>> queryTransformations;
+    private HashMap<Integer, Boolean> runs;
+    private int currentRunNumber;
+    private boolean changed = false;
 
     public Query(String originalQuery, String inputQuery, String outputQuery) {
         this.originalQuery = originalQuery;
@@ -17,24 +17,12 @@ public class Query {
         this.outputQuery = outputQuery;
     }
 
-    public List<OperatorTransformation> getOperators() {
-        List<OperatorTransformation> items = new ArrayList<>();
-        for (int i = 1; i <= currentRunNumber; i++) {
-            if (queryTransformations.get(i) == null) continue;
-            for (Transformation t: queryTransformations.get(i)) {
-                if (t.getoperatorTransformation() == null) continue;
-                items.add(t.getoperatorTransformation());
-            }
-        }
-        return items;
-    }
-
-    public boolean IgnoredOperatorExists(Action action, String find) {
+    public boolean ignoredOperatorExists(Action action, String find) {
         for (int i = 1; i <= currentRunNumber; i++) {
             if (queryTransformations == null || queryTransformations.get(i) == null) continue;
             for (Transformation t: queryTransformations.get(i)) {
-                if (t.getoperatorTransformation() == null || !t.getAction().equals(action)) continue;
-                if (t.getoperatorTransformation().isIgnored() && find.equals(t.getoperatorTransformation().getTo())) {
+                if (t.getOperatorTransformation() == null || !t.getAction().equals(action)) continue;
+                if (t.getOperatorTransformation().isIgnored() && find.equals(t.getOperatorTransformation().getTo())) {
                     return true;
                 }
             }

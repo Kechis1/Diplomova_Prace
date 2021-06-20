@@ -1,10 +1,12 @@
 package tsql;
 
 import DP.Database.DatabaseMetadata;
+import DP.Exceptions.MetadataException;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.Transformations.GroupByTransformation;
 import DP.Transformations.Query;
 import DP.Transformations.TransformationBuilder;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -29,9 +31,13 @@ public class GroupByTest {
 
     @BeforeEach
     void init() {
-        metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        transformation = new GroupByTransformation(null, metadata);
-        transformationBuilder = new TransformationBuilder(metadata);
+        try {
+            metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
+            transformation = new GroupByTransformation(null, metadata);
+            transformationBuilder = new TransformationBuilder(metadata);
+        } catch (MetadataException exception) {
+            Assertions.fail(exception.getMessage());
+        }
     }
 
     @ParameterizedTest(name = "doFindNecessaryGroupByOneRunTest {index} query = {0}")
@@ -101,7 +107,7 @@ public class GroupByTest {
     public static Stream<Arguments> doGroupByRandomSource() {
         return Stream.of(
                 Arguments.arguments("SELECT SID FROM STUDENT GROUP BY SID HAVING sum(SID) > 3",
-                "SELECT SID FROM STUDENT GROUP BY SID HAVING sum(SID) > 3"),
+                        "SELECT SID FROM STUDENT GROUP BY SID HAVING sum(SID) > 3"),
                 Arguments.arguments("SELECT SID FROM STUDENT GROUP BY SID HAVING SUM(SID) > 1",
                         "SELECT SID FROM STUDENT GROUP BY SID HAVING SUM(SID) > 1"),
                 Arguments.arguments("SELECT * FROM STUDENT JOIN STUDUJE ON STUDENT.SID = STUDUJE.SID GROUP BY STUDENT.SID, STUDUJE.SID, STUDUJE.ROK, STUDUJE.PID",

@@ -1,52 +1,55 @@
 package DP.Database;
 
+import java.util.Map;
+import java.util.Set;
+
 public class ForeignKey {
-    String columnName;
-    ColumnItem columnItem;
-    String referencesColumnName;
-    ColumnItem referencesColumnObj;
+    Set<String> columnNames;
+    Map<String, ColumnItem> columnItems;
+    Set<String> referencesColumnNames;
+    Map<String, ColumnItem> referencesColumnObjs;
     String referencesTableName;
     DatabaseTable referencesTableObj;
 
-    public ForeignKey(String columnName, ColumnItem columnItem, String referencesColumnName, ColumnItem referencesColumnObj, String referencesTableName, DatabaseTable referencesTableObj) {
-        this.columnName = columnName;
-        this.columnItem = columnItem;
-        this.referencesColumnName = referencesColumnName;
-        this.referencesColumnObj = referencesColumnObj;
+    public ForeignKey(Set<String> columnNames, Map<String, ColumnItem> columnItems, Set<String> referencesColumnNames, Map<String, ColumnItem> referencesColumnObjs, String referencesTableName, DatabaseTable referencesTableObj) {
+        this.columnNames = columnNames;
+        this.columnItems = columnItems;
+        this.referencesColumnNames = referencesColumnNames;
+        this.referencesColumnObjs = referencesColumnObjs;
         this.referencesTableName = referencesTableName;
         this.referencesTableObj = referencesTableObj;
     }
 
-    public String getColumnName() {
-        return columnName;
+    public Set<String> getColumnNames() {
+        return columnNames;
     }
 
-    public void setColumnName(String columnName) {
-        this.columnName = columnName;
+    public void setColumnNames(Set<String> columnNames) {
+        this.columnNames = columnNames;
     }
 
-    public ColumnItem getColumnItem() {
-        return columnItem;
+    public Map<String, ColumnItem> getColumnItems() {
+        return columnItems;
     }
 
-    public void setColumnItem(ColumnItem columnItem) {
-        this.columnItem = columnItem;
+    public void setColumnItems(Map<String, ColumnItem> columnItems) {
+        this.columnItems = columnItems;
     }
 
-    public String getReferencesColumnName() {
-        return referencesColumnName;
+    public Set<String> getReferencesColumnNames() {
+        return referencesColumnNames;
     }
 
-    public void setReferencesColumnName(String referencesColumnName) {
-        this.referencesColumnName = referencesColumnName;
+    public void setReferencesColumnNames(Set<String> referencesColumnNames) {
+        this.referencesColumnNames = referencesColumnNames;
     }
 
-    public ColumnItem getReferencesColumnObj() {
-        return referencesColumnObj;
+    public Map<String, ColumnItem> getReferencesColumnObjs() {
+        return referencesColumnObjs;
     }
 
-    public void setReferencesColumnObj(ColumnItem referencesColumnObj) {
-        this.referencesColumnObj = referencesColumnObj;
+    public void setReferencesColumnObjs(Map<String, ColumnItem> referencesColumnObjs) {
+        this.referencesColumnObjs = referencesColumnObjs;
     }
 
     public String getReferencesTableName() {
@@ -68,10 +71,10 @@ public class ForeignKey {
     @Override
     public String toString() {
         return "ForeignKey{" +
-                "columnName='" + columnName + '\'' +
-                ", columnItem=" + columnItem +
-                ", referencesColumnName='" + referencesColumnName + '\'' +
-                ", referencesColumnObj=" + referencesColumnObj +
+                "columnNames=" + columnNames +
+                ", columnItems=" + columnItems +
+                ", referencesColumnNames=" + referencesColumnNames +
+                ", referencesColumnObjs=" + referencesColumnObjs +
                 ", referencesTableName='" + referencesTableName + '\'' +
                 ", referencesTableObj=" + referencesTableObj +
                 '}';

@@ -1,9 +1,9 @@
 package DP.Database;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
+import DP.Exceptions.MetadataException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.json.JSONArray;
@@ -24,7 +24,7 @@ public class DatabaseMetadata {
         return tables;
     }
 
-    public static DatabaseMetadata LoadFromJson(String path) {
+    public static DatabaseMetadata LoadFromJson(String path) throws MetadataException {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         InputStream is = classloader.getResourceAsStream(path);
 
@@ -54,9 +54,23 @@ public class DatabaseMetadata {
                 JSONArray fKeys = tableObject.getJSONArray("foreign_keys");
                 for (Object o : fKeys) {
                     JSONObject item = (JSONObject) o;
-                    tableForeignKeys.add(new ForeignKey(item.getString("column_name").toUpperCase(),
-                            tableColumns.stream().filter(x -> x.getName().equalsIgnoreCase(item.getString("column_name"))).findFirst().orElse(null),
-                            item.getString("references_column").toUpperCase(),
+                    Set<String> columnNames = new HashSet<>();
+                    Set<String> referencesColumns = new HashSet<>();
+                    item.getJSONArray("column_names").forEach(x -> columnNames.add(x.toString().toUpperCase()));
+                    item.getJSONArray("references_columns").forEach(x -> referencesColumns.add(x.toString().toUpperCase()));
+                    if (columnNames.size() != referencesColumns.size()) {
+                        throw new MetadataException("the size of foreign keys is not equivalent");
+                    }
+                    HashMap<String, ColumnItem> columnItems = new HashMap<>();
+                    for (String cName: columnNames) {
+                        ColumnItem foundCItem = tableColumns.stream().filter(x -> x.getName().equalsIgnoreCase(cName)).findFirst().orElse(null);
+                        if (foundCItem == null) continue;
+                        columnItems.put(cName, foundCItem);
+                    }
+
+                    tableForeignKeys.add(new ForeignKey(columnNames,
+                            columnItems.size() == 0 ? null : columnItems,
+                            referencesColumns,
                             null,
                             item.getString("references_table").toUpperCase(),
                             null));
@@ -66,9 +80,17 @@ public class DatabaseMetadata {
             for (Object o : columns) {
                 JSONObject item = (JSONObject) o;
                 int foundIndex = -1;
+                String foundColumnName = "";
                 for (int fI = 0; fI < tableForeignKeys.size(); fI++) {
-                    if (tableForeignKeys.get(fI).getColumnName().equals(item.getString("name").toUpperCase())) {
-                        foundIndex = fI;
+                    for (Iterator<String> it = tableForeignKeys.get(fI).getColumnNames().iterator(); it.hasNext(); ) {
+                        String next = it.next();
+                        if (next.equals(item.getString("name").toUpperCase())) {
+                            foundIndex = fI;
+                            foundColumnName = next;
+                            break;
+                        }
+                    }
+                    if (!foundColumnName.equals("")) {
                         break;
                     }
                 }
@@ -81,6 +103,12 @@ public class DatabaseMetadata {
                             item.getBoolean("is_nullable"),
                             false));
                 } else {
+                    ColumnItem referencesColumn;
+                    if (tableForeignKeys.get(foundIndex).getReferencesColumnObjs() == null) {
+                        referencesColumn = null;
+                    } else {
+                        referencesColumn = tableForeignKeys.get(foundIndex).getReferencesColumnObjs().get(foundColumnName);
+                    }
                     tableColumns.add(new ColumnItem(object.getString("table_catalog").toUpperCase(),
                             object.getString("table_schema").toUpperCase(),
                             null,
@@ -88,9 +116,9 @@ public class DatabaseMetadata {
                             item.getString("name").toUpperCase(),
                             true,
                             tableForeignKeys.get(foundIndex).getReferencesTableName(),
-                            tableForeignKeys.get(foundIndex).getReferencesColumnName(),
+                            foundColumnName,
                             tableForeignKeys.get(foundIndex).getReferencesTableObj(),
-                            tableForeignKeys.get(foundIndex).getReferencesColumnObj(),
+                            referencesColumn,
                             item.getBoolean("is_nullable"),
                             false));
                 }
@@ -114,8 +142,17 @@ public class DatabaseMetadata {
                             continue;
                         }
                         if (dbTables.get(j).getTableName().equalsIgnoreCase(item.getString("references_table"))) {
-                            ColumnItem foundCI = dbTables.get(j).getColumns().stream().filter(x -> x.getName().equalsIgnoreCase(item.getString("references_column"))).findAny().orElse(null);
-                            dbTables.get(i).getForeignKeys().get(h).setReferencesColumnObj(foundCI);
+                            JSONArray rColumns = item.getJSONArray("references_columns");
+                            Map<String, ColumnItem> columns = new HashMap<>();
+                            for (int l = 0; l < dbTables.get(j).getColumns().size(); l++) {
+                                for (int l1 = 0; l1 < rColumns.length(); l1++) {
+                                    if (dbTables.get(j).getColumns().get(l).getName().equalsIgnoreCase(rColumns.getString(l1))) {
+                                        columns.put(rColumns.getString(l1), dbTables.get(j).getColumns().get(l));
+                                    }
+                                }
+                            }
+
+                            dbTables.get(i).getForeignKeys().get(h).setReferencesColumnObjs(columns.size() == 0 ? null : columns);
                             dbTables.get(i).getForeignKeys().get(h).setReferencesTableObj(dbTables.get(j));
                         }
                     }

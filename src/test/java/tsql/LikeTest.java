@@ -1,12 +1,14 @@
 package tsql;
 
 import DP.Database.DatabaseMetadata;
+import DP.Exceptions.MetadataException;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.Transformations.LikeTransformation;
 import DP.Transformations.Query;
 import DP.Transformations.Transformation;
 import DP.Transformations.TransformationBuilder;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,9 +31,13 @@ public class LikeTest {
 
     @BeforeEach
     void init() {
-        metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        transformation = new LikeTransformation(null, metadata);
-        transformationBuilder = new TransformationBuilder(metadata);
+        try {
+            metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
+            transformation = new LikeTransformation(null, metadata);
+            transformationBuilder = new TransformationBuilder(metadata);
+        } catch (MetadataException exception) {
+            Assertions.fail(exception.getMessage());
+        }
     }
 
     @ParameterizedTest(name = "doFindNecessaryLikeTest {index} query = {0}")
@@ -171,16 +177,16 @@ public class LikeTest {
     public static Stream<Arguments> doLikeWhereResultIsEmptySetSource() {
         return Stream.of(
                 Arguments.arguments("SELECT * " +
-                        "FROM student stt " +
-                        "WHERE 'a' LIKE 'b'",
+                                "FROM student stt " +
+                                "WHERE 'a' LIKE 'b'",
                         "'A' LIKE 'B'"),
                 Arguments.arguments("SELECT * " +
-                        "FROM student stt " +
-                        "WHERE 'a' LIKE 2",
+                                "FROM student stt " +
+                                "WHERE 'a' LIKE 2",
                         "'A' LIKE 2"),
                 Arguments.arguments("SELECT * " +
-                        "FROM student stt " +
-                        "WHERE 'a' LIKE 'b%'",
+                                "FROM student stt " +
+                                "WHERE 'a' LIKE 'b%'",
                         "'A' LIKE 'B%'")
         );
     }

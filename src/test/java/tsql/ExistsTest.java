@@ -3,11 +3,13 @@ package tsql;
 import DP.Database.ColumnItem;
 import DP.Database.DatabaseMetadata;
 import DP.Database.DatabaseTable;
+import DP.Exceptions.MetadataException;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.Transformations.ExistsTransformation;
 import DP.Transformations.Query;
 import DP.Transformations.TransformationBuilder;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,9 +32,13 @@ public class ExistsTest {
 
     @BeforeEach
     void init() {
-        metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        transformation = new ExistsTransformation(null, metadata);
-        transformationBuilder = new TransformationBuilder(metadata);
+        try {
+            metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
+            transformation = new ExistsTransformation(null, metadata);
+            transformationBuilder = new TransformationBuilder(metadata);
+        } catch (MetadataException exception) {
+            Assertions.fail(exception.getMessage());
+        }
     }
 
     @ParameterizedTest(name = "doFindNecessaryExistsTest {index} query = {0}")

@@ -1,6 +1,7 @@
 package DP;
 
 import DP.Database.DatabaseMetadata;
+import DP.Exceptions.MetadataException;
 import DP.Transformations.*;
 import DP.antlr4.tsql.parser.TSqlParser;
 
@@ -41,14 +42,18 @@ public class Main {
             is = classloader.getResourceAsStream(inPathToMetadata);
         } while (!inPathToMetadata.isEmpty() && is == null);
 
-        if (inPathToMetadata.isEmpty()) {
-            runExample(inOriginalQuery, inTransformedQuery, pathToMetadata);
-        } else {
-            runExample(inOriginalQuery, inTransformedQuery, inPathToMetadata);
+        try {
+            if (inPathToMetadata.isEmpty()) {
+                runExample(inOriginalQuery, inTransformedQuery, pathToMetadata);
+            } else {
+                runExample(inOriginalQuery, inTransformedQuery, inPathToMetadata);
+            }
+        }  catch (MetadataException exception) {
+            System.out.println(exception.getMessage());
         }
     }
 
-    private static void runExample(String originalQuery, String requestQuery, String requestMetadata) {
+    private static void runExample(String originalQuery, String requestQuery, String requestMetadata) throws MetadataException {
         DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson(requestMetadata);
         Query query = new Query(originalQuery, requestQuery, requestQuery);
 

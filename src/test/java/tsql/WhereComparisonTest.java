@@ -1,10 +1,12 @@
 package tsql;
 
 import DP.Database.DatabaseMetadata;
+import DP.Exceptions.MetadataException;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.Transformations.Query;
 import DP.Transformations.TransformationBuilder;
 import DP.Transformations.WhereComparisonTransformation;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -29,9 +31,13 @@ public class WhereComparisonTest {
 
     @BeforeEach
     void init() {
-        metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        transformation = new WhereComparisonTransformation(null, metadata);
-        transformationBuilder = new TransformationBuilder(metadata);
+        try {
+            metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
+            transformation = new WhereComparisonTransformation(null, metadata);
+            transformationBuilder = new TransformationBuilder(metadata);
+        } catch (MetadataException exception) {
+            Assertions.fail(exception.getMessage());
+        }
     }
 
     @ParameterizedTest(name = "doFindNecessaryWhereComparisonTest {index} query = {0}")
@@ -116,7 +122,7 @@ public class WhereComparisonTest {
                         "SELECT jmeno FROM STUDENT where 1 = 1 or jmeno = 'adam' HAVING sum(SID) > 3 ORDER BY SID"),
                 Arguments.arguments("SELECT * FROM STUDENT STT JOIN STUDUJE SDE ON STT.SID = STT.SID WHERE SDE.SID LIKE STT.SID AND 1 = 1 HAVING sum(SID) > 3 ORDER BY STT.SID",
                         "SELECT * FROM STUDENT STT JOIN STUDUJE SDE ON STT.SID = STT.SID WHERE SDE.SID LIKE STT.SID  HAVING sum(SID) > 3 ORDER BY STT.SID")
-                );
+        );
     }
 
     public static Stream<Arguments> doFindUnnecessaryWhereComparisonSource() {
@@ -189,56 +195,56 @@ public class WhereComparisonTest {
                         "WHERE 1 = 2",
                 "1 = 2"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 0 >= 1",
+                                "FROM DBO.PREDMET " +
+                                "WHERE 0 >= 1",
                         "0 >= 1"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 1 > 2",
+                                "FROM DBO.PREDMET " +
+                                "WHERE 1 > 2",
                         "1 > 2"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 2 <= 1",
+                                "FROM DBO.PREDMET " +
+                                "WHERE 2 <= 1",
                         "2 <= 1"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 2 < 1",
+                                "FROM DBO.PREDMET " +
+                                "WHERE 2 < 1",
                         "2 < 1"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 1 <> 1",
+                                "FROM DBO.PREDMET " +
+                                "WHERE 1 <> 1",
                         "1 <> 1"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 1 = '2'",
+                                "FROM DBO.PREDMET " +
+                                "WHERE 1 = '2'",
                         "1 = '2'"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE '1' = 2",
+                                "FROM DBO.PREDMET " +
+                                "WHERE '1' = 2",
                         "'1' = 2"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'a' = 'B'",
+                                "FROM DBO.PREDMET " +
+                                "WHERE 'a' = 'B'",
                         "'A' = 'B'"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'ba' >= 'ca'",
+                                "FROM DBO.PREDMET " +
+                                "WHERE 'ba' >= 'ca'",
                         "'BA' >= 'CA'"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'ba' > 'ca'",
+                                "FROM DBO.PREDMET " +
+                                "WHERE 'ba' > 'ca'",
                         "'BA' > 'CA'"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'ab' <= 'aa'",
+                                "FROM DBO.PREDMET " +
+                                "WHERE 'ab' <= 'aa'",
                         "'AB' <= 'AA'"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'ac' < 'ab'",
+                                "FROM DBO.PREDMET " +
+                                "WHERE 'ac' < 'ab'",
                         "'AC' < 'AB'"),
                 Arguments.arguments("SELECT * " +
-                        "FROM DBO.PREDMET " +
-                        "WHERE 'aa' <> 'aa'",
+                                "FROM DBO.PREDMET " +
+                                "WHERE 'aa' <> 'aa'",
                         "'AA' <> 'AA'")
         );
     }

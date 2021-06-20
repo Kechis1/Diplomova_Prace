@@ -1,11 +1,13 @@
 package tsql;
 
 import DP.Database.DatabaseMetadata;
+import DP.Exceptions.MetadataException;
 import DP.Exceptions.UnnecessaryStatementException;
 import DP.Transformations.JoinConditionTransformation;
 import DP.Transformations.Query;
 import DP.Transformations.TransformationBuilder;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,9 +30,13 @@ public class JoinConditionTest {
 
     @BeforeEach
     void init() {
-        metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
-        transformation = new JoinConditionTransformation(null, metadata);
-        transformationBuilder = new TransformationBuilder(metadata);
+        try {
+            metadata = DatabaseMetadata.LoadFromJson("databases/db_student_studuje_predmet.json");
+            transformation = new JoinConditionTransformation(null, metadata);
+            transformationBuilder = new TransformationBuilder(metadata);
+        } catch (MetadataException exception) {
+            Assertions.fail(exception.getMessage());
+        }
     }
 
     @ParameterizedTest(name = "doFindNecessaryJoinConditionOneRunTest {index} query = {0}")
@@ -86,7 +92,7 @@ public class JoinConditionTest {
     public static Stream<Arguments> doJoinConditionRandomSource() {
         return Stream.of(
                 Arguments.arguments("SELECT * FROM student JOIN STUDUJE ON 1 = DATEADD(DAY, 1, ROK_NAROZENI) HAVING sum(SID) > 3 ORDER BY STUDENT.SID",
-                    "SELECT * FROM student JOIN STUDUJE ON 1 = DATEADD(DAY, 1, ROK_NAROZENI) HAVING sum(SID) > 3 ORDER BY STUDENT.SID"),
+                        "SELECT * FROM student JOIN STUDUJE ON 1 = DATEADD(DAY, 1, ROK_NAROZENI) HAVING sum(SID) > 3 ORDER BY STUDENT.SID"),
                 Arguments.arguments("SELECT * FROM student JOIN STUDUJE ON 1 = DATEADD(DAY, 1, ROK_NAROZENI) OR 1 = 1 HAVING sum(STUDENT.SID) > 3 ORDER BY STUDENT.SID",
                         "SELECT * FROM student JOIN STUDUJE ON 1 = DATEADD(DAY, 1, ROK_NAROZENI) OR 1 = 1 HAVING sum(STUDENT.SID) > 3 ORDER BY STUDENT.SID"),
                 Arguments.arguments("SELECT * FROM student x JOIN studuje y ON x.sID + 1 = y.sID + 1 HAVING sum(x.SID) > 3 ORDER BY x.SID",

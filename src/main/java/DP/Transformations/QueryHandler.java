@@ -7,8 +7,6 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,12 +32,11 @@ public abstract class QueryHandler implements ITransformation {
     }
 
     private void normalizeQuery(Query query) {
-        String validatedQuery = getRidOfInvalidCommas(query.getOutputQuery());
-        TSqlParser parser = parseQuery(validatedQuery);
+        TSqlParser parser = parseQuery(query.getOutputQuery());
         ParseTree select = parser.select_statement();
         String parsedQuery = select.getText();
         parsedQuery = restoreConstants(query.getOriginalQuery(), parsedQuery);
-        parsedQuery = restoreSpaces(validatedQuery, parsedQuery);
+        parsedQuery = restoreSpaces(query.getOutputQuery(), parsedQuery);
         query.setOutputQuery(parsedQuery);
         query.getQueryTransforms().get(query.getCurrentRunNumber()).get(query.getQueryTransforms().get(query.getCurrentRunNumber()).size() - 1).setOutputQuery(parsedQuery);
     }
@@ -68,30 +65,6 @@ public abstract class QueryHandler implements ITransformation {
             }
         } while (index >= 0);
         return withoutSpaces;
-    }
-
-    private String getRidOfInvalidCommas(String query) {
-        List<String> originals = new ArrayList<>();
-        List<String> modified = new ArrayList<>();
-        Matcher m = Pattern.compile("(?<=SELECT)(.+?)(?=FROM)")
-                .matcher(query);
-        while (m.find()) {
-            modified.add(m.group().replaceAll("\\s+",""));
-            originals.add(m.group().trim());
-        }
-
-        for (int k = 0; k < modified.size(); k++) {
-            for (int i = 0; i < modified.get(k).length() - 1; i++) {
-                if (modified.get(k).charAt(i+1) == ',') {
-                    if (modified.get(k).charAt(i) == ',') {
-                        query = query.replace(originals.get(k), modified.get(k).substring(0, i) + modified.get(k).substring(i+1));
-                    } else if (modified.get(k).length() - 1 == i + 1) {
-                        query = query.replace(originals.get(k), modified.get(k).substring(0, i+1));
-                    }
-                }
-            }
-        }
-        return query;
     }
 
     public DatabaseMetadata getDatabaseMetadata() {

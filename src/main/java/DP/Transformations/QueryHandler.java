@@ -6,6 +6,7 @@ import DP.antlr4.tsql.parser.TSqlParser;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.apache.commons.text.StringEscapeUtils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,7 +47,7 @@ public abstract class QueryHandler implements ITransformation {
         Pattern p = Pattern.compile("(?:^|\\s)'([^']*?)'(?:$|\\s)");
         Matcher m = p.matcher(from);
         while (m.find()) {
-            output = to.replaceAll(Pattern.quote("'" + m.group(1).toUpperCase() + "'"), "'" + m.group(1) + "'");
+            output = to.replaceAll(Pattern.quote("'" + m.group(1).toUpperCase() + "'"), Matcher.quoteReplacement("'" + m.group(1) + "'"));
         }
         if (output.equals("")) return to;
         return output;

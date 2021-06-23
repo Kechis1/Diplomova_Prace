@@ -1,50 +1,54 @@
 package DP;
 
 import DP.Database.DatabaseMetadata;
-import DP.Database.DatabaseTable;
 import DP.Transformations.Query;
 import DP.Transformations.Transformation;
 import DP.Transformations.TransformationBuilder;
 import com.google.common.io.CharStreams;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PerformanceTestMain {
     private static final String pathToMetadata = "databases/db_student_studuje_predmet.json";
 
     public static void main(String[] args) {
+        List<Long> times = new ArrayList<>();
         try {
+            PrintWriter out = new PrintWriter("results.txt");
             // InputStream is = loadQueryFile("queries/performance_test_queries_old.sql");
-            InputStream is = loadQueryFile("queries/performance_test_queries_old.sql");
+            InputStream is = loadQueryFile("queries/performance_test_queries_new.txt");
             DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson(pathToMetadata);
-            List<Long> times = new ArrayList<>();
-            String[] queries = splitQueries(is);
-            runTest(is, queries, times, metadata, 4);
+            // String[] queries = splitQueries(is, ";");
+            // runTest(queries, times, metadata, 4);
+            Matcher queries = splitQueries(is, "[0-9]+_[0-9]+_(.+)");
+            runTest(out, queries, times, metadata, -1);
             printTime(times);
+            out.close();
         } catch (Exception exception) {
             System.out.println("An error occurred while running a performance test");
             exception.printStackTrace();
+        } finally {
+            printTime(times);
         }
     }
 
-    private static String[] splitQueries(InputStream is) throws Exception {
+    private static Matcher splitQueries(InputStream is, String splitRegex) throws Exception {
         String queriesText = null;
         try (final Reader reader = new InputStreamReader(is)) {
             queriesText = CharStreams.toString(reader);
         }
-
-        return queriesText.split(";");
+        return Pattern.compile(splitRegex).matcher(queriesText);
     }
 
-    private static void runTest(InputStream is, String[] queries, List<Long> times, DatabaseMetadata metadata, int skipQueries) {
-        for (int i = 0; i < queries.length; i++) {
-            String queryText = queries[i].replaceAll("\\s", " ").trim().toUpperCase();
-
+    private static void runTest(PrintWriter out, Matcher queries, List<Long> times, DatabaseMetadata metadata, int skipQueries) {
+        int i = 0;
+        while (queries.find()) {
+            String queryText = queries.group(1).replaceAll("\\s", " ").trim().toUpperCase();
             Query query = new Query(queryText, queryText, queryText);
 
             TransformationBuilder builder = new TransformationBuilder(metadata);
@@ -53,25 +57,52 @@ public class PerformanceTestMain {
 
             builder.makeQuery(query);
 
-            if (i > skipQueries) {
-                long finish = System.nanoTime();
-                long timeElapsed = (finish - start) / 1000000;
-                times.add(timeElapsed);
+            long finish = System.nanoTime();
+            long timeElapsed = (finish - start) / 1000000;
+            times.add(timeElapsed);
+            saveTransformation(out, i, skipQueries, queryText, timeElapsed, query);
+            i++;
 
-                System.out.println("#Q" + (i-skipQueries) + ": " + queryText);
-                System.out.println(timeElapsed + " ms");
-                for (int k = 1; k <= query.getCurrentRunNumber(); k++) {
-                    System.out.println("Run (" + k + "): ");
-                    if (query.getQueryTransforms().get(k) != null) {
-                        for (Transformation r : query.getQueryTransforms().get(k)) {
-                            System.out.println(r);
-                        }
-                    } else {
-                        System.out.println("--");
-                    }
-                }
-                System.out.println("\n");
+            if (i % 5000 == 0) {
+                saveTime(out, times, i);
             }
+        }
+    }
+
+    private static void saveTransformation(PrintWriter out, int i, int skipQueries, String queryText, long timeElapsed, Query query) {
+        out.println("#Q" + (i - skipQueries) + ": " + queryText);
+        out.println(timeElapsed + " ms");
+        for (int k = 1; k <= query.getCurrentRunNumber(); k++) {
+            out.println("Run (" + k + "): ");
+            if (query.getQueryTransforms() != null && query.getQueryTransforms().get(k) != null) {
+                for (Transformation r : query.getQueryTransforms().get(k)) {
+                    out.println(r.toString());
+                }
+            } else {
+                out.println("--");
+            }
+        }
+        out.println("\n");
+    }
+
+    private static void saveTime(PrintWriter out, List<Long> times, int count) {
+        try {
+            boolean close = false;
+            if (out == null) {
+                out = new PrintWriter("results.txt");
+                close = true;
+            }
+            out.println("Count: " + count);
+            out.println("STATS:\n");
+            out.println("Total time: " + (times.stream().reduce(0L, Long::sum)) + " ms");
+            out.println("Max time: " + (Collections.max(times)) + " ms");
+            out.println("Min time: " + (Collections.min(times)) + " ms");
+            out.println("Avg time: " + (times.stream().mapToInt(Math::toIntExact).average().orElse(0.0)) + " ms\n");
+            if (close) {
+                out.close();
+            }
+        } catch (FileNotFoundException ignored) {
+
         }
     }
 
@@ -81,11 +112,13 @@ public class PerformanceTestMain {
     }
 
     private static void printTime(List<Long> times) {
-        System.out.println("STATS:\n");
-        System.out.println("Total time: " + (times.stream().reduce(0L, Long::sum)) + " ms");
-        System.out.println("Max time: " + (Collections.max(times)) + " ms");
-        System.out.println("Min time: " + (Collections.min(times)) + " ms");
-        System.out.println("Avg time: " + (times.stream().mapToInt(Math::toIntExact).average().orElse(0.0)) + " ms");
+        if (times.size() > 1) {
+            System.out.println("STATS:\n");
+            System.out.println("Total time: " + (times.stream().reduce(0L, Long::sum)) + " ms");
+            System.out.println("Max time: " + (Collections.max(times)) + " ms");
+            System.out.println("Min time: " + (Collections.min(times)) + " ms");
+            System.out.println("Avg time: " + (times.stream().mapToInt(Math::toIntExact).average().orElse(0.0)) + " ms");
+        }
     }
 
 }

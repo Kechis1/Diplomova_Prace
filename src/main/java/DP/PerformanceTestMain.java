@@ -19,15 +19,18 @@ public class PerformanceTestMain {
     public static void main(String[] args) {
         List<Long> times = new ArrayList<>();
         try {
-            PrintWriter out = new PrintWriter("results.txt");
+            PrintWriter out = new PrintWriter("results1.txt");
+            // PrintWriter out = new PrintWriter("results.txt");
             // InputStream is = loadQueryFile("queries/performance_test_queries_old.sql");
             InputStream is = loadQueryFile("queries/performance_text_queries_operators.sql");
             // InputStream is = loadQueryFile("queries/performance_test_queries_new.txt");
             DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson(pathToMetadata);
             // String[] queries = splitQueries(is, ";");
             // runTest(queries, times, metadata, 4);
-            Matcher queries = splitQueries(is, "[0-9]+_[0-9]+_(.+)");
-            runTest(out, queries, times, metadata, -1);
+            // Matcher queries = splitQueries(is, "[0-9]+_[0-9]+_(.+)");
+            Matcher queries = splitQueries(is, ";");
+            // runTest(out, queries, times, metadata, -1);
+            runTest(out, queries, times, metadata, 4);
             printTime(times);
             out.close();
         } catch (Exception exception) {

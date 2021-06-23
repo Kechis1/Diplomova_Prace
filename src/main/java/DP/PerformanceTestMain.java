@@ -1,6 +1,7 @@
 package DP;
 
 import DP.Database.DatabaseMetadata;
+import DP.Database.DatabaseTable;
 import DP.Transformations.Query;
 import DP.Transformations.Transformation;
 import DP.Transformations.TransformationBuilder;
@@ -16,19 +17,31 @@ import java.util.List;
 public class PerformanceTestMain {
     private static final String pathToMetadata = "databases/db_student_studuje_predmet.json";
 
-    public static void main(String[] args) throws Exception {
-        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        InputStream is = classloader.getResourceAsStream("queries/transformation_test_queries.sql");
-        String queriesText = null;
-        DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson(pathToMetadata);
+    public static void main(String[] args) {
+        try {
+            // InputStream is = loadQueryFile("queries/performance_test_queries_old.sql");
+            InputStream is = loadQueryFile("queries/performance_test_queries_old.sql");
+            DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson(pathToMetadata);
+            List<Long> times = new ArrayList<>();
+            String[] queries = splitQueries(is);
+            runTest(is, queries, times, metadata, 4);
+            printTime(times);
+        } catch (Exception exception) {
+            System.out.println("An error occurred while running a performance test");
+            exception.printStackTrace();
+        }
+    }
 
+    private static String[] splitQueries(InputStream is) throws Exception {
+        String queriesText = null;
         try (final Reader reader = new InputStreamReader(is)) {
             queriesText = CharStreams.toString(reader);
         }
 
-        String[] queries = queriesText.split(";");
-        List<Long> times = new ArrayList<>();
+        return queriesText.split(";");
+    }
 
+    private static void runTest(InputStream is, String[] queries, List<Long> times, DatabaseMetadata metadata, int skipQueries) {
         for (int i = 0; i < queries.length; i++) {
             String queryText = queries[i].replaceAll("\\s", " ").trim().toUpperCase();
 
@@ -40,12 +53,12 @@ public class PerformanceTestMain {
 
             builder.makeQuery(query);
 
-            if (i > 4) {
+            if (i > skipQueries) {
                 long finish = System.nanoTime();
                 long timeElapsed = (finish - start) / 1000000;
                 times.add(timeElapsed);
 
-                System.out.println("#Q" + (i-4) + ": " + queryText);
+                System.out.println("#Q" + (i-skipQueries) + ": " + queryText);
                 System.out.println(timeElapsed + " ms");
                 for (int k = 1; k <= query.getCurrentRunNumber(); k++) {
                     System.out.println("Run (" + k + "): ");
@@ -60,7 +73,14 @@ public class PerformanceTestMain {
                 System.out.println("\n");
             }
         }
+    }
 
+    private static InputStream loadQueryFile(String path) {
+        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+        return classloader.getResourceAsStream(path);
+    }
+
+    private static void printTime(List<Long> times) {
         System.out.println("STATS:\n");
         System.out.println("Total time: " + (times.stream().reduce(0L, Long::sum)) + " ms");
         System.out.println("Max time: " + (Collections.max(times)) + " ms");

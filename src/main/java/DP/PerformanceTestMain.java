@@ -21,7 +21,8 @@ public class PerformanceTestMain {
         try {
             PrintWriter out = new PrintWriter("results.txt");
             // InputStream is = loadQueryFile("queries/performance_test_queries_old.sql");
-            InputStream is = loadQueryFile("queries/performance_test_queries_new.txt");
+            InputStream is = loadQueryFile("queries/performance_text_queries_operators.sql");
+            // InputStream is = loadQueryFile("queries/performance_test_queries_new.txt");
             DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson(pathToMetadata);
             // String[] queries = splitQueries(is, ";");
             // runTest(queries, times, metadata, 4);

@@ -22,13 +22,12 @@ public class PerformanceTestMain {
             PrintWriter out = new PrintWriter("results1.txt");
             // PrintWriter out = new PrintWriter("results.txt");
             // InputStream is = loadQueryFile("queries/performance_test_queries_old.sql");
-            InputStream is = loadQueryFile("queries/performance_text_queries_operators.sql");
-            // InputStream is = loadQueryFile("queries/performance_test_queries_new.txt");
+            // InputStream is = loadQueryFile("queries/performance_text_queries_operators.sql");
+            InputStream is = loadQueryFile("queries/performance_test_queries_new.txt");
             DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson(pathToMetadata);
             // String[] queries = splitQueries(is, ";");
-            // runTest(queries, times, metadata, 4);
             // Matcher queries = splitQueries(is, "[0-9]+_[0-9]+_(.+)");
-            Matcher queries = splitQueries(is, ";");
+            Matcher queries = splitQueries(is, "(.*);");
             // runTest(out, queries, times, metadata, -1);
             runTest(out, queries, times, metadata, 4);
             printTime(times);
@@ -52,24 +51,26 @@ public class PerformanceTestMain {
     private static void runTest(PrintWriter out, Matcher queries, List<Long> times, DatabaseMetadata metadata, int skipQueries) {
         int i = 0;
         while (queries.find()) {
-            String queryText = queries.group(1).replaceAll("\\s", " ").trim().toUpperCase();
-            Query query = new Query(queryText, queryText, queryText);
+            if (skipQueries < i) {
+                String queryText = queries.group(1).replaceAll("\\s", " ").trim().toUpperCase();
+                Query query = new Query(queryText, queryText, queryText);
 
-            TransformationBuilder builder = new TransformationBuilder(metadata);
+                TransformationBuilder builder = new TransformationBuilder(metadata);
 
-            long start = System.nanoTime();
+                long start = System.nanoTime();
 
-            builder.makeQuery(query);
+                builder.makeQuery(query);
 
-            long finish = System.nanoTime();
-            long timeElapsed = (finish - start) / 1000000;
-            times.add(timeElapsed);
-            saveTransformation(out, i, skipQueries, queryText, timeElapsed, query);
-            i++;
+                long finish = System.nanoTime();
+                long timeElapsed = (finish - start) / 1000000;
+                times.add(timeElapsed);
+                saveTransformation(out, i, skipQueries, queryText, timeElapsed, query);
 
-            if (i % 5000 == 0) {
-                saveTime(out, times, i);
+                if (i % 5000 == 0) {
+                    saveTime(out, times, i);
+                }
             }
+            i++;
         }
     }
 

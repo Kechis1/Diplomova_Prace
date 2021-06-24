@@ -43,11 +43,15 @@ public class Main {
         } while (!inPathToMetadata.isEmpty() && is == null);
 
         try {
+            long start = System.nanoTime();
             if (inPathToMetadata.isEmpty()) {
                 runExample(inOriginalQuery, inTransformedQuery, pathToMetadata);
             } else {
                 runExample(inOriginalQuery, inTransformedQuery, inPathToMetadata);
             }
+            long finish = System.nanoTime();
+            long timeElapsed = (finish - start) / 1000000;
+            System.out.println("Time: " + timeElapsed + " ms");
         }  catch (MetadataException exception) {
             System.out.println(exception.getMessage());
         }

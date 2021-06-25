@@ -19,25 +19,33 @@ public class PerformanceTestMain {
     public static void main(String[] args) {
         List<Long> times = new ArrayList<>();
         try {
-            PrintWriter out = new PrintWriter("results1.txt");
-            // PrintWriter out = new PrintWriter("results.txt");
-            // InputStream is = loadQueryFile("queries/performance_test_queries_old.sql");
-            // InputStream is = loadQueryFile("queries/performance_text_queries_operators.sql");
-            InputStream is = loadQueryFile("queries/performance_test_queries_new.txt");
             DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson(pathToMetadata);
-            // String[] queries = splitQueries(is, ";");
-            // Matcher queries = splitQueries(is, "[0-9]+_[0-9]+_(.+)");
-            Matcher queries = splitQueries(is, "(.*);");
-            // runTest(out, queries, times, metadata, -1);
-            runTest(out, queries, times, metadata, 4);
-            printTime(times);
-            out.close();
+            // runOperatorsTest(times, metadata);
+            runLongTest(times, metadata);
         } catch (Exception exception) {
             System.out.println("An error occurred while running a performance test");
             exception.printStackTrace();
         } finally {
             printTime(times);
         }
+    }
+
+    private static void runOperatorsTest(List<Long> times, DatabaseMetadata metadata) throws Exception {
+        PrintWriter out = new PrintWriter("results.txt");
+        InputStream is = loadQueryFile("queries/performance_text_queries_operators.sql");
+        Matcher queries = splitQueries(is, "(.*);");
+        runTest(out, queries, times, metadata, 4);
+        printTime(times);
+        out.close();
+    }
+
+    private static void runLongTest(List<Long> times, DatabaseMetadata metadata) throws Exception {
+        PrintWriter out = new PrintWriter("results4.txt");
+        InputStream is = loadQueryFile("queries/performance_test_queries_new4.txt");
+        Matcher queries = splitQueries(is, "[0-9]+_[0-9]+_(.+)");
+        runTest(out, queries, times, metadata, -1);
+        printTime(times);
+        out.close();
     }
 
     private static Matcher splitQueries(InputStream is, String splitRegex) throws Exception {
@@ -50,22 +58,25 @@ public class PerformanceTestMain {
 
     private static void runTest(PrintWriter out, Matcher queries, List<Long> times, DatabaseMetadata metadata, int skipQueries) {
         int i = 0;
+        String queryText;
+        Query query = new Query();
+        TransformationBuilder builder = new TransformationBuilder(metadata);
+        long start;
+        long finish;
+        long timeElapsed;
         while (queries.find()) {
             if (skipQueries < i) {
-                String queryText = queries.group(1).replaceAll("\\s", " ").trim().toUpperCase();
-                Query query = new Query(queryText, queryText, queryText);
+                queryText = queries.group(1).replaceAll("\\s", " ").trim().toUpperCase();
+                query.setQuery(queryText, queryText, queryText);
 
-                TransformationBuilder builder = new TransformationBuilder(metadata);
-
-                long start = System.nanoTime();
+                start = System.nanoTime();
 
                 builder.makeQuery(query);
 
-                long finish = System.nanoTime();
-                long timeElapsed = (finish - start) / 1000000;
+                finish = System.nanoTime();
+                timeElapsed = (finish - start) / 1000000;
                 times.add(timeElapsed);
-                saveTransformation(out, i, skipQueries, queryText, timeElapsed, query);
-
+                saveTransformation(out, i, skipQueries, queries.group(0), timeElapsed, query);
                 if (i % 5000 == 0) {
                     saveTime(out, times, i);
                 }

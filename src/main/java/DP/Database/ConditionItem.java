@@ -183,7 +183,7 @@ public class ConditionItem {
         for (int i = 0; i < conditions.size() - 1; i++) {
             if (conditions.get(i).isNot() || conditions.get(i).getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
             for (int j = i + 1; j < conditions.size(); j++) {
-                if (conditions.get(i).isNot() || conditions.get(i).getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
+                if (conditions.get(j).isNot() || conditions.get(j).getOperatorType().equals(ConditionOperator.SAMPLE)) continue;
                 if (conditions.get(i).compareToCondition(metadata, conditions.get(j))) {
                     String newQueryString;
 

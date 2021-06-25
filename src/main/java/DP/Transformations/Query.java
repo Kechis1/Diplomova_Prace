@@ -11,10 +11,22 @@ public class Query {
     private int currentRunNumber;
     private boolean changed = false;
 
+    public Query() {}
+
     public Query(String originalQuery, String inputQuery, String outputQuery) {
         this.originalQuery = originalQuery;
         this.inputQuery = QueryHandler.restoreConstants(originalQuery, inputQuery);
         this.outputQuery = outputQuery;
+    }
+
+    public void setQuery(String originalQuery, String inputQuery, String outputQuery) {
+        this.originalQuery = originalQuery;
+        this.inputQuery = QueryHandler.restoreConstants(originalQuery, inputQuery);
+        this.outputQuery = outputQuery;
+        this.queryTransformations = null;
+        this.runs = null;
+        this.currentRunNumber = 0;
+        this.changed = false;
     }
 
     public boolean ignoredOperatorExists(Action action, String find) {

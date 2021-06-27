@@ -20,20 +20,36 @@ public class PerformanceTestMain {
         List<Long> times = new ArrayList<>();
         try {
             DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson(pathToMetadata);
-            // runOperatorsTest(times, metadata);
-            runLongTest(times, metadata);
+            runOperatorsTest(times, metadata);
+            // runLongTest(times, metadata);
+            // runResults();
         } catch (Exception exception) {
             System.out.println("An error occurred while running a performance test");
             exception.printStackTrace();
-        } finally {
-            printTime(times);
         }
     }
 
+    private static void runResults() throws Exception {
+        InputStream is;
+        Matcher queries;
+        int i = 0;
+        List<Long> times = new ArrayList<>();
+
+        for (int j = 1; j <= 4; j++) {
+            is = loadQueryFile("results" + j + ".txt");
+            queries = splitQueries(is, "^((?!Total time|Max time:|Min time:|Avg time:)([0-9]+) ms)$", Pattern.MULTILINE);
+            while (queries.find()) {
+                i++;
+                times.add(Long.valueOf(queries.group(2)));
+            }
+        }
+        printTime(times);
+    }
+
     private static void runOperatorsTest(List<Long> times, DatabaseMetadata metadata) throws Exception {
-        PrintWriter out = new PrintWriter("results.txt");
+        PrintWriter out = new PrintWriter("results_operators.txt");
         InputStream is = loadQueryFile("queries/performance_text_queries_operators.sql");
-        Matcher queries = splitQueries(is, "(.*);");
+        Matcher queries = splitQueries(is, "(.*);", -1);
         runTest(out, queries, times, metadata, 4);
         printTime(times);
         out.close();
@@ -42,18 +58,21 @@ public class PerformanceTestMain {
     private static void runLongTest(List<Long> times, DatabaseMetadata metadata) throws Exception {
         PrintWriter out = new PrintWriter("results4.txt");
         InputStream is = loadQueryFile("queries/performance_test_queries_new4.txt");
-        Matcher queries = splitQueries(is, "[0-9]+_[0-9]+_(.+)");
+        Matcher queries = splitQueries(is, "[0-9]+_[0-9]+_(.+)", -1);
         runTest(out, queries, times, metadata, -1);
         printTime(times);
         out.close();
     }
 
-    private static Matcher splitQueries(InputStream is, String splitRegex) throws Exception {
+    private static Matcher splitQueries(InputStream is, String splitRegex, int flags) throws Exception {
         String queriesText = null;
         try (final Reader reader = new InputStreamReader(is)) {
             queriesText = CharStreams.toString(reader);
         }
-        return Pattern.compile(splitRegex).matcher(queriesText);
+        if (flags == -1) {
+            return Pattern.compile(splitRegex).matcher(queriesText);
+        }
+        return Pattern.compile(splitRegex, flags).matcher(queriesText);
     }
 
     private static void runTest(PrintWriter out, Matcher queries, List<Long> times, DatabaseMetadata metadata, int skipQueries) {
@@ -77,9 +96,6 @@ public class PerformanceTestMain {
                 timeElapsed = (finish - start) / 1000000;
                 times.add(timeElapsed);
                 saveTransformation(out, i, skipQueries, queries.group(0), timeElapsed, query);
-                if (i % 5000 == 0) {
-                    saveTime(out, times, i);
-                }
             }
             i++;
         }
@@ -101,35 +117,15 @@ public class PerformanceTestMain {
         out.println("\n");
     }
 
-    private static void saveTime(PrintWriter out, List<Long> times, int count) {
-        try {
-            boolean close = false;
-            if (out == null) {
-                out = new PrintWriter("results.txt");
-                close = true;
-            }
-            out.println("Count: " + count);
-            out.println("STATS:\n");
-            out.println("Total time: " + (times.stream().reduce(0L, Long::sum)) + " ms");
-            out.println("Max time: " + (Collections.max(times)) + " ms");
-            out.println("Min time: " + (Collections.min(times)) + " ms");
-            out.println("Avg time: " + (times.stream().mapToInt(Math::toIntExact).average().orElse(0.0)) + " ms\n");
-            if (close) {
-                out.close();
-            }
-        } catch (FileNotFoundException ignored) {
-
-        }
-    }
-
     private static InputStream loadQueryFile(String path) {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         return classloader.getResourceAsStream(path);
     }
 
     private static void printTime(List<Long> times) {
-        if (times.size() > 1) {
+        if (times.size() > 0) {
             System.out.println("STATS:\n");
+            System.out.println("Count: " + times.size());
             System.out.println("Total time: " + (times.stream().reduce(0L, Long::sum)) + " ms");
             System.out.println("Max time: " + (Collections.max(times)) + " ms");
             System.out.println("Min time: " + (Collections.min(times)) + " ms");

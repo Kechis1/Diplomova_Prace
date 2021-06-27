@@ -20,9 +20,9 @@ public class PerformanceTestMain {
         List<Long> times = new ArrayList<>();
         try {
             DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson(pathToMetadata);
-            runOperatorsTest(times, metadata);
+            // runOperatorsTest(times, metadata);
             // runLongTest(times, metadata);
-            // runResults();
+            runResults();
         } catch (Exception exception) {
             System.out.println("An error occurred while running a performance test");
             exception.printStackTrace();

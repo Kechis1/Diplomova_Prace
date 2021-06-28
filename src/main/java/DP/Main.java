@@ -19,22 +19,14 @@ public class Main {
         String inOriginalQuery;
         String inTransformedQuery;
         String inPathToMetadata;
-        boolean repeat;
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         InputStream is;
 
-        do {
-            System.out.println("Enter query");
-            inOriginalQuery = in.nextLine().trim();
-            inTransformedQuery = inOriginalQuery.toUpperCase();
-            if (inTransformedQuery.isEmpty()) {
-                repeat = true;
-            } else {
-                TSqlParser parser = QueryHandler.parseQuery(inTransformedQuery);
-                parser.select_statement();
-                repeat = parser.getErrorHandler().inErrorRecoveryMode(parser);
-            }
-        } while (repeat);
+        System.out.println("Enter query");
+        inOriginalQuery = in.nextLine().trim();
+        inTransformedQuery = inOriginalQuery.toUpperCase();
+        TSqlParser parser = QueryHandler.parseQuery(inTransformedQuery);
+        parser.select_statement();
 
         do {
             System.out.println("Enter path to database metadata (optional)");

@@ -21,7 +21,7 @@ public class PerformanceTestMain {
         try {
             DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson(pathToMetadata);
             runOperatorsTest(times, metadata);
-            // runLongTest(times, metadata);
+            // runLongTest(times, metadata, 1);
             // runResults();
         } catch (Exception exception) {
             System.out.println("An error occurred while running a performance test");
@@ -55,9 +55,9 @@ public class PerformanceTestMain {
         out.close();
     }
 
-    private static void runLongTest(List<Long> times, DatabaseMetadata metadata) throws Exception {
-        PrintWriter out = new PrintWriter("results4.txt");
-        InputStream is = loadQueryFile("queries/performance_test_queries_new4.txt");
+    private static void runLongTest(List<Long> times, DatabaseMetadata metadata, int index) throws Exception {
+        PrintWriter out = new PrintWriter("results" + index + ".txt");
+        InputStream is = loadQueryFile("queries/performance_test_queries_new" + index + ".txt");
         Matcher queries = splitQueries(is, "[0-9]+_[0-9]+_(.+)", -1);
         runTest(out, queries, times, metadata, -1);
         printTime(times);

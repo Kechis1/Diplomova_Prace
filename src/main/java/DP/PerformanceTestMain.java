@@ -4,6 +4,7 @@ import DP.Database.DatabaseMetadata;
 import DP.Transformations.Query;
 import DP.Transformations.Transformation;
 import DP.Transformations.TransformationBuilder;
+import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 
 import java.io.*;
@@ -20,9 +21,9 @@ public class PerformanceTestMain {
         List<Long> times = new ArrayList<>();
         try {
             DatabaseMetadata metadata = DatabaseMetadata.LoadFromJson(pathToMetadata);
-            runOperatorsTest(times, metadata);
+            // runOperatorsTest(times, metadata);
             // runLongTest(times, metadata, 1);
-            // runResults();
+            runResults();
         } catch (Exception exception) {
             System.out.println("An error occurred while running a performance test");
             exception.printStackTrace();
@@ -36,7 +37,7 @@ public class PerformanceTestMain {
         List<Long> times = new ArrayList<>();
 
         for (int j = 1; j <= 4; j++) {
-            is = loadQueryFile("results" + j + ".txt");
+            is = loadQueryFile("results/results" + j + ".txt");
             queries = splitQueries(is, "^((?!Total time|Max time:|Min time:|Avg time:)([0-9]+) ms)$", Pattern.MULTILINE);
             while (queries.find()) {
                 i++;
@@ -44,6 +45,20 @@ public class PerformanceTestMain {
             }
         }
         printTime(times);
+        printPercentile(times, 4);
+    }
+
+    private static void printPercentile(List<Long> times, int chunks) {
+        if (times.size() > 0) {
+            Collections.sort(times);
+            List<List<Long>> lists = Lists.partition(times, (int)Math.ceil((double)times.size()/chunks));
+
+            for (int i = 0; i < chunks; i++) {
+                System.out.println("Chunk [" + i + "]:");
+                printTime(lists.get(i));
+                System.out.println("\n");
+            }
+        }
     }
 
     private static void runOperatorsTest(List<Long> times, DatabaseMetadata metadata) throws Exception {
